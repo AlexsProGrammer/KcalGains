@@ -7,6 +7,7 @@ import { DatabaseDebugger } from '@/components/DatabaseDebugger'
 import { StorageStatus } from '@/components/StorageStatus'
 import { FoodManagement } from '@/components/food/FoodManagement'
 import { BalancerContainer } from '@/components/balancer/BalancerContainer'
+import { AiBridgeContainer } from '@/components/ai-bridge/AiBridgeContainer'
 
 function App() {
   return (
@@ -50,6 +51,10 @@ function App() {
 
         <section className="mt-4 max-w-2xl">
           <BalancerContainer />
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <AiBridgeContainer />
         </section>
 
         <section className="mt-4 max-w-2xl">

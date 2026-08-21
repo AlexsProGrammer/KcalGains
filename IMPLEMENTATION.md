@@ -119,19 +119,19 @@ src/
 
 #### Phase 4: UI Components & Ingestion Workflow
 
-* [ ] **Step 4.1:** In `src/components/ai-bridge/PromptGeneratorModal.tsx`, build a configuration dialog allowing users to adjust prompt parameters (target meal type, remaining macros, pantry food selection) with a prominent "Copy Prompt for Gemini/ChatGPT" button.
-* [ ] **Step 4.2:** In `src/components/ai-bridge/PromptCopyCard.tsx`, display a copy confirmation toast and a quick step-by-step indicator (*"1. Paste into Gemini -> 2. Copy Gemini's reply -> 3. Paste back here"*).
-* [ ] **Step 4.3:** In `src/components/ai-bridge/AiPasteModal.tsx`, create a pasteboard dialog featuring an auto-paste button (`navigator.clipboard.readText()`), a manual textarea fallback, and instant validation status badges.
-* [ ] **Step 4.4:** In `src/components/ai-bridge/IngestionPreviewTable.tsx`, render the parsed meal:
+* [x] **Step 4.1:** In `src/components/ai-bridge/PromptGeneratorModal.tsx`, build a configuration dialog allowing users to adjust prompt parameters (target meal type, remaining macros, pantry food selection) with a prominent "Copy Prompt for Gemini/ChatGPT" button.
+* [x] **Step 4.2:** In `src/components/ai-bridge/PromptCopyCard.tsx`, display a copy confirmation toast and a quick step-by-step indicator (*"1. Paste into Gemini -> 2. Copy Gemini's reply -> 3. Paste back here"*).
+* [x] **Step 4.3:** In `src/components/ai-bridge/AiPasteModal.tsx`, create a pasteboard dialog featuring an auto-paste button (`navigator.clipboard.readText()`), a manual textarea fallback, and instant validation status badges.
+* [x] **Step 4.4:** In `src/components/ai-bridge/IngestionPreviewTable.tsx`, render the parsed meal:
 * Itemized food names, computed gram amounts, and individual macros.
 * Indicator showing whether an item will be linked to an existing food or created as a new library item.
 * Editable gram inputs allowing the user to tweak values before committing.
 * "Log Meal & Save Foods" submit button.
 
 
-* [ ] **Step 4.5:** In `src/components/ai-bridge/SchemaValidationAlert.tsx`, render descriptive, friendly error alerts when LLM outputs are invalid (e.g., *"The AI returned an invalid format. Click below to regenerate the prompt."*).
-* [ ] **Step 4.6:** In `src/components/ai-bridge/AiBridgeContainer.tsx`, integrate the modals and quick-access buttons into the main dashboard navigation.
-* [ ] **Verification:** Open `AiPasteModal`, paste a valid mock AI JSON payload, verify `IngestionPreviewTable` renders all items accurately, and clicking "Log Meal" commits the record to the Dexie `meals` table.
+* [x] **Step 4.5:** In `src/components/ai-bridge/SchemaValidationAlert.tsx`, render descriptive, friendly error alerts when LLM outputs are invalid.
+* [x] **Step 4.6:** In `src/components/ai-bridge/AiBridgeContainer.tsx`, integrate the modals and quick-access buttons into the main dashboard navigation.
+* [ ] **Verification:** Open `AiPasteModal`, paste a valid mock AI JSON payload, verify `IngestionPreviewTable` renders all items accurately, and clicking "Log Meal" commits the record to the Dexie `meals` table. (Pending browser runtime verification.)
 
 ---
 

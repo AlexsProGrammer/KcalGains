@@ -1,0 +1,9 @@
+import { Database, Plus, Save } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import type { AiMealResponse } from '@/types'
+import type { LinkedAiFood } from '@/services/aiResponseParserService'
+
+type Props = { meal: AiMealResponse; links: LinkedAiFood[]; isProcessing: boolean; onChangeGrams: (index: number, grams: number) => void; onCommit: () => void }
+export function IngestionPreviewTable({ meal, links, isProcessing, onChangeGrams, onCommit }: Props) {
+  return <div><div className="overflow-hidden rounded-md border border-slate-800"><div className="grid grid-cols-[1fr_5rem_5rem] gap-2 border-b border-slate-800 px-3 py-2 text-xs uppercase tracking-wide text-slate-500"><span>Food</span><span>Grams</span><span>Origin</span></div>{meal.items.map((item, index) => <div key={`${item.name}-${index}`} className="grid grid-cols-[1fr_5rem_5rem] items-center gap-2 border-b border-slate-800 px-3 py-3 text-sm last:border-0"><span className="min-w-0 truncate text-slate-200">{item.name}<span className="ml-2 text-xs text-slate-500">{item.calories.toFixed(0)} kcal · P {item.protein.toFixed(1)}g</span></span><input type="number" min="0" step="1" value={item.grams} onChange={(event) => onChangeGrams(index, Number(event.target.value))} aria-label={`${item.name} grams`} className="min-h-8 rounded border border-slate-700 bg-slate-950 px-2 text-xs text-slate-100" /><span className="text-xs text-slate-500">{links[index]?.newFood ? <><Plus className="mr-1 inline h-3.5 w-3.5" />New</> : <><Database className="mr-1 inline h-3.5 w-3.5" />Linked</>}</span></div>)}</div><p className="mt-3 text-xs text-slate-500">Totals: {meal.totalCalories.toFixed(0)} kcal · P {meal.totalProtein.toFixed(1)}g · C {meal.totalCarbs.toFixed(1)}g · F {meal.totalFat.toFixed(1)}g</p><Button className="mt-4" type="button" disabled={isProcessing} onClick={onCommit}><Save className="mr-2 h-4 w-4" />{isProcessing ? 'Saving...' : 'Log Meal & Save Foods'}</Button></div>
+}

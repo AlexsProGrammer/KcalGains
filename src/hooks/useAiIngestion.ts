@@ -57,5 +57,31 @@ export function useAiIngestion() {
     }
   }
 
-  return { commit, errors, isCommitted, isProcessing, linkedFoods, parsedMeal, rawText, setRawText, validate }
+  function updateItem(index: number, grams: number) {
+    if (!parsedMeal) return
+    const nextItems = parsedMeal.items.map((item, itemIndex) => {
+      if (itemIndex !== index) return item
+      const factor = item.grams > 0 ? grams / item.grams : 0
+      return {
+        ...item,
+        grams,
+        calories: item.calories * factor,
+        protein: item.protein * factor,
+        carbs: item.carbs * factor,
+        fat: item.fat * factor,
+      }
+    })
+    const nextMeal = {
+      ...parsedMeal,
+      items: nextItems,
+      totalCalories: nextItems.reduce((total, item) => total + item.calories, 0),
+      totalProtein: nextItems.reduce((total, item) => total + item.protein, 0),
+      totalCarbs: nextItems.reduce((total, item) => total + item.carbs, 0),
+      totalFat: nextItems.reduce((total, item) => total + item.fat, 0),
+    }
+    setParsedMeal(AiMealResponseSchema.parse(nextMeal))
+    setLinkedFoods((current) => current.map((link, linkIndex) => linkIndex === index ? { ...link, item: nextItems[index] } : link))
+  }
+
+  return { commit, errors, isCommitted, isProcessing, linkedFoods, parsedMeal, rawText, setRawText, updateItem, validate }
 }
