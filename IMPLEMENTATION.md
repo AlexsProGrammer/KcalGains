@@ -81,19 +81,19 @@ src/
 
 #### Phase 2: Prompt Synthesizer & Clipboard Service
 
-* [ ] **Step 2.1:** In `src/utils/promptTemplates.ts`, construct the system prompt template engineered for Gemini and ChatGPT:
+* [x] **Step 2.1:** In `src/utils/promptTemplates.ts`, construct the system prompt template engineered for Gemini and ChatGPT:
 * Enforce explicit instructions for the AI to respond **exclusively** with a raw JSON block matching `AiMealResponseSchema`.
 * Include example input/output schema definitions and instruction to calculate accurate grams based on real macronutrient densities ($4\text{ kcal/g}$ for P & C, $9\text{ kcal/g}$ for F).
 
 
-* [ ] **Step 2.2:** In `src/services/promptSynthesizerService.ts`, implement `generatePrompt(context: PromptContext): string`:
+* [x] **Step 2.2:** In `src/services/promptSynthesizerService.ts`, implement `generatePrompt(context: PromptContext): string`:
 * Dynamically inject remaining daily deficits and available pantry ingredients into the prompt template.
 * Return the sanitized, ready-to-paste prompt string.
 
 
-* [ ] **Step 2.3:** In `src/services/clipboardService.ts`, implement `copyToClipboard(text: string): Promise<boolean>` and `readFromClipboard(): Promise<string>` with permission fallback handlers for non-supported browsers.
-* [ ] **Step 2.4:** In `src/hooks/useAiPromptGenerator.ts`, create a React hook that reads today's target deficits from Dexie `dailyLogs` and exports the generated prompt to the clipboard.
-* [ ] **Verification:** Invoke `generatePrompt()` with mock deficits (e.g., 40g Protein, 500 kcal) and verify the generated string contains the correct schema structure and numerical parameters.
+* [x] **Step 2.3:** In `src/services/clipboardService.ts`, implement `copyToClipboard(text: string): Promise<boolean>` and `readFromClipboard(): Promise<string>` with permission fallback handlers for non-supported browsers.
+* [x] **Step 2.4:** In `src/hooks/useAiPromptGenerator.ts`, create a React hook that reads today's target deficits from Dexie `dailyLogs` and exports the generated prompt to the clipboard.
+* [ ] **Verification:** Invoke `generatePrompt()` with mock deficits (e.g., 40g Protein, 500 kcal) and verify the generated string contains the correct schema structure and numerical parameters. (Pending browser/clipboard runtime verification.)
 
 #### Phase 3: AI Output Sanitizer & Zod Ingestion Pipeline
 
