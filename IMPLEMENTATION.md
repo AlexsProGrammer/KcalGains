@@ -104,21 +104,21 @@ npx cap init "Quirin Fitti" "com.quirin.fitti" --web-dir "dist"
 
 #### Phase 2: Platform Detection & Install Prompt Subsystem
 
-* [ ] **Step 2.1:** In `src/utils/platformDetect.ts`, implement helpers:
+* [x] **Step 2.1:** In `src/utils/platformDetect.ts`, implement helpers:
 * `isIOS(): boolean` (detects iPhone/iPad user agents).
 * `isStandalone(): boolean` (checks `window.matchMedia('(display-mode: standalone)').matches` or `navigator.standalone`).
 * `isAndroid(): boolean`.
 
 
-* [ ] **Step 2.2:** In `src/services/pwaService.ts`, handle the `beforeinstallprompt` event on Chromium/Android and store the deferred prompt object.
-* [ ] **Step 2.3:** In `src/hooks/usePWAInstall.ts`, create a React hook exposing:
+* [x] **Step 2.2:** In `src/services/pwaService.ts`, handle the `beforeinstallprompt` event on Chromium/Android and store the deferred prompt object.
+* [x] **Step 2.3:** In `src/hooks/usePWAInstall.ts`, create a React hook exposing:
 * `isInstallable: boolean`
 * `isInstalled: boolean`
 * `platform: 'ios' | 'android' | 'desktop'`
 * `promptInstall(): Promise<void>`
 
 
-* [ ] **Verification:** Open the web app on desktop Chrome and verify `beforeinstallprompt` registers and triggers the custom installation workflow.
+* [ ] **Verification:** Open the web app on desktop Chrome and verify `beforeinstallprompt` registers and triggers the custom installation workflow. (Pending browser installability verification.)
 
 #### Phase 3: PWA UI Components & Update Handling
 
