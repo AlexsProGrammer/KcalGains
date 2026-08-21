@@ -1,0 +1,10 @@
+import { Save } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import type { BalancerResult } from '@/types/balancer.types'
+
+type Props = { result: BalancerResult; names: Map<string, string>; targets: { calories: number; protein: number; carbs: number; fat: number }; onLog: () => void }
+const macros = [['calories', 'Calories'], ['protein', 'Protein'], ['carbs', 'Carbs'], ['fat', 'Fat']] as const
+
+export function BalancerResultsCard({ result, names, targets, onLog }: Props) {
+  return <div className="mt-5 border-t border-slate-800 pt-4"><div className="flex items-center justify-between"><h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Solver result</h3><span className="rounded-full bg-emerald-400/10 px-2 py-1 text-xs text-emerald-300">{result.status}</span></div><div className="mt-3 grid gap-2 sm:grid-cols-2">{result.solution.map((item) => <div key={item.foodId} className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2"><span className="text-sm text-slate-500">{names.get(item.foodId) ?? item.foodId}</span><strong className="ml-2 text-lg text-slate-100">{item.grams}g</strong></div>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-2">{macros.map(([key, label]) => { const actual = result.totalMacros[key]; const target = targets[key]; const percent = target > 0 ? Math.min(100, actual / target * 100) : 0; return <div key={key}><div className="flex justify-between text-xs text-slate-500"><span>{label}</span><span>{actual.toFixed(1)} / {target}</span></div><div className="mt-1 h-2 rounded-full bg-slate-800"><div className="h-2 rounded-full bg-emerald-400" style={{ width: `${percent}%` }} /></div></div> })}</div><p className="mt-3 text-xs text-slate-500">Delta: P {result.deviation.deltaProtein.toFixed(1)}g · C {result.deviation.deltaCarbs.toFixed(1)}g · F {result.deviation.deltaFat.toFixed(1)}g</p><Button className="mt-4" type="button" disabled={result.status === 'infeasible'} onClick={onLog}><Save className="mr-2 h-4 w-4" />Log this meal</Button></div>
+}

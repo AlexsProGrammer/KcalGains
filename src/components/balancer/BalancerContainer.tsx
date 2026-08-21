@@ -1,0 +1,36 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Calculator, Check, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Alert } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { db } from '@/db'
+import { useMealBalancer } from '@/hooks/useMealBalancer'
+import { useMealLogger } from '@/hooks/useMealLogger'
+import { MacroTargetControls } from '@/components/balancer/MacroTargetControls'
+import { OptimizationErrorAlert } from '@/components/balancer/OptimizationErrorAlert'
+import { BalancerResultsCard } from '@/components/balancer/BalancerResultsCard'
+import { SelectedFoodList } from '@/components/balancer/SelectedFoodList'
+import type { Food } from '@/types'
+
+export function BalancerContainer() {
+  const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])
+  const balancer = useMealBalancer()
+  const { commitBalancedMealToLog } = useMealLogger()
+  const [query, setQuery] = useState('')
+  const [message, setMessage] = useState<string | null>(null)
+  const visibleFoods = foods.filter((food) => food.name.toLowerCase().includes(query.toLowerCase())).slice(0, 24)
+  const names = new Map(balancer.selectedFoods.map((food) => [food.id, food.name]))
+
+  function toggleFood(food: Food) {
+    if (balancer.selectedFoods.some((selected) => selected.id === food.id)) balancer.removeFood(food.id)
+    else if (balancer.selectedFoods.length < 8) balancer.addFood(food)
+  }
+
+  async function logMeal() {
+    if (!balancer.result || balancer.result.status === 'infeasible') return
+    await commitBalancedMealToLog(balancer.result, 'lunch', new Date().toISOString().slice(0, 10))
+    setMessage('Balanced meal logged.')
+  }
+
+  return <Card><CardHeader icon={<Calculator />} title="Meal balancer development panel" /><CardContent><MacroTargetControls targets={balancer.targets} onChange={balancer.setTargets} /><div className="mt-5 border-t border-slate-800 pt-4"><div className="flex items-center justify-between gap-3"><h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Food pool ({balancer.selectedFoods.length}/8)</h3><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter local foods" aria-label="Filter local balancer foods" className="min-h-8 rounded-md border border-slate-700 bg-slate-950 px-3 text-xs text-slate-100" /></div><div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-slate-800">{visibleFoods.map((food) => { const selected = balancer.selectedFoods.some((item) => item.id === food.id); return <button key={food.id} type="button" disabled={!selected && balancer.selectedFoods.length >= 8} onClick={() => toggleFood(food)} className="flex w-full items-center justify-between border-b border-slate-800 px-3 py-2 text-left text-sm text-slate-300 last:border-0 disabled:opacity-40"> <span>{selected ? <Check className="mr-2 inline h-3.5 w-3.5 text-emerald-400" /> : <Plus className="mr-2 inline h-3.5 w-3.5" />}{food.name}</span><span className="text-xs text-slate-500">{food.calories} kcal</span></button> })}</div></div><SelectedFoodList foods={balancer.selectedFoods} constraints={balancer.constraints} onUpdate={balancer.updateConstraint} onRemove={balancer.removeFood} />{balancer.isCalculating ? <p className="mt-4 text-xs text-slate-500">Calculating...</p> : null}{balancer.result ? <><OptimizationErrorAlert result={balancer.result} /><BalancerResultsCard result={balancer.result} names={names} targets={balancer.targets} onLog={() => void logMeal()} /></> : null}{message ? <Alert className="mt-4" variant="success">{message}</Alert> : null}</CardContent></Card>
+}

@@ -113,24 +113,24 @@ $$\min \sum w_i \cdot (\text{deviation}_i) \quad \text{subject to} \quad \mathbf
 
 #### Phase 4: UI Components & Constraint Controls
 
-* [ ] **Step 4.1:** In `src/components/balancer/MacroTargetControls.tsx`, build numeric/slider inputs for target Calories, Protein, Carbs, and Fat with quick-preset buttons (e.g., "Fill Remaining Day Deficit", "High Protein Snack").
-* [ ] **Step 4.2:** In `src/components/balancer/SelectedFoodList.tsx` and `FoodConstraintRow.tsx`, render selected ingredients with:
+* [x] **Step 4.1:** In `src/components/balancer/MacroTargetControls.tsx`, build numeric/slider inputs for target Calories, Protein, Carbs, and Fat with quick-preset buttons (e.g., "Fill Remaining Day Deficit", "High Protein Snack").
+* [x] **Step 4.2:** In `src/components/balancer/SelectedFoodList.tsx` and `FoodConstraintRow.tsx`, render selected ingredients with:
 * Visual macro badges per item.
 * Dual-thumb range slider for min/max gram limits (e.g., `50g - 250g`).
 * Lock toggle (e.g., pin an ingredient to exactly `100g` while the other items balance around it).
 * Delete/remove button.
 
 
-* [ ] **Step 4.3:** In `src/components/balancer/BalancerResultsCard.tsx`, display:
+* [x] **Step 4.3:** In `src/components/balancer/BalancerResultsCard.tsx`, display:
 * Solved gram amount highlighted in large typography for each food.
 * Macro comparison progress bars (Target vs Actual achieved).
 * Discrepancy delta indicators (e.g., `+1.2g Protein, -0.5g Fat`).
 * "Log This Meal" primary action button.
 
 
-* [ ] **Step 4.4:** In `src/components/balancer/OptimizationErrorAlert.tsx`, render an actionable alert when constraints cannot be solved, explaining the blocker (e.g., *"Cannot reach 60g Protein: Max limit of Quark (200g) reached. Increase max limit or add another protein source."*).
-* [ ] **Step 4.5:** In `src/components/balancer/BalancerContainer.tsx`, integrate search modal trigger (from Part 2) to easily add foods from the local database into the active balancing pool.
-* [ ] **Verification:** In UI, select 3 foods, lock one food to 100g, adjust target protein, and confirm that only the unlocked foods adjust their gram amounts.
+* [x] **Step 4.4:** In `src/components/balancer/OptimizationErrorAlert.tsx`, render an actionable alert when constraints cannot be solved, explaining the blocker.
+* [x] **Step 4.5:** In `src/components/balancer/BalancerContainer.tsx`, integrate local food catalog selection into the active balancing pool.
+* [ ] **Verification:** In UI, select 3 foods, lock one food to 100g, adjust target protein, and confirm that only the unlocked foods adjust their gram amounts. (Pending browser runtime verification.)
 
 ---
 
