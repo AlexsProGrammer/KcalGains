@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Database, FlaskConical, Search, Trash2 } from 'lucide-react'
+import { CloudDownload, Database, FlaskConical, Search, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -75,7 +75,16 @@ const emptyCounts = { foods: 0, meals: 0, workouts: 0, dailyLogs: 0, profile: 0 
 export function DatabaseDebugger() {
   const [message, setMessage] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const { isReady: isSearchReady, isSearching, results: searchResults } = useFoodSearch(searchQuery)
+  const {
+    cacheRemoteFood,
+    isReady: isSearchReady,
+    isRemoteSearching,
+    isSearching,
+    remoteError,
+    remoteResults,
+    results: searchResults,
+    searchRemote,
+  } = useFoodSearch(searchQuery)
   const liveData = useLiveQuery(async () => ({
     counts: {
       foods: await db.foods.count(),
@@ -185,6 +194,19 @@ export function DatabaseDebugger() {
           <div className="mt-2 text-xs text-slate-500">
             {isSearching ? 'Searching...' : isSearchReady ? `${searchResults.length} match${searchResults.length === 1 ? '' : 'es'}` : 'Loading local index...'}
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={!searchQuery.trim() || isRemoteSearching}
+              onClick={() => void searchRemote()}
+            >
+              <CloudDownload className="mr-2 h-4 w-4" aria-hidden="true" />
+              {isRemoteSearching ? 'Searching Open Food Facts...' : 'Search Open Food Facts'}
+            </Button>
+            {remoteError ? <span className="text-xs text-amber-300">{remoteError}</span> : null}
+          </div>
           {searchQuery.trim() && searchResults.length > 0 ? (
             <ul className="mt-3 divide-y divide-slate-800 rounded-md border border-slate-800">
               {searchResults.slice(0, 8).map((result) => (
@@ -200,6 +222,23 @@ export function DatabaseDebugger() {
             </ul>
           ) : searchQuery.trim() && !isSearching ? (
             <p className="mt-3 text-sm text-slate-600">No local foods matched that query.</p>
+          ) : null}
+          {remoteResults.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Open Food Facts results</h3>
+              <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800">
+                {remoteResults.slice(0, 8).map((food) => (
+                  <li key={food.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span className="min-w-0 truncate text-slate-200">
+                      {food.name}{food.brand ? <span className="text-slate-500"> · {food.brand}</span> : null}
+                    </span>
+                    <Button type="button" size="sm" onClick={() => void cacheRemoteFood(food).then(() => setMessage(`Cached ${food.name} locally.`))}>
+                      Cache locally
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </div>
 

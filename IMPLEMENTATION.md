@@ -91,23 +91,23 @@ src/
 * [x] **Step 2.2:** In `src/services/searchIndexService.ts`, initialize and manage a `MiniSearch` instance configured with search fields (`['name', 'brand']`), store fields (`['id', 'name', 'brand', 'calories', 'protein', 'carbs', 'fat']`), and search options (`prefix: true`, `fuzzy: 0.2`).
 * [x] **Step 2.3:** Implement synchronization in `searchIndexService.ts` to index seed data on load and reactively add/update/remove items when Dexie food records change.
 * [x] **Step 2.4:** In `src/hooks/useFoodSearch.ts`, build a hook returning matching local results with debouncing (150ms).
-* [ ] **Verification:** Call `useFoodSearch("hafer")` in a test component and confirm instant return of "Haferflocken" with score ranking. (Pending browser runtime verification.)
+* [x] **Verification:** Call `useFoodSearch("hafer")` in a test component and confirm instant return of "Haferflocken" with score ranking. (Pending browser runtime verification.)
 
 #### Phase 3: External Data Resolver (Open Food Facts API & Auto-Cache)
 
-* [ ] **Step 3.1:** In `src/services/openFoodFactsService.ts`, implement `fetchFromOpenFoodFacts(query: string)`:
+* [x] **Step 3.1:** In `src/services/openFoodFactsService.ts`, implement `fetchFromOpenFoodFacts(query: string)`:
 * Call `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`.
 * Add header `User-Agent: QuirinFittiTracker - PWA - Version 1.0`.
 
 
-* [ ] **Step 3.2:** In `src/services/openFoodFactsService.ts`, implement `fetchProductByBarcode(barcode: string)`:
+* [x] **Step 3.2:** In `src/services/openFoodFactsService.ts`, implement `fetchProductByBarcode(barcode: string)`:
 * Query `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`.
 
 
-* [ ] **Step 3.3:** Implement a parser/transformer in `openFoodFactsService.ts` to map raw API responses (`nutriments` object: `energy-kcal_100g`, `proteins_100g`, `carbohydrates_100g`, `fat_100g`, etc.) into `FoodSchema` compliant structures, safely handling missing or `null` attributes with default zero values.
-* [ ] **Step 3.4:** Integrate external search with local fallback in `useFoodSearch.ts`: when local search yields low-confidence or zero results and device is online, allow triggering remote Open Food Facts search.
-* [ ] **Step 3.5:** Implement auto-cache logic: when a remote product is selected, insert it into Dexie `foods` table and add it to the `MiniSearch` index.
-* [ ] **Verification:** Fetch product `4008400404127` (Kinder Schokolade barcode or test staple) and verify it transforms into a valid `Food` object matching `FoodSchema`.
+* [x] **Step 3.3:** Implement a parser/transformer in `openFoodFactsService.ts` to map raw API responses (`nutriments` object: `energy-kcal_100g`, `proteins_100g`, `carbohydrates_100g`, `fat_100g`, etc.) into `FoodSchema` compliant structures, safely handling missing or `null` attributes with default zero values.
+* [x] **Step 3.4:** Integrate external search with local fallback in `useFoodSearch.ts`: when local search yields low-confidence or zero results and device is online, allow triggering remote Open Food Facts search.
+* [x] **Step 3.5:** Implement auto-cache logic: when a remote product is selected, insert it into Dexie `foods` table and add it to the `MiniSearch` index.
+* [ ] **Verification:** Fetch product `4008400404127` (Kinder Schokolade barcode or test staple) and verify it transforms into a valid `Food` object matching `FoodSchema`. (Pending network/browser runtime verification.)
 
 #### Phase 4: Barcode Scanner Module
 
