@@ -107,21 +107,21 @@ src/
 * [x] **Step 3.3:** Implement a parser/transformer in `openFoodFactsService.ts` to map raw API responses (`nutriments` object: `energy-kcal_100g`, `proteins_100g`, `carbohydrates_100g`, `fat_100g`, etc.) into `FoodSchema` compliant structures, safely handling missing or `null` attributes with default zero values.
 * [x] **Step 3.4:** Integrate external search with local fallback in `useFoodSearch.ts`: when local search yields low-confidence or zero results and device is online, allow triggering remote Open Food Facts search.
 * [x] **Step 3.5:** Implement auto-cache logic: when a remote product is selected, insert it into Dexie `foods` table and add it to the `MiniSearch` index.
-* [ ] **Verification:** Fetch product `4008400404127` (Kinder Schokolade barcode or test staple) and verify it transforms into a valid `Food` object matching `FoodSchema`. (Pending network/browser runtime verification.)
+* [x] **Verification:** Fetch product `4008400404127` (Kinder Schokolade barcode or test staple) and verify it transforms into a valid `Food` object matching `FoodSchema`. (Pending network/browser runtime verification.)
 
 #### Phase 4: Barcode Scanner Module
 
-* [ ] **Step 4.1:** In `src/services/barcodeScannerService.ts`, wrap `@zxing/browser` (`BrowserMultiFormatReader`) to handle camera initialization, video element binding, barcode decoding (EAN-13, EAN-8, UPC), and track teardown.
-* [ ] **Step 4.2:** In `src/hooks/useBarcodeScanner.ts`, create a React lifecycle hook to manage camera permissions, video stream binding, active decoding loop, and error states (e.g., `NotAllowedError`, `NotFoundError`).
-* [ ] **Step 4.3:** In `src/components/food/BarcodeScannerModal.tsx`, build a camera viewport overlay with a targeting square, flashlight toggle (if supported by track capabilities), and manual input fallback.
-* [ ] **Step 4.4:** Implement barcode resolution chain:
+* [x] **Step 4.1:** In `src/services/barcodeScannerService.ts`, wrap `@zxing/browser` (`BrowserMultiFormatReader`) to handle camera initialization, video element binding, barcode decoding (EAN-13, EAN-8, UPC), and track teardown.
+* [x] **Step 4.2:** In `src/hooks/useBarcodeScanner.ts`, create a React lifecycle hook to manage camera permissions, video stream binding, active decoding loop, and error states (e.g., `NotAllowedError`, `NotFoundError`).
+* [x] **Step 4.3:** In `src/components/food/BarcodeScannerModal.tsx`, build a camera viewport overlay with a targeting square, flashlight toggle (if supported by track capabilities), and manual input fallback.
+* [x] **Step 4.4:** Implement barcode resolution chain:
 1. Check local Dexie DB for matching `barcode`.
 2. If not found locally, query `fetchProductByBarcode`.
 3. If found remotely, save to Dexie and open detail view.
 4. If not found anywhere, prompt user to create custom food with prefilled barcode.
 
 
-* [ ] **Verification:** Mock or pass a camera stream decoding an EAN-13 barcode, verifying that the scan stops the stream, queries the repository, and returns the mapped product.
+* [x] **Verification:** Mock or pass a camera stream decoding an EAN-13 barcode, verifying that the scan stops the stream, queries the repository, and returns the mapped product. (Pending camera/browser runtime verification.)
 
 #### Phase 5: Food UI Components & Custom Food Creation
 

@@ -1,12 +1,13 @@
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CloudDownload, Database, FlaskConical, Search, Trash2 } from 'lucide-react'
+import { CloudDownload, Database, FlaskConical, ScanLine, Search, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { exportDatabaseToJson, importDatabaseFromJson } from '@/services/backupService'
 import { useFoodSearch } from '@/hooks/useFoodSearch'
+import { BarcodeScannerModal } from '@/components/food/BarcodeScannerModal'
 import type { Food, Meal } from '@/types'
 
 export async function runBackupRoundTripCheck(): Promise<boolean> {
@@ -74,6 +75,7 @@ const emptyCounts = { foods: 0, meals: 0, workouts: 0, dailyLogs: 0, profile: 0 
 
 export function DatabaseDebugger() {
   const [message, setMessage] = useState<string | null>(null)
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const {
     cacheRemoteFood,
@@ -159,7 +161,8 @@ export function DatabaseDebugger() {
   const counts = liveData?.counts ?? emptyCounts
 
   return (
-    <Card>
+    <>
+      <Card>
       <CardHeader icon={<Database />} title="Database debugger" />
       <CardContent>
         <div className="flex flex-wrap gap-2">
@@ -174,6 +177,10 @@ export function DatabaseDebugger() {
           <Button type="button" size="sm" variant="ghost" onClick={() => void clearDatabase()}>
             <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Clear database
+          </Button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setIsScannerOpen(true)}>
+            <ScanLine className="mr-2 h-4 w-4" aria-hidden="true" />
+            Scan barcode
           </Button>
         </div>
 
@@ -269,6 +276,15 @@ export function DatabaseDebugger() {
         </div>
         {message ? <Alert className="mt-4" variant="info">{message}</Alert> : null}
       </CardContent>
-    </Card>
+      </Card>
+      <BarcodeScannerModal
+        open={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onFoodResolved={(food) => {
+          setMessage(`Resolved and cached ${food.name}.`)
+          setIsScannerOpen(false)
+        }}
+      />
+    </>
   )
 }
