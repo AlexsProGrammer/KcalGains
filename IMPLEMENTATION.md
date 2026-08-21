@@ -122,18 +122,18 @@ npx cap init "Quirin Fitti" "com.quirin.fitti" --web-dir "dist"
 
 #### Phase 3: PWA UI Components & Update Handling
 
-* [ ] **Step 3.1:** In `src/components/pwa/ReloadPrompt.tsx`, implement a non-intrusive toast notifying the user when a new Service Worker update is downloaded with a "Neu laden" (Reload) button.
-* [ ] **Step 3.2:** In `src/components/pwa/IosInstallInstructionsModal.tsx`, build a step-by-step visual onboarding modal tailored for iOS users:
+* [x] **Step 3.1:** In `src/components/pwa/ReloadPrompt.tsx`, implement a non-intrusive toast notifying the user when a new Service Worker update is downloaded with a reload button.
+* [x] **Step 3.2:** In `src/components/pwa/IosInstallInstructionsModal.tsx`, build a step-by-step visual onboarding modal tailored for iOS users:
 1. *"Tippe unten in Safari auf das Teilen-Symbol"* (Share icon).
 2. *"Scrolle nach unten und wähle 'Zum Home-Bildschirm'"* (Add to Home Screen).
 3. *"Bestätige oben rechts mit 'Hinzufügen'"* (Confirm).
 4. Display notice explaining that this step guarantees permanent offline persistence against iOS 7-day cache cleanups.
 
 
-* [ ] **Step 3.3:** In `src/components/pwa/InstallBanner.tsx`, render a dismissible bottom bar shown only to non-standalone users, routing to native `promptInstall()` on Android or opening `IosInstallInstructionsModal` on iOS.
-* [ ] **Step 3.4:** In `src/components/pwa/OfflineIndicator.tsx`, listen to `window.addEventListener('online' | 'offline')` and display a discreet badge when the device is completely offline.
-* [ ] **Step 3.5:** In `src/App.tsx`, mount `ReloadPrompt`, `InstallBanner`, and `OfflineIndicator`.
-* [ ] **Verification:** In browser DevTools, toggle Device Emulation to "iPhone 14 Pro", verify that clicking "App installieren" opens the iOS instructions modal, and toggle Network to "Offline" to check the offline badge.
+* [x] **Step 3.3:** In `src/components/pwa/InstallBanner.tsx`, render a dismissible bottom bar shown only to non-standalone users, routing to native `promptInstall()` on Android or opening `IosInstallInstructionsModal` on iOS.
+* [x] **Step 3.4:** In `src/components/pwa/OfflineIndicator.tsx`, listen to `window.addEventListener('online' | 'offline')` and display a discreet badge when the device is completely offline.
+* [x] **Step 3.5:** In `src/App.tsx`, mount `ReloadPrompt`, `InstallBanner`, and `OfflineIndicator`.
+* [ ] **Verification:** In browser DevTools, toggle Device Emulation to "iPhone 14 Pro", verify that clicking the install banner opens the iOS instructions modal, and toggle Network to "Offline" to check the offline badge. (Pending browser runtime verification.)
 
 #### Phase 4: Zero-Leak DSGVO Network Audit
 

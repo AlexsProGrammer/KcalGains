@@ -13,10 +13,14 @@ import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
 import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
 import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
 import { WeightLoggerCard } from '@/components/analytics/WeightLoggerCard'
+import { InstallBanner } from '@/components/pwa/InstallBanner'
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
+import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
 
 function App() {
   return (
-    <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
+    <>
+      <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
       <div className="container max-w-5xl">
         <header className="mb-10 flex items-start justify-between gap-6">
           <div>
@@ -84,6 +88,10 @@ function App() {
         </section>
       </div>
     </main>
+      <ReloadPrompt />
+      <InstallBanner />
+      <OfflineIndicator />
+    </>
   )
 }
 
