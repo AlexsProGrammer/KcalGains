@@ -88,13 +88,13 @@ npx tailwindcss init -p
 
 #### Phase 2: Zod Schemas & Domain Type Definitions
 
-* [ ] **Step 2.1:** In `src/schemas/food.schema.ts`, define `FoodSchema` using `zod` for attributes: `id` (uuid/string), `name` (string), `brand` (optional string), `servingSize` (number), `calories` (number), `protein` (number), `carbs` (number), `fat` (number), `micros` (optional record of string -> number), `isCustom` (boolean), `createdAt` (timestamp).
-* [ ] **Step 2.2:** In `src/schemas/meal.schema.ts`, define `MealItemSchema` (references `foodId`, `amountInGrams`, and computed macros) and `MealSchema` (`id`, `date` string YYYY-MM-DD, `mealType` enum [breakfast, lunch, dinner, snack], `items` array, `totalCalories`, `totalProtein`, `totalCarbs`, `totalFat`).
-* [ ] **Step 2.3:** In `src/schemas/workout.schema.ts`, define `SetSchema` (reps, weight, rpe) and `WorkoutSchema` (`id`, `date` string YYYY-MM-DD, `title` string, `type` enum [strength, cardio, other], `durationMinutes` number, `caloriesBurned` optional number, `sets` array).
-* [ ] **Step 2.4:** In `src/schemas/dailyLog.schema.ts` and `src/schemas/profile.schema.ts`, define schemas for daily target trackers, weight logs, and user profile parameters (target calories, target macros).
-* [ ] **Step 2.5:** In `src/schemas/backup.schema.ts`, define `BackupPayloadSchema` aggregating all table arrays (`version`, `exportedAt`, `foods`, `meals`, `workouts`, `dailyLogs`, `profile`).
-* [ ] **Step 2.6:** In `src/types/index.ts`, export inferred TypeScript types from all Zod schemas using `z.infer<typeof ...>`.
-* [ ] **Verification:** Run `npx tsc --noEmit` to verify type inference and exports across the schema layer.
+* [x] **Step 2.1:** In `src/schemas/food.schema.ts`, define `FoodSchema` using `zod` for attributes: `id` (uuid/string), `name` (string), `brand` (optional string), `servingSize` (number), `calories` (number), `protein` (number), `carbs` (number), `fat` (number), `micros` (optional record of string -> number), `isCustom` (boolean), `createdAt` (timestamp).
+* [x] **Step 2.2:** In `src/schemas/meal.schema.ts`, define `MealItemSchema` (references `foodId`, `amountInGrams`, and computed macros) and `MealSchema` (`id`, `date` string YYYY-MM-DD, `mealType` enum [breakfast, lunch, dinner, snack], `items` array, `totalCalories`, `totalProtein`, `totalCarbs`, `totalFat`).
+* [x] **Step 2.3:** In `src/schemas/workout.schema.ts`, define `SetSchema` (reps, weight, rpe) and `WorkoutSchema` (`id`, `date` string YYYY-MM-DD, `title` string, `type` enum [strength, cardio, other], `durationMinutes` number, `caloriesBurned` optional number, `sets` array).
+* [x] **Step 2.4:** In `src/schemas/dailyLog.schema.ts` and `src/schemas/profile.schema.ts`, define schemas for daily target trackers, weight logs, and user profile parameters (target calories, target macros).
+* [x] **Step 2.5:** In `src/schemas/backup.schema.ts`, define `BackupPayloadSchema` aggregating all table arrays (`version`, `exportedAt`, `foods`, `meals`, `workouts`, `dailyLogs`, `profile`).
+* [x] **Step 2.6:** In `src/types/index.ts`, export inferred TypeScript types from all Zod schemas using `z.infer<typeof ...>`.
+* [ ] **Verification:** Run `npx tsc --noEmit` to verify type inference and exports across the schema layer. (Pending: run `pnpm install` to add Zod to the lockfile and node_modules.)
 
 #### Phase 3: Dexie.js Database & Storage Persistence Subsystem
 
