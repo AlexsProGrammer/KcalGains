@@ -21,7 +21,9 @@ export function StorageStatus() {
       <CardContent>
         <div className="flex items-center gap-2 font-medium text-slate-200">
           <StatusIcon className={isPersisted ? 'h-4 w-4 text-emerald-400' : 'h-4 w-4 text-amber-400'} aria-hidden="true" />
-          <span>{statusLabel}</span>
+          <span className={`rounded-full border px-2 py-0.5 text-xs ${isPersisted ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}>
+            {statusLabel}
+          </span>
         </div>
         <p className="mt-2">Usage: {formatMegabytes(quotaUsageBytes)} / {formatMegabytes(quotaTotalBytes)}</p>
       </CardContent>

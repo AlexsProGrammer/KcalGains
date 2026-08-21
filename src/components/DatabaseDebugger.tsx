@@ -1,4 +1,10 @@
 import { db } from '@/db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Database, FlaskConical, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { Alert } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { exportDatabaseToJson, importDatabaseFromJson } from '@/services/backupService'
 import type { Food, Meal } from '@/types'
 
@@ -60,4 +66,130 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
 
   const [foodCount, mealCount] = await Promise.all([db.foods.count(), db.meals.count()])
   return foodCount === 10 && mealCount === 2 && result.counts.foods === 10 && result.counts.meals === 2
+}
+
+const emptyCounts = { foods: 0, meals: 0, workouts: 0, dailyLogs: 0, profile: 0 }
+
+export function DatabaseDebugger() {
+  const [message, setMessage] = useState<string | null>(null)
+  const liveData = useLiveQuery(async () => ({
+    counts: {
+      foods: await db.foods.count(),
+      meals: await db.meals.count(),
+      workouts: await db.workouts.count(),
+      dailyLogs: await db.dailyLogs.count(),
+      profile: await db.profile.count(),
+    },
+    foods: await db.foods.orderBy('createdAt').reverse().limit(5).toArray(),
+    meals: await db.meals.orderBy('date').reverse().limit(5).toArray(),
+  }), [], { counts: emptyCounts, foods: [], meals: [] })
+
+  async function seedFoods() {
+    const foods: Food[] = Array.from({ length: 5 }, (_, index) => ({
+      id: crypto.randomUUID(),
+      name: `Test food ${index + 1}`,
+      servingSize: 100,
+      calories: 100 + index * 20,
+      protein: 10 + index,
+      carbs: 12,
+      fat: 4,
+      isCustom: true,
+      createdAt: new Date(),
+    }))
+
+    await db.foods.bulkAdd(foods)
+    setMessage('Seeded 5 test foods.')
+  }
+
+  async function seedMeal() {
+    const food = await db.foods.toCollection().first()
+
+    if (!food) {
+      setMessage('Seed foods before creating a test meal.')
+      return
+    }
+
+    const meal: Meal = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString().slice(0, 10),
+      mealType: 'lunch',
+      items: [{
+        foodId: food.id,
+        amountInGrams: 100,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat,
+      }],
+      totalCalories: food.calories,
+      totalProtein: food.protein,
+      totalCarbs: food.carbs,
+      totalFat: food.fat,
+    }
+
+    await db.meals.add(meal)
+    setMessage('Seeded 1 test meal.')
+  }
+
+  async function clearDatabase() {
+    await Promise.all([
+      db.foods.clear(),
+      db.meals.clear(),
+      db.workouts.clear(),
+      db.dailyLogs.clear(),
+      db.profile.clear(),
+    ])
+    setMessage('Cleared all IndexedDB tables.')
+  }
+
+  const counts = liveData?.counts ?? emptyCounts
+
+  return (
+    <Card>
+      <CardHeader icon={<Database />} title="Database debugger" />
+      <CardContent>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" size="sm" onClick={() => void seedFoods()}>
+            <FlaskConical className="mr-2 h-4 w-4" aria-hidden="true" />
+            Seed 5 foods
+          </Button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => void seedMeal()}>
+            <FlaskConical className="mr-2 h-4 w-4" aria-hidden="true" />
+            Seed 1 meal
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => void clearDatabase()}>
+            <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            Clear database
+          </Button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {Object.entries(counts).map(([table, count]) => (
+            <div key={table} className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">{table}</p>
+              <p className="mt-1 text-xl font-semibold text-slate-100">{count}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Live foods</h3>
+            <ul className="mt-2 space-y-1 text-sm text-slate-300">
+              {liveData?.foods.map((food) => <li key={food.id}>{food.name}</li>)}
+              {liveData?.foods.length === 0 ? <li className="text-slate-600">No foods yet</li> : null}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Live meals</h3>
+            <ul className="mt-2 space-y-1 text-sm text-slate-300">
+              {liveData?.meals.map((meal) => <li key={meal.id}>{meal.date} · {meal.mealType}</li>)}
+              {liveData?.meals.length === 0 ? <li className="text-slate-600">No meals yet</li> : null}
+            </ul>
+          </div>
+        </div>
+        {message ? <Alert className="mt-4" variant="info">{message}</Alert> : null}
+      </CardContent>
+    </Card>
+  )
 }

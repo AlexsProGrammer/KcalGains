@@ -132,16 +132,16 @@ npx tailwindcss init -p
 
 #### Phase 5: Reactive UI Shell & Developer Dashboard
 
-* [ ] **Step 5.1:** In `src/components/DatabaseDebugger.tsx`, build a developer test-harness utilizing `useLiveQuery` to display real-time table record counts and live tables.
-* [ ] **Step 5.2:** Add action buttons in the debugger to:
+* [x] **Step 5.1:** In `src/components/DatabaseDebugger.tsx`, build a developer test-harness utilizing `useLiveQuery` to display real-time table record counts and live tables.
+* [x] **Step 5.2:** Add action buttons in the debugger to:
 * Seed 5 test food items.
 * Seed 1 test meal.
 * Clear all IndexedDB tables.
 
 
-* [ ] **Step 5.3:** In `src/components/StorageStatus.tsx`, display storage quota in Megabytes (MB) and show a badge indicating if persistent storage is granted or unsupported.
-* [ ] **Step 5.4:** In `src/App.tsx`, assemble the layout: Header, `StorageStatus`, `BackupManager`, and `DatabaseDebugger`.
-* [ ] **Verification:** Run `npm run dev`, open the browser console, insert test items via the UI, verify records increment immediately via `useLiveQuery`, export the JSON, wipe data, import JSON, and confirm instant re-render.
+* [x] **Step 5.3:** In `src/components/StorageStatus.tsx`, display storage quota in Megabytes (MB) and show a badge indicating if persistent storage is granted or unsupported.
+* [x] **Step 5.4:** In `src/App.tsx`, assemble the layout: Header, `StorageStatus`, `BackupManager`, and `DatabaseDebugger`.
+* [ ] **Verification:** Run `npm run dev`, open the browser console, insert test items via the UI, verify records increment immediately via `useLiveQuery`, export the JSON, wipe data, import JSON, and confirm instant re-render. (Pending browser runtime verification.)
 
 ---
 

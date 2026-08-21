@@ -3,6 +3,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { BackupManager } from '@/components/BackupManager'
+import { DatabaseDebugger } from '@/components/DatabaseDebugger'
 import { StorageStatus } from '@/components/StorageStatus'
 
 function App() {
@@ -43,6 +44,10 @@ function App() {
 
         <section className="mt-4 max-w-2xl">
           <BackupManager />
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <DatabaseDebugger />
         </section>
       </div>
     </main>
