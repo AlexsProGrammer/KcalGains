@@ -12,6 +12,7 @@ import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
 import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
 import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
+import { WeightLoggerCard } from '@/components/analytics/WeightLoggerCard'
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
         <section className="mt-4 grid gap-4 lg:grid-cols-2">
           <WorkoutLoggerCard />
           <div className="space-y-4">
+            <WeightLoggerCard />
             <TdeeStatsCard />
             <WeightTrendChart />
           </div>
