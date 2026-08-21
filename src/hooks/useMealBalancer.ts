@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BalancerInputSchema } from '@/schemas/balancer.schema'
-import { solveMealBalance } from '@/services/lpSolverService'
+import { autoBalanceMeal, solveMealBalance } from '@/services/lpSolverService'
 import type { BalancerResult, IngredientConstraint, MacroTarget } from '@/types/balancer.types'
 import type { Food } from '@/types'
 
@@ -15,6 +15,7 @@ export type MealBalancerState = {
   updateConstraint: (foodId: string, updates: Partial<Omit<IngredientConstraint, 'foodId'>>) => void
   setTargets: (updates: Partial<MacroTarget>) => void
   recalculate: () => void
+  autoBalance: (proteinFocus?: number) => void
 }
 
 const defaultTargets: MacroTarget = {
@@ -69,6 +70,15 @@ export function useMealBalancer(initialTargets: Partial<MacroTarget> = {}): Meal
     }
   }
 
+  function autoBalance(proteinFocus = 50) {
+    if (constraints.length === 0) {
+      setResult(undefined)
+      return
+    }
+    const input = BalancerInputSchema.parse({ targets, ingredients: constraints })
+    setResult(autoBalanceMeal(input, foodCatalog, proteinFocus))
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(recalculate, 150)
     return () => window.clearTimeout(timeout)
@@ -76,6 +86,7 @@ export function useMealBalancer(initialTargets: Partial<MacroTarget> = {}): Meal
 
   return {
     addFood,
+    autoBalance,
     constraints,
     isCalculating,
     recalculate,

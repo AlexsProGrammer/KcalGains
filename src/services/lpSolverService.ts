@@ -20,7 +20,7 @@ function quantizeGrams(grams: number, stepSize?: number): number {
   return Math.max(0, Math.round(grams / step) * step)
 }
 
-function buildResult(
+export function buildResult(
   input: BalancerInput,
   foodCatalog: Map<string, Food>,
   solvedValues: Map<string, number>,
@@ -88,6 +88,57 @@ export function solveMealBalance(input: BalancerInput, foodCatalog: Map<string, 
   }
 
   const result = buildResult(input, foodCatalog, solvedValues, 'bounded')
+  return isCloseToTarget(result) ? { ...result, status: 'feasible' } : result
+}
+
+export function autoBalanceMeal(input: BalancerInput, foodCatalog: Map<string, Food>, proteinFocus = 50): BalancerResult {
+  const grams = new Map(input.ingredients.map((ingredient) => [ingredient.foodId, ingredient.minGrams]))
+  const weights = {
+    calories: 0.5 + proteinFocus / 200,
+    protein: 0.5 + (100 - proteinFocus) / 100,
+    carbs: 0.5,
+    fat: 0.5,
+  }
+
+  function score(current: Map<string, number>): number {
+    const totals = input.ingredients.reduce((sum, ingredient) => {
+      const food = foodCatalog.get(ingredient.foodId)
+      return food ? addMacroTotals(sum, calculateFoodMacros(food, current.get(ingredient.foodId) ?? 0)) : sum
+    }, { ...emptyTotals })
+
+    return macroNames.reduce((total, macro) => total + weights[macro] * Math.abs(totals[macro] - input.targets[macro]) / Math.max(input.targets[macro], 1), 0)
+  }
+
+  let currentScore = score(grams)
+  let improved = true
+  while (improved) {
+    improved = false
+    let bestScore = currentScore
+    let bestFoodId: string | undefined
+    let bestGrams = 0
+
+    for (const ingredient of input.ingredients) {
+      const currentGrams = grams.get(ingredient.foodId) ?? ingredient.minGrams
+      const step = ingredient.stepSize ?? 1
+      if (currentGrams + step > ingredient.maxGrams) continue
+      grams.set(ingredient.foodId, currentGrams + step)
+      const candidateScore = score(grams)
+      grams.set(ingredient.foodId, currentGrams)
+      if (candidateScore + 0.000001 < bestScore) {
+        bestScore = candidateScore
+        bestFoodId = ingredient.foodId
+        bestGrams = currentGrams + step
+      }
+    }
+
+    if (bestFoodId) {
+      grams.set(bestFoodId, bestGrams)
+      currentScore = bestScore
+      improved = true
+    }
+  }
+
+  const result = buildResult(input, foodCatalog, grams, 'bounded')
   return isCloseToTarget(result) ? { ...result, status: 'feasible' } : result
 }
 
