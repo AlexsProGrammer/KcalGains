@@ -4,7 +4,9 @@ import { DailyLogSchema } from '@/schemas/dailyLog.schema'
 import { FoodSchema } from '@/schemas/food.schema'
 import { MealItemSchema, MealSchema } from '@/schemas/meal.schema'
 import { ProfileSchema } from '@/schemas/profile.schema'
-import { SetSchema, WorkoutSchema } from '@/schemas/workout.schema'
+import { ExerciseDefinitionSchema, ExerciseSetSchema, LoggedExerciseSchema, SetSchema, WorkoutLogSchema, WorkoutSchema } from '@/schemas/workout.schema'
+import { WeightEntrySchema } from '@/schemas/weightLog.schema'
+import { TdeeCalculationResultSchema } from '@/schemas/tdee.schema'
 import { PromptContextSchema } from '@/schemas/aiPrompt.schema'
 import { AiMealItemSchema, AiMealResponseSchema } from '@/schemas/aiResponse.schema'
 
@@ -19,3 +21,9 @@ export type BackupPayload = z.infer<typeof BackupPayloadSchema>
 export type PromptContext = z.infer<typeof PromptContextSchema>
 export type AiMealItem = z.infer<typeof AiMealItemSchema>
 export type AiMealResponse = z.infer<typeof AiMealResponseSchema>
+export type ExerciseDefinition = z.infer<typeof ExerciseDefinitionSchema>
+export type ExerciseSet = z.infer<typeof ExerciseSetSchema>
+export type LoggedExercise = z.infer<typeof LoggedExerciseSchema>
+export type WorkoutLog = z.infer<typeof WorkoutLogSchema>
+export type WeightEntry = z.infer<typeof WeightEntrySchema>
+export type TdeeCalculationResult = z.infer<typeof TdeeCalculationResultSchema>

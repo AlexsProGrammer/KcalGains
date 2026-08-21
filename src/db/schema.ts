@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { DailyLog, Food, Meal, Profile, Workout } from '@/types'
+import type { DailyLog, ExerciseDefinition, Food, Meal, Profile, WeightEntry, Workout } from '@/types'
 
 export class FitnessTrackerDB extends Dexie {
   foods!: Table<Food, string>
@@ -7,6 +7,8 @@ export class FitnessTrackerDB extends Dexie {
   workouts!: Table<Workout, string>
   dailyLogs!: Table<DailyLog, string>
   profile!: Table<Profile, string>
+  weightLogs!: Table<WeightEntry, string>
+  exerciseDefinitions!: Table<ExerciseDefinition, string>
 
   constructor() {
     super('KcalGains')
@@ -25,6 +27,16 @@ export class FitnessTrackerDB extends Dexie {
       workouts: 'id, date, type',
       dailyLogs: 'id, date',
       profile: 'id',
+    })
+
+    this.version(3).stores({
+      foods: 'id, name, brand, barcode, isCustom, createdAt',
+      meals: 'id, date, mealType, [date+mealType]',
+      workouts: 'id, date, type',
+      dailyLogs: 'id, date',
+      profile: 'id',
+      weightLogs: 'id, date',
+      exerciseDefinitions: 'id, name, category',
     })
   }
 }

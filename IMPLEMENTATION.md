@@ -1,20 +1,21 @@
-# IMPLEMENTATION.md - Part 4: Clipboard AI Bridge & Smart Ingestion/Validation Engine
+# IMPLEMENTATION.md - Part 5: Hybrid Workout Logger & Dynamic TDEE Engine
 
 ## 1. Project Context & Architecture
 
 ### Goal
-Implement a zero-backend, privacy-first AI bridge and resilient data ingestion engine. This module allows users to generate structured, context-aware prompt templates (containing remaining daily macros, dietary preferences, and logged pantry foods) for external LLMs (Gemini/ChatGPT), and provides a clipboard listener/paste parser that validates and ingests AI-generated meals and full data snapshots directly into Dexie.js using strict Zod schemas.
+Implement a lightweight local workout logging module (supporting strength exercises, sets, reps, weight, RPE, and cardio durations) and couple it directly to the nutrition engine. This part introduces an adaptive Exponential Moving Average (EMA) algorithm that computes true energy expenditure (TDEE) from daily scale weights and calorie logs, and automatically adjusts daily macronutrient targets on workout days.
 
 ### Tech Stack & Dependencies
 - **Runtime & Framework:** TypeScript (v5.5+), React 19, Vite (from Part 1)
-- **Validation & Parsing:** `zod` (v3+)
-- **Storage & State:** `dexie` (v4+), `dexie-react-hooks` (from Part 1)
-- **UI & Interaction:** `lucide-react`, Tailwind CSS, `radix-ui` toast/dialog
-- **Clipboard & File Utilities:** Browser Native Async Clipboard API (`navigator.clipboard`), Native File API
+- **Local Persistence & State:** `dexie` (v4+), `dexie-react-hooks` (from Part 1)
+- **Data Visualization:** `recharts` (v2.12+)
+- **Validation:** `zod` (v3+)
+- **UI & Icons:** `lucide-react`, Tailwind CSS, `radix-ui` tabs/slider/dialog
 
 #### Installation Commands:
 ```bash
-npm install clsx tailwind-merge
+npm install recharts
+npm install -D @types/recharts
 
 ```
 
@@ -23,115 +24,134 @@ npm install clsx tailwind-merge
 ```text
 src/
 ├── schemas/
-│   ├── aiPrompt.schema.ts
-│   └── aiResponse.schema.ts
+│   ├── workout.schema.ts
+│   ├── weightLog.schema.ts
+│   └── tdee.schema.ts
+├── db/
+│   ├── workoutRepository.ts
+│   └── metricsRepository.ts
 ├── services/
-│   ├── promptSynthesizerService.ts
-│   ├── aiResponseParserService.ts
-│   └── clipboardService.ts
+│   ├── tdeeEngineService.ts
+│   ├── volumeCalculatorService.ts
+│   └── dynamicTargetService.ts
 ├── hooks/
-│   ├── useAiPromptGenerator.ts
-│   └── useAiIngestion.ts
+│   ├── useWorkoutLogger.ts
+│   ├── useWeightTrends.ts
+│   └── useDynamicTargets.ts
 ├── components/
-│   └── ai-bridge/
-│       ├── AiBridgeContainer.tsx
-│       ├── PromptGeneratorModal.tsx
-│       ├── PromptCopyCard.tsx
-│       ├── AiPasteModal.tsx
-│       ├── IngestionPreviewTable.tsx
-│       └── SchemaValidationAlert.tsx
+│   ├── workout/
+│   │   ├── WorkoutLoggerCard.tsx
+│   │   ├── ExerciseSetTable.tsx
+│   │   ├── ExercisePickerModal.tsx
+│   │   ├── RestTimerOverlay.tsx
+│   │   └── WorkoutSummaryModal.tsx
+│   ├── analytics/
+│   │   ├── WeightTrendChart.tsx
+│   │   ├── TdeeStatsCard.tsx
+│   │   ├── CalorieDeficitChart.tsx
+│   │   └── MacroDistributionRadar.tsx
+│   └── dashboard/
+│       └── DynamicTargetBanner.tsx
 └── utils/
-    └── promptTemplates.ts
+    ├── mathCalculations.ts
+    └── emaCalculations.ts
 
 ```
 
 ### Attention Points & DSGVO
 
-* **100% Client-Side Prompt Composition:** All prompt generation and text ingestion happen locally in memory. No user dietary records, weights, or food data are sent to any intermediate proxy server.
-* **Zero API Key Overhead:** Avoid costly third-party API keys and token consumption by utilizing standard copy-paste protocols between the PWA and the user's preferred LLM web interface or app.
-* **Robust Schema Sandboxing:** External AI outputs are non-deterministic and prone to syntax errors (e.g., Markdown wrapping `json ... `, trailing commas, missing units). The parser must sanitize raw LLM text, strip markdown blocks, and parse through Zod before committing any record to IndexedDB.
-* **Atomic Dexie Transactions:** Multi-item meals or database snapshots parsed from AI imports must be written atomically to ensure partial failures do not leave IndexedDB in an inconsistent state.
+* **Zero Cloud Fitness Sync:** All health and workout data (weight, volume, heart rate/calories, exercise names) remain strictly on-device in IndexedDB. No external fitness APIs (Apple HealthKit / Google Health Connect) are queried in this phase.
+* **Adaptive EMA Weight Smoothing:** Daily body weight fluctuates up to $\pm 2\text{ kg}$ due to water retention and glycogen storage. The TDEE calculation must never use single-day raw weight, but rather an Exponential Moving Average:
+
+$$\text{EMA}_{\text{today}} = \alpha \cdot \text{Weight}_{\text{today}} + (1 - \alpha) \cdot \text{EMA}_{\text{yesterday}} \quad (\alpha \approx 0.1 \text{ to } 0.2)$$
+
+
+* **Caloric Balance Inversion:** Caloric expenditure calculation over a 14–28 day rolling window:
+
+$$\text{TDEE}_{\text{avg}} = \text{Calories}_{\text{avg}} - \left( \frac{\Delta \text{EMA Weight (kg)} \times 7700\text{ kcal}}{N \text{ days}} \right)$$
+
+
+* **Zero Stutter Data Rendering:** Use optimized SVG path rendering via `recharts` with debounced time-series downsampling to ensure smooth 60fps chart interactions on mobile viewports.
 
 ---
 
 ## 2. Execution Phases
 
-#### Phase 1: AI Prompt & Response Schema Contracts
+#### Phase 1: Schemas & Database Extensions
 
-* [x] **Step 1.1:** In `src/schemas/aiPrompt.schema.ts`, define `PromptContextSchema` containing:
-* `remainingMacros`: `{ calories: number, protein: number, carbs: number, fat: number }`
-* `mealType`: enum `['breakfast', 'lunch', 'dinner', 'snack', 'flexible']`
-* `pantryFoods`: array of string (names of available food items)
-* `dietaryPreferences`: array of string (e.g., `['vegan', 'high-protein', 'low-sugar']`)
-* `maxIngredients`: optional number (default 4)
-
-
-* [x] **Step 1.2:** In `src/schemas/aiResponse.schema.ts`, define `AiMealItemSchema` (`name`, `grams`, `calories`, `protein`, `carbs`, `fat`) and `AiMealResponseSchema`:
-* `title`: string (e.g., "Post-Workout High-Protein Quark Bowl")
-* `description`: optional string
-* `items`: array of `AiMealItemSchema` (min 1)
-* `totalCalories`: number
-* `totalProtein`: number
-* `totalCarbs`: number
-* `totalFat`: number
+* [x] **Step 1.1:** In `src/schemas/workout.schema.ts`, expand schemas for:
+* `ExerciseDefinitionSchema`: `id` (uuid), `name` (string), `category` (enum: `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`), `defaultRestSeconds` (number).
+* `ExerciseSetSchema`: `setId` (string), `setNumber` (number), `type` (enum: `warmup`, `normal`, `drop`, `failure`), `weightKg` (number), `reps` (number), `rpe` (optional number 1–10), `isCompleted` (boolean).
+* `LoggedExerciseSchema`: `exerciseId` (string), `exerciseName` (string), `sets` (array of `ExerciseSetSchema`), `notes` (optional string).
+* `WorkoutLogSchema`: `id` (uuid), `date` (string YYYY-MM-DD), `startTime` (timestamp), `endTime` (optional timestamp), `title` (string), `exercises` (array of `LoggedExerciseSchema`), `estimatedCaloriesBurned` (optional number).
 
 
-* [x] **Step 1.3:** In `src/types/index.ts`, export inferred TypeScript types `PromptContext`, `AiMealItem`, and `AiMealResponse`.
-* [ ] **Verification:** Run `npx tsc --noEmit` to confirm all schema contracts compile cleanly without type mismatches. (Editor diagnostics are clean; command verification pending.)
+* [x] **Step 1.2:** In `src/schemas/weightLog.schema.ts`, define `WeightEntrySchema` (`id`, `date` YYYY-MM-DD, `weightKg`, `smoothedWeightKg`, `note`).
+* [x] **Step 1.3:** In `src/schemas/tdee.schema.ts`, define `TdeeCalculationResultSchema` (`calculatedTdee`, `trendDirection`, `weeklyWeightDeltaKg`, `confidenceScore`, `recommendedIntake`).
+* [x] **Step 1.4:** In `src/db/schema.ts`, add the v3 migration with `weightLogs` (`id, date`), `exerciseDefinitions`, and a pre-seeded local exercise library of 30 standard gym movements.
+* [ ] **Verification:** Run `npx tsc --noEmit` and execute schema migration tests to ensure database opens without data loss. (Pending runtime verification.)
 
-#### Phase 2: Prompt Synthesizer & Clipboard Service
+#### Phase 2: Math & TDEE Calculation Subsystem
 
-* [x] **Step 2.1:** In `src/utils/promptTemplates.ts`, construct the system prompt template engineered for Gemini and ChatGPT:
-* Enforce explicit instructions for the AI to respond **exclusively** with a raw JSON block matching `AiMealResponseSchema`.
-* Include example input/output schema definitions and instruction to calculate accurate grams based on real macronutrient densities ($4\text{ kcal/g}$ for P & C, $9\text{ kcal/g}$ for F).
-
-
-* [x] **Step 2.2:** In `src/services/promptSynthesizerService.ts`, implement `generatePrompt(context: PromptContext): string`:
-* Dynamically inject remaining daily deficits and available pantry ingredients into the prompt template.
-* Return the sanitized, ready-to-paste prompt string.
+* [ ] **Step 2.1:** In `src/utils/emaCalculations.ts`, implement `calculateWeightEMA(entries: WeightEntry[], smoothingFactor = 0.1)`:
+* Sort entries chronologically.
+* Compute the weighted exponential trend line and backfill missing day gaps via linear interpolation.
 
 
-* [x] **Step 2.3:** In `src/services/clipboardService.ts`, implement `copyToClipboard(text: string): Promise<boolean>` and `readFromClipboard(): Promise<string>` with permission fallback handlers for non-supported browsers.
-* [x] **Step 2.4:** In `src/hooks/useAiPromptGenerator.ts`, create a React hook that reads today's target deficits from Dexie `dailyLogs` and exports the generated prompt to the clipboard.
-* [ ] **Verification:** Invoke `generatePrompt()` with mock deficits (e.g., 40g Protein, 500 kcal) and verify the generated string contains the correct schema structure and numerical parameters. (Pending browser/clipboard runtime verification.)
-
-#### Phase 3: AI Output Sanitizer & Zod Ingestion Pipeline
-
-* [x] **Step 3.1:** In `src/services/aiResponseParserService.ts`, implement `extractJsonFromText(rawText: string): string`:
-* Strip markdown formatting fences (e.g., `json ... ` or `...`).
-* Use regular expressions to extract the outermost JSON object `{ ... }` from surrounding explanatory text.
-* Clean up common LLM syntax anomalies (e.g., unescaped newlines, trailing commas).
+* [ ] **Step 2.2:** In `src/services/tdeeEngineService.ts`, implement `computeAdaptiveTDEE(weightLogs: WeightEntry[], dailyCalorieLogs: DailyLog[], windowDays = 21)`:
+* Calculate average daily caloric intake over the window.
+* Calculate smoothed weight change ($\Delta \text{EMA Weight}$) over the window.
+* Convert weight delta into caloric surplus/deficit using the standard $7700\text{ kcal/kg}$ adipose tissue energy constant.
+* Compute raw TDEE and compute confidence score based on the number of days logged (minimum 7 days required for baseline confidence).
 
 
-* [x] **Step 3.2:** In `src/services/aiResponseParserService.ts`, implement `parseAndValidateAiResponse(rawText: string)`:
-* Run JSON extraction and parse into a JavaScript object.
-* Execute `AiMealResponseSchema.safeParse()`.
-* Return `{ success: true, data: AiMealResponse }` or `{ success: false, errors: string[] }`.
+* [ ] **Step 2.3:** In `src/services/volumeCalculatorService.ts`, implement workout aggregation helpers:
+* `calculateTotalVolume(workout: WorkoutLog): number` ($\sum \text{reps} \times \text{weightKg}$).
+* `calculateEstimated1RM(weightKg: number, reps: number): number` using the Brzycki formula:
+
+$$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
 
 
-* [x] **Step 3.3:** In `src/services/aiResponseParserService.ts`, implement `resolveAndLinkFoods(aiMeal: AiMealResponse, db: FitnessTrackerDB)`:
-* For each ingredient in `aiMeal.items`, search existing `foods` table by name.
-* If food exists, link its `foodId`; if not, flag as a new custom food to be automatically registered in Dexie.
 
 
-* [x] **Step 3.4:** In `src/hooks/useAiIngestion.ts`, implement stateful workflow handling raw text input, real-time validation feedback, parsed preview state, and committing confirmed meals to Dexie.
-* [ ] **Verification:** Pass a messy LLM response string (containing conversational intro, markdown code blocks, and valid JSON) to `parseAndValidateAiResponse()`, verifying successful parsing into typed data. (Pending parser/browser runtime verification.)
-
-#### Phase 4: UI Components & Ingestion Workflow
-
-* [x] **Step 4.1:** In `src/components/ai-bridge/PromptGeneratorModal.tsx`, build a configuration dialog allowing users to adjust prompt parameters (target meal type, remaining macros, pantry food selection) with a prominent "Copy Prompt for Gemini/ChatGPT" button.
-* [x] **Step 4.2:** In `src/components/ai-bridge/PromptCopyCard.tsx`, display a copy confirmation toast and a quick step-by-step indicator (*"1. Paste into Gemini -> 2. Copy Gemini's reply -> 3. Paste back here"*).
-* [x] **Step 4.3:** In `src/components/ai-bridge/AiPasteModal.tsx`, create a pasteboard dialog featuring an auto-paste button (`navigator.clipboard.readText()`), a manual textarea fallback, and instant validation status badges.
-* [x] **Step 4.4:** In `src/components/ai-bridge/IngestionPreviewTable.tsx`, render the parsed meal:
-* Itemized food names, computed gram amounts, and individual macros.
-* Indicator showing whether an item will be linked to an existing food or created as a new library item.
-* Editable gram inputs allowing the user to tweak values before committing.
-* "Log Meal & Save Foods" submit button.
+* [ ] **Step 2.4:** In `src/services/dynamicTargetService.ts`, implement `getAdjustedDailyTargets(baseProfile: UserProfile, isWorkoutDay: boolean, workoutType?: string)`:
+* If `isWorkoutDay` is true, add configured delta (e.g., $+40\text{g}$ carbohydrates, $+10\text{g}$ protein, $+250\text{ kcal}$) to base nutritional target.
 
 
-* [x] **Step 4.5:** In `src/components/ai-bridge/SchemaValidationAlert.tsx`, render descriptive, friendly error alerts when LLM outputs are invalid.
-* [x] **Step 4.6:** In `src/components/ai-bridge/AiBridgeContainer.tsx`, integrate the modals and quick-access buttons into the main dashboard navigation.
-* [ ] **Verification:** Open `AiPasteModal`, paste a valid mock AI JSON payload, verify `IngestionPreviewTable` renders all items accurately, and clicking "Log Meal" commits the record to the Dexie `meals` table. (Pending browser runtime verification.)
+* [ ] **Verification:** Write unit test feeding 14 days of 2500 kcal intake with a steady 0.5 kg weight drop, confirming calculated TDEE outputs approximately $2775\text{ kcal/day} \pm 25\text{ kcal}$.
+
+#### Phase 3: Workout Logger & State Hooks
+
+* [ ] **Step 3.1:** In `src/db/workoutRepository.ts`, implement CRUD operations for active and completed workouts.
+* [ ] **Step 3.2:** In `src/hooks/useWorkoutLogger.ts`, build state management for:
+* Active workout session (persisted in local state to survive page refreshes).
+* Add/remove exercise, add/remove set, toggle set completion.
+* Auto-trigger rest countdown timer on set completion.
+* "Finish Workout" action that writes final data to Dexie `workouts` table and updates `dailyLogs` for that date.
+
+
+* [ ] **Step 3.3:** In `src/hooks/useWeightTrends.ts`, implement reactive queries pulling weight logs and computing dynamic EMA time-series for chart consumption.
+* [ ] **Step 3.4:** In `src/hooks/useDynamicTargets.ts`, combine user profile targets with today's logged workouts to supply the active macro targets to the Part 3 Balancer and Part 4 AI Bridge.
+* [ ] **Verification:** Log a 3-set bench press workout in a test harness; verify set completion updates total volume and saves to Dexie reactively.
+
+#### Phase 4: UI Components & Dashboard Integration
+
+* [ ] **Step 4.1:** In `src/components/workout/ExerciseSetTable.tsx`, build a mobile-optimized table with numeric inputs for weight, reps, RPE, and a one-tap checkmark button for set completion.
+* [ ] **Step 4.2:** In `src/components/workout/RestTimerOverlay.tsx`, build a floating countdown badge that plays a local chime/vibration when rest time elapses.
+* [ ] **Step 4.3:** In `src/components/workout/ExercisePickerModal.tsx`, build a categorized search interface to select movements or create custom exercises.
+* [ ] **Step 4.4:** In `src/components/analytics/WeightTrendChart.tsx`, build a dual-line chart (Recharts `ResponsiveContainer`, `LineChart`, `Line`, `Tooltip`, `XAxis`, `YAxis`) displaying:
+* Raw daily weight dots (semi-transparent scatter dots).
+* Continuous EMA smoothed trend line (bold primary color line).
+
+
+* [ ] **Step 4.5:** In `src/components/analytics/TdeeStatsCard.tsx`, render:
+* Live calculated TDEE readout (e.g., `2,640 kcal/day`).
+* True daily surplus/deficit indicator.
+* Confidence rating badge ("Calibrating: 5/14 days" or "Calibrated").
+
+
+* [ ] **Step 4.6:** In `src/components/dashboard/DynamicTargetBanner.tsx`, render a dynamic banner on the main dashboard showing: *"Workout Day: Macro targets adjusted (+40g Carbs)"*.
+* [ ] **Verification:** In the UI, log weight for 3 consecutive days, complete a workout, and verify both the Weight Chart renders the smoothed line and the dashboard macro target dynamically updates.
 
 ---
 
@@ -139,7 +159,7 @@ src/
 
 ### Critical Path Edge Cases
 
-1. **Conversational LLM Text Wrapping:** Test pasting an output starting with *"Sure, here is your high protein meal plan:"* followed by code fences. Ensure the JSON extractor isolates the JSON body and parses successfully.
-2. **Missing/Corrupted Macronutrient Fields:** Test pasting an AI response where `totalFat` is missing or `grams` is provided as a string with units (e.g., `"150g"` instead of `150`). Verify the sanitizer coerces strings or flags the exact validation error without throwing runtime crashes.
-3. **Clipboard Permission Block:** Deny clipboard reading permissions in browser settings. Verify the UI smoothly falls back to the manual textarea input without unhandled promise rejections.
-4. **Duplicate Food Creation Prevention:** Ingest an AI meal containing "Haferflocken" when "Haferflocken" is already present in the local database. Verify the resolver links to the existing database record rather than creating a duplicate entry.
+1. **Missing Weight Days:** Log weight on Day 1 and Day 5 (skipping Days 2, 3, 4). Verify that `calculateWeightEMA()` handles the time gap without dividing by zero, crashing, or distorting the EMA curvature.
+2. **In-Progress Workout Recovery:** Start a workout, log 2 sets, close the browser tab, and reopen the application. Verify that the active workout state restores without data loss.
+3. **Extreme Outlier Scale Readings:** Input a weight value with an accidental typo (e.g., 8.0 kg instead of 80.0 kg). Verify the Zod schema rejects inputs outside valid biological bounds ($30\text{ kg} - 350\text{ kg}$) before it corrupts the EMA curve.
+4. **Target Synchronization Across Modules:** Log a workout on the current date, then navigate to Part 3 (Meal Balancer) and Part 4 (AI Prompt Synthesizer). Confirm both modules automatically receive the elevated workout-day macro targets without manual re-entry.
