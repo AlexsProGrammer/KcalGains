@@ -137,12 +137,12 @@ npx cap init "Quirin Fitti" "com.quirin.fitti" --web-dir "dist"
 
 #### Phase 4: Zero-Leak DSGVO Network Audit
 
-* [ ] **Step 4.1:** Verify that all icons in `src/components/` are imported from `lucide-react` (SVG inlined into JS bundles) and not from external CDNs.
-* [ ] **Step 4.2:** In `src/main.tsx`, ensure `@fontsource-variable/inter` is loaded locally and check `dist/` font chunks after build.
-* [ ] **Step 4.3:** Audit all fetch calls across `openFoodFactsService.ts` and ensure zero telemetry query params or headers are attached.
-* [ ] **Step 4.4:** Set Content Security Policy (CSP) headers in `index.html`:
+* [x] **Step 4.1:** Verify that all icons in `src/components/` are imported from `lucide-react` (SVG inlined into JS bundles) and not from external CDNs.
+* [x] **Step 4.2:** In `src/main.tsx`, ensure `@fontsource-variable/inter` is loaded locally and check `dist/` font chunks after build.
+* [x] **Step 4.3:** Audit all fetch calls across `openFoodFactsService.ts` and ensure zero telemetry query params or headers are attached.
+* [x] **Step 4.4:** Set Content Security Policy (CSP) headers in `index.html`:
 `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; connect-src 'self' https://world.openfoodfacts.org;">`
-* [ ] **Verification:** Run a full Chrome DevTools Network trace from fresh page load through food search and workout logging. Verify that the ONLY outbound domains contacted are `self` (local assets) and explicitly user-triggered queries to `world.openfoodfacts.org`.
+* [ ] **Verification:** Run a full Chrome DevTools Network trace from fresh page load through food search and workout logging. Verify that the ONLY outbound domains contacted are `self` (local assets) and explicitly user-triggered queries to `world.openfoodfacts.org`. (Pending browser/build trace verification.)
 
 #### Phase 5: CI/CD Pipelines (GitHub Pages & Android Build)
 
