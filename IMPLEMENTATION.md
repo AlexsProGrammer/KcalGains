@@ -113,22 +113,22 @@ npx tailwindcss init -p
 
 #### Phase 4: Backup, Restore & Validation Engine
 
-* [ ] **Step 4.1:** In `src/services/backupService.ts`, implement `exportDatabaseToJson()`:
+* [x] **Step 4.1:** In `src/services/backupService.ts`, implement `exportDatabaseToJson()`:
 * Query all tables from `db` concurrently.
 * Construct a payload matching `BackupPayloadSchema`.
 * Trigger client-side file download (as a `.json` file stamped with the current ISO date).
 
 
-* [ ] **Step 4.2:** In `src/services/backupService.ts`, implement `importDatabaseFromJson(file: File)`:
+* [x] **Step 4.2:** In `src/services/backupService.ts`, implement `importDatabaseFromJson(file: File)`:
 * Read file as text and parse JSON.
 * Validate the parsed payload against `BackupPayloadSchema.safeParse()`.
 * If validation fails, return structured validation errors.
 * If validation succeeds, execute an atomic transaction (`db.transaction('rw', [all tables])`) clearing existing tables and bulk-inserting imported entities.
 
 
-* [ ] **Step 4.3:** In `src/hooks/useBackup.ts`, build a custom hook wrapping export/import actions with loading states, error handling, and success notifications.
-* [ ] **Step 4.4:** In `src/components/BackupManager.tsx`, build a UI panel containing "Export Backup (.json)" and "Import Backup" file drag-and-drop/input handlers with schema-error display alerts.
-* [ ] **Verification:** Mock data generation test: Write an automated test or helper function in `src/components/DatabaseDebugger.tsx` to insert 10 sample foods and 2 sample meals, trigger export, drop database tables, re-import the file, and verify table counts match initial values.
+* [x] **Step 4.3:** In `src/hooks/useBackup.ts`, build a custom hook wrapping export/import actions with loading states, error handling, and success notifications.
+* [x] **Step 4.4:** In `src/components/BackupManager.tsx`, build a UI panel containing "Export Backup (.json)" and "Import Backup" file drag-and-drop/input handlers with schema-error display alerts.
+* [ ] **Verification:** Mock data generation test: The `runBackupRoundTripCheck()` helper in `src/components/DatabaseDebugger.tsx` inserts 10 sample foods and 2 sample meals, triggers export, drops database tables, re-imports the file, and verifies table counts. (Pending browser runtime verification.)
 
 #### Phase 5: Reactive UI Shell & Developer Dashboard
 
