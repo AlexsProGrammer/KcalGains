@@ -122,17 +122,17 @@ $$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
 
 #### Phase 3: Workout Logger & State Hooks
 
-* [ ] **Step 3.1:** In `src/db/workoutRepository.ts`, implement CRUD operations for active and completed workouts.
-* [ ] **Step 3.2:** In `src/hooks/useWorkoutLogger.ts`, build state management for:
+* [x] **Step 3.1:** In `src/db/workoutRepository.ts`, implement CRUD operations for active and completed workouts.
+* [x] **Step 3.2:** In `src/hooks/useWorkoutLogger.ts`, build state management for:
 * Active workout session (persisted in local state to survive page refreshes).
 * Add/remove exercise, add/remove set, toggle set completion.
 * Auto-trigger rest countdown timer on set completion.
 * "Finish Workout" action that writes final data to Dexie `workouts` table and updates `dailyLogs` for that date.
 
 
-* [ ] **Step 3.3:** In `src/hooks/useWeightTrends.ts`, implement reactive queries pulling weight logs and computing dynamic EMA time-series for chart consumption.
-* [ ] **Step 3.4:** In `src/hooks/useDynamicTargets.ts`, combine user profile targets with today's logged workouts to supply the active macro targets to the Part 3 Balancer and Part 4 AI Bridge.
-* [ ] **Verification:** Log a 3-set bench press workout in a test harness; verify set completion updates total volume and saves to Dexie reactively.
+* [x] **Step 3.3:** In `src/hooks/useWeightTrends.ts`, implement reactive queries pulling weight logs and computing dynamic EMA time-series for chart consumption.
+* [x] **Step 3.4:** In `src/hooks/useDynamicTargets.ts`, combine user profile targets with today's logged workouts to supply the active macro targets to the Part 3 Balancer and Part 4 AI Bridge.
+* [ ] **Verification:** Log a 3-set bench press workout in a test harness; verify set completion updates total volume and saves to Dexie reactively. (Pending browser/runtime verification.)
 
 #### Phase 4: UI Components & Dashboard Integration
 
