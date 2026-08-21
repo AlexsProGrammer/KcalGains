@@ -9,6 +9,7 @@ export const FoodSchema = z.object({
   protein: z.number().nonnegative(),
   carbs: z.number().nonnegative(),
   fat: z.number().nonnegative(),
+  fiber: z.number().nonnegative().default(0),
   micros: z.record(z.string(), z.number()).optional(),
   isCustom: z.boolean(),
   createdAt: z.coerce.date(),

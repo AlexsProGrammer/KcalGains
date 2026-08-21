@@ -1,147 +1,136 @@
 
-# IMPLEMENTATION.md - Part 1: Core Foundation & Reactive Persistence Engine
+# IMPLEMENTATION.md - Part 2: Local Food Engine & External Data Resolver
 
 ## 1. Project Context & Architecture
 
 ### Goal
-Build the initial, offline-first foundation for a 100% client-side fitness and nutrition tracker. This part sets up the local development environment, establishes the Dexie.js (IndexedDB) database architecture with strict Zod schemas, enforces persistent browser storage, and implements a full JSON backup and restore engine.
+Implement the local food catalog layer that supports zero-latency offline food search, manual custom food CRUD operations, a pre-seeded dataset of common fitness staples, and an on-demand direct Open Food Facts resolver with automatic local caching.
 
 ### Tech Stack & Dependencies
-- **Runtime & Language:** Node.js (LTS), TypeScript (v5.5+)
-- **Build Tool & Framework:** Vite, React 19
-- **CSS & UI Framework:** Tailwind CSS, `clsx`, `tailwind-merge`, `lucide-react`, `radix-ui` primitives
-- **Storage & State:** `dexie` (v4+), `dexie-react-hooks`
-- **Validation:** `zod` (v3+)
-- **Typography & Local Assets:** `@fontsource-variable/inter` (local font bundling for DSGVO compliance)
-- **Utilities:** `file-saver` (or browser native file picker / Blob API)
+- **Runtime & Framework:** TypeScript (v5.5+), React 19, Vite (from Part 1)
+- **Local Database & State:** `dexie` (v4+), `dexie-react-hooks` (from Part 1)
+- **Client-Side Search Indexing:** `minisearch` (v7+)
+- **Barcode & Scanning Utilities:** `@zxing/browser` (v0.1+)
+- **Validation & Parsing:** `zod` (from Part 1)
+- **UI & Icons:** `lucide-react`, Tailwind CSS, `radix-ui` dialog/tabs/popover
 
 #### Installation Commands:
 ```bash
-npm create vite@latest . -- --template react-ts
-npm install dexie dexie-react-hooks zod lucide-react clsx tailwind-merge @fontsource-variable/inter
-npm install -D tailwindcss postcss autoprefixer @types/node
-npx tailwindcss init -p
+npm install minisearch @zxing/browser
 
 ```
 
 ### File Structure
 
 ```text
-├── index.html
-├── package.json
-├── tsconfig.json
-├── tsconfig.app.json
-├── vite.config.ts
-├── tailwind.config.js
-├── postcss.config.js
-└── src/
-    ├── main.tsx
-    ├── App.tsx
-    ├── index.css
-    ├── db/
-    │   ├── schema.ts
-    │   ├── index.ts
-    │   └── persistence.ts
-    ├── schemas/
-    │   ├── food.schema.ts
-    │   ├── meal.schema.ts
-    │   ├── workout.schema.ts
-    │   ├── dailyLog.schema.ts
-    │   ├── profile.schema.ts
-    │   └── backup.schema.ts
-    ├── services/
-    │   └── backupService.ts
-    ├── hooks/
-    │   ├── useStoragePersistence.ts
-    │   └── useBackup.ts
-    ├── components/
-    │   ├── ui/
-    │   │   ├── button.tsx
-    │   │   ├── card.tsx
-    │   │   └── alert.tsx
-    │   ├── StorageStatus.tsx
-    │   ├── BackupManager.tsx
-    │   └── DatabaseDebugger.tsx
-    └── types/
-        └── index.ts
+src/
+├── data/
+│   └── seedFoods.json
+├── db/
+│   ├── seed.ts
+│   └── foodRepository.ts
+├── services/
+│   ├── searchIndexService.ts
+│   ├── openFoodFactsService.ts
+│   └── barcodeScannerService.ts
+├── hooks/
+│   ├── useFoodSearch.ts
+│   ├── useFoodMutations.ts
+│   └── useBarcodeScanner.ts
+├── components/
+│   ├── food/
+│   │   ├── FoodSearchInput.tsx
+│   │   ├── FoodSearchResults.tsx
+│   │   ├── FoodItemCard.tsx
+│   │   ├── FoodDetailModal.tsx
+│   │   ├── CustomFoodForm.tsx
+│   │   └── BarcodeScannerModal.tsx
+│   └── ui/
+│       ├── dialog.tsx
+│       ├── input.tsx
+│       ├── badge.tsx
+│       └── tabs.tsx
+└── types/
+    └── food.types.ts
 
 ```
 
 ### Attention Points & DSGVO
 
-* **Zero Remote Calls:** No analytics, tracking scripts, or remote endpoints allowed.
-* **Font Self-Hosting:** Load `@fontsource-variable/inter` locally in `src/main.tsx`. Absolutely no CDNs or Google Fonts URLs in `index.html`.
-* **iOS WebKit Eviction Mitigation:** Execute `navigator.storage.persist()` on app initialization to lock IndexedDB against Safari 7-day eviction policies.
-* **Type Safety Contract:** All Dexie table schemas must be directly derived from or validated against Zod schemas.
+* **Zero Third-Party Telemetry on API Calls:** When querying Open Food Facts API, execute direct client-to-API `fetch()` calls from the device without sending analytics, user identifiers, or location data. Set the required custom `User-Agent` header as per Open Food Facts terms (`User-Agent: QuirinFittiTracker - Version 1.0 - Android/iOS PWA`).
+* **Offline Isolation:** Network failures during Open Food Facts lookups must be handled gracefully without throwing unhandled exceptions; fallback immediately to local-only search.
+* **Auto-Caching:** Any food fetched from Open Food Facts that is selected by the user must be automatically saved into the local `foods` Dexie table with `isCustom: false` so it is permanently queryable offline.
+* **Search Memory Footprint:** Initialize and update the `minisearch` index in-memory from Dexie records to ensure sub-millisecond prefix, fuzzy, and substring matching.
 
 ---
 
 ## 2. Execution Phases
 
-#### Phase 1: Project Scaffolding & DSGVO-Compliant Styling
+#### Phase 1: Pre-Seeded Dataset & Seeding Engine
 
-* [x] **Step 1.1:** Initialize the Vite project with the React-TypeScript template and configure Path Aliases (`@/*` pointing to `./src/*`) in `tsconfig.json`, `tsconfig.app.json`, and `vite.config.ts`.
-* [x] **Step 1.2:** Configure `tailwind.config.js` with dark mode support (`class`), custom container padding, and standard slate/zinc color tokens.
-* [x] **Step 1.3:** In `src/main.tsx`, import `@fontsource-variable/inter/index.css` and configure `src/index.css` with Tailwind directives (`@tailwind base; @tailwind components; @tailwind utilities;`). Ensure `index.html` has no external stylesheet links.
-* [x] **Step 1.4:** Create base reusable UI components (`button.tsx`, `card.tsx`, `alert.tsx`) inside `src/components/ui/` using `clsx` and `tailwind-merge`.
-* [ ] **Verification:** Run `npm run build` and ensure TypeScript compilation succeeds without errors and no external asset URLs exist in the build output. (Blocked: terminal execution is unavailable in this session.)
-
-#### Phase 2: Zod Schemas & Domain Type Definitions
-
-* [x] **Step 2.1:** In `src/schemas/food.schema.ts`, define `FoodSchema` using `zod` for attributes: `id` (uuid/string), `name` (string), `brand` (optional string), `servingSize` (number), `calories` (number), `protein` (number), `carbs` (number), `fat` (number), `micros` (optional record of string -> number), `isCustom` (boolean), `createdAt` (timestamp).
-* [x] **Step 2.2:** In `src/schemas/meal.schema.ts`, define `MealItemSchema` (references `foodId`, `amountInGrams`, and computed macros) and `MealSchema` (`id`, `date` string YYYY-MM-DD, `mealType` enum [breakfast, lunch, dinner, snack], `items` array, `totalCalories`, `totalProtein`, `totalCarbs`, `totalFat`).
-* [x] **Step 2.3:** In `src/schemas/workout.schema.ts`, define `SetSchema` (reps, weight, rpe) and `WorkoutSchema` (`id`, `date` string YYYY-MM-DD, `title` string, `type` enum [strength, cardio, other], `durationMinutes` number, `caloriesBurned` optional number, `sets` array).
-* [x] **Step 2.4:** In `src/schemas/dailyLog.schema.ts` and `src/schemas/profile.schema.ts`, define schemas for daily target trackers, weight logs, and user profile parameters (target calories, target macros).
-* [x] **Step 2.5:** In `src/schemas/backup.schema.ts`, define `BackupPayloadSchema` aggregating all table arrays (`version`, `exportedAt`, `foods`, `meals`, `workouts`, `dailyLogs`, `profile`).
-* [x] **Step 2.6:** In `src/types/index.ts`, export inferred TypeScript types from all Zod schemas using `z.infer<typeof ...>`.
-* [ ] **Verification:** Run `npx tsc --noEmit` to verify type inference and exports across the schema layer. (Pending: run `pnpm install` to add Zod to the lockfile and node_modules.)
-
-#### Phase 3: Dexie.js Database & Storage Persistence Subsystem
-
-* [x] **Step 3.1:** In `src/db/schema.ts`, define the Dexie database class `FitnessTrackerDB` extending `Dexie`. Configure store version `1` with tables and compound/single indices. String `id` keys are used to match the Phase 2 Zod contracts.
-* `foods`: `id, name, isCustom, createdAt`
-* `meals`: `id, date, mealType, [date+mealType]`
-* `workouts`: `id, date, type`
-* `dailyLogs`: `id, date`
-* `profile`: `id`
+* [x] **Step 1.1:** In `src/data/seedFoods.json`, construct a curated dataset of ~100 standard fitness foods (e.g., Haferflocken, Magerquark, Hähnchenbrust, Reis, Eier, Banane, Whey Isolat, Olivenöl, Mandeln) with verified per-100g values for calories, protein, carbs, fat, fiber, and key micronutrients (e.g., sodium, potassium, magnesium, zinc).
+* [x] **Step 1.2:** In `src/db/seed.ts`, implement `seedDatabaseIfEmpty(db: FitnessTrackerDB)`:
+* Check if `db.foods.count() === 0`.
+* If zero, validate `seedFoods.json` against `z.array(FoodSchema)` and bulk-insert into `db.foods`.
 
 
-* [x] **Step 3.2:** In `src/db/index.ts`, instantiate and export a singleton `db` instance of `FitnessTrackerDB`.
-* [x] **Step 3.3:** In `src/db/persistence.ts`, implement `requestStoragePersistence()` to check and execute `navigator.storage.persist()`, and `getStorageEstimate()` to fetch usage and quota via `navigator.storage.estimate()`.
-* [x] **Step 3.4:** In `src/hooks/useStoragePersistence.ts`, create a React hook that initializes persistence check on mount and exposes `isPersisted`, `quotaUsageBytes`, and `quotaTotalBytes`.
-* [ ] **Verification:** Create a test unit script or render `StorageStatus.tsx` in `App.tsx` displaying the boolean return of `navigator.storage.persisted()`. (Rendered; pending dependency installation and browser verification.)
+* [x] **Step 1.3:** In `src/main.tsx` or database initialization lifecycle, call `seedDatabaseIfEmpty` after database open.
+* [ ] **Verification:** Wipe IndexedDB in browser DevTools, reload the app, and verify via `db.foods.count()` that all seed items are populated. (Pending browser runtime verification.)
 
-#### Phase 4: Backup, Restore & Validation Engine
+#### Phase 2: In-Memory Search Engine & Food Repository
 
-* [x] **Step 4.1:** In `src/services/backupService.ts`, implement `exportDatabaseToJson()`:
-* Query all tables from `db` concurrently.
-* Construct a payload matching `BackupPayloadSchema`.
-* Trigger client-side file download (as a `.json` file stamped with the current ISO date).
-
-
-* [x] **Step 4.2:** In `src/services/backupService.ts`, implement `importDatabaseFromJson(file: File)`:
-* Read file as text and parse JSON.
-* Validate the parsed payload against `BackupPayloadSchema.safeParse()`.
-* If validation fails, return structured validation errors.
-* If validation succeeds, execute an atomic transaction (`db.transaction('rw', [all tables])`) clearing existing tables and bulk-inserting imported entities.
+* [ ] **Step 2.1:** In `src/db/foodRepository.ts`, implement CRUD operations:
+* `getAllFoods(): Promise<Food[]>`
+* `getFoodById(id: string): Promise<Food | undefined>`
+* `getFoodByBarcode(barcode: string): Promise<Food | undefined>`
+* `createFood(food: InsertFoodInput): Promise<string>`
+* `updateFood(id: string, updates: Partial<Food>): Promise<void>`
+* `deleteFood(id: string): Promise<void>`
 
 
-* [x] **Step 4.3:** In `src/hooks/useBackup.ts`, build a custom hook wrapping export/import actions with loading states, error handling, and success notifications.
-* [x] **Step 4.4:** In `src/components/BackupManager.tsx`, build a UI panel containing "Export Backup (.json)" and "Import Backup" file drag-and-drop/input handlers with schema-error display alerts.
-* [ ] **Verification:** Mock data generation test: The `runBackupRoundTripCheck()` helper in `src/components/DatabaseDebugger.tsx` inserts 10 sample foods and 2 sample meals, triggers export, drops database tables, re-imports the file, and verifies table counts. (Pending browser runtime verification.)
+* [ ] **Step 2.2:** In `src/services/searchIndexService.ts`, initialize and manage a `MiniSearch` instance configured with search fields (`['name', 'brand']`), store fields (`['id', 'name', 'brand', 'calories', 'protein', 'carbs', 'fat']`), and search options (`prefix: true`, `fuzzy: 0.2`).
+* [ ] **Step 2.3:** Implement synchronization in `searchIndexService.ts` to index seed data on load and reactively add/update/remove items when Dexie food records change.
+* [ ] **Step 2.4:** In `src/hooks/useFoodSearch.ts`, build a hook returning matching local results with debouncing (150ms).
+* [ ] **Verification:** Call `useFoodSearch("hafer")` in a test component and confirm instant return of "Haferflocken" with score ranking.
 
-#### Phase 5: Reactive UI Shell & Developer Dashboard
+#### Phase 3: External Data Resolver (Open Food Facts API & Auto-Cache)
 
-* [x] **Step 5.1:** In `src/components/DatabaseDebugger.tsx`, build a developer test-harness utilizing `useLiveQuery` to display real-time table record counts and live tables.
-* [x] **Step 5.2:** Add action buttons in the debugger to:
-* Seed 5 test food items.
-* Seed 1 test meal.
-* Clear all IndexedDB tables.
+* [ ] **Step 3.1:** In `src/services/openFoodFactsService.ts`, implement `fetchFromOpenFoodFacts(query: string)`:
+* Call `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`.
+* Add header `User-Agent: QuirinFittiTracker - PWA - Version 1.0`.
 
 
-* [x] **Step 5.3:** In `src/components/StorageStatus.tsx`, display storage quota in Megabytes (MB) and show a badge indicating if persistent storage is granted or unsupported.
-* [x] **Step 5.4:** In `src/App.tsx`, assemble the layout: Header, `StorageStatus`, `BackupManager`, and `DatabaseDebugger`.
-* [ ] **Verification:** Run `npm run dev`, open the browser console, insert test items via the UI, verify records increment immediately via `useLiveQuery`, export the JSON, wipe data, import JSON, and confirm instant re-render. (Pending browser runtime verification.)
+* [ ] **Step 3.2:** In `src/services/openFoodFactsService.ts`, implement `fetchProductByBarcode(barcode: string)`:
+* Query `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`.
+
+
+* [ ] **Step 3.3:** Implement a parser/transformer in `openFoodFactsService.ts` to map raw API responses (`nutriments` object: `energy-kcal_100g`, `proteins_100g`, `carbohydrates_100g`, `fat_100g`, etc.) into `FoodSchema` compliant structures, safely handling missing or `null` attributes with default zero values.
+* [ ] **Step 3.4:** Integrate external search with local fallback in `useFoodSearch.ts`: when local search yields low-confidence or zero results and device is online, allow triggering remote Open Food Facts search.
+* [ ] **Step 3.5:** Implement auto-cache logic: when a remote product is selected, insert it into Dexie `foods` table and add it to the `MiniSearch` index.
+* [ ] **Verification:** Fetch product `4008400404127` (Kinder Schokolade barcode or test staple) and verify it transforms into a valid `Food` object matching `FoodSchema`.
+
+#### Phase 4: Barcode Scanner Module
+
+* [ ] **Step 4.1:** In `src/services/barcodeScannerService.ts`, wrap `@zxing/browser` (`BrowserMultiFormatReader`) to handle camera initialization, video element binding, barcode decoding (EAN-13, EAN-8, UPC), and track teardown.
+* [ ] **Step 4.2:** In `src/hooks/useBarcodeScanner.ts`, create a React lifecycle hook to manage camera permissions, video stream binding, active decoding loop, and error states (e.g., `NotAllowedError`, `NotFoundError`).
+* [ ] **Step 4.3:** In `src/components/food/BarcodeScannerModal.tsx`, build a camera viewport overlay with a targeting square, flashlight toggle (if supported by track capabilities), and manual input fallback.
+* [ ] **Step 4.4:** Implement barcode resolution chain:
+1. Check local Dexie DB for matching `barcode`.
+2. If not found locally, query `fetchProductByBarcode`.
+3. If found remotely, save to Dexie and open detail view.
+4. If not found anywhere, prompt user to create custom food with prefilled barcode.
+
+
+* [ ] **Verification:** Mock or pass a camera stream decoding an EAN-13 barcode, verifying that the scan stops the stream, queries the repository, and returns the mapped product.
+
+#### Phase 5: Food UI Components & Custom Food Creation
+
+* [ ] **Step 5.1:** In `src/components/food/FoodSearchInput.tsx`, build the search bar with clear button, barcode scanner trigger button, and network status indicator.
+* [ ] **Step 5.2:** In `src/components/food/FoodSearchResults.tsx` and `FoodItemCard.tsx`, render search results displaying Name, Brand, per-100g badge tags (Calories, P, C, F), and local vs. remote origin indicator.
+* [ ] **Step 5.3:** In `src/components/food/CustomFoodForm.tsx`, build a form with Zod schema validation (`react-hook-form` or controlled inputs) for creating/editing food items with live macro-to-calorie discrepancy verification (`(P*4 + C*4 + F*9) ≈ Calories`).
+* [ ] **Step 5.4:** In `src/components/food/FoodDetailModal.tsx`, display full nutritional breakdown, serving size customizer (e.g., gram input calculating absolute macros), and "Add to Local Library" / "Edit" buttons.
+* [ ] **Step 5.5:** In `src/App.tsx`, integrate the Food Management tab/view alongside the debugger and backup manager.
+* [ ] **Verification:** Manually create a custom food item "Test Protein Shake" (120 kcal, 25g P, 2g C, 1g F), verify it displays in search results instantly, and check that it persists across page reloads.
 
 ---
 
@@ -149,7 +138,7 @@ npx tailwindcss init -p
 
 ### Critical Path Edge Cases
 
-1. **Malformed JSON Import:** Upload an invalid JSON file (e.g., missing required macro fields or containing string values for calories). Verify that `BackupPayloadSchema.safeParse()` intercepts the file and displays an error message without corrupting IndexedDB.
-2. **Schema Evolution Simulation:** Import a legacy/partial JSON backup missing optional fields (e.g., missing `micros` or `durationMinutes`). Verify defaults are applied gracefully.
-3. **Storage Quota Degradation:** Verify that `persistence.ts` handles environments where `navigator.storage` or `navigator.storage.persist` is undefined (e.g., legacy browsers or strict private modes).
-4. **Data Isolation:** Verify that no network requests (XHR/Fetch) are triggered in the browser Network tab during creation, query, backup, or restore operations.
+1. **Full Offline Isolation:** Set browser to Offline mode in Network tab. Search local foods, create a custom food item, and verify no network requests are attempted and search operates without lag.
+2. **Camera Permission Denied:** Trigger the barcode scanner and deny camera permissions. Verify the UI displays a clear, non-crashing permission error message and provides a manual barcode text input alternative.
+3. **Incomplete Open Food Facts Payload:** Mock an Open Food Facts response containing null/missing `proteins_100g` and `energy-kcal_100g`. Verify the parser defaults missing numbers to 0 without breaking the UI.
+4. **Search Index Sync Consistency:** Delete a custom food item from Dexie and verify that subsequent queries in `MiniSearch` do not return the deleted item.
