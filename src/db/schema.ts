@@ -18,5 +18,13 @@ export class FitnessTrackerDB extends Dexie {
       dailyLogs: 'id, date',
       profile: 'id',
     })
+
+    this.version(2).stores({
+      foods: 'id, name, brand, barcode, isCustom, createdAt',
+      meals: 'id, date, mealType, [date+mealType]',
+      workouts: 'id, date, type',
+      dailyLogs: 'id, date',
+      profile: 'id',
+    })
   }
 }

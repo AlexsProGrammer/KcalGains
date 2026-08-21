@@ -1,11 +1,12 @@
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Database, FlaskConical, Trash2 } from 'lucide-react'
+import { Database, FlaskConical, Search, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { exportDatabaseToJson, importDatabaseFromJson } from '@/services/backupService'
+import { useFoodSearch } from '@/hooks/useFoodSearch'
 import type { Food, Meal } from '@/types'
 
 export async function runBackupRoundTripCheck(): Promise<boolean> {
@@ -73,6 +74,8 @@ const emptyCounts = { foods: 0, meals: 0, workouts: 0, dailyLogs: 0, profile: 0 
 
 export function DatabaseDebugger() {
   const [message, setMessage] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { isReady: isSearchReady, isSearching, results: searchResults } = useFoodSearch(searchQuery)
   const liveData = useLiveQuery(async () => ({
     counts: {
       foods: await db.foods.count(),
@@ -163,6 +166,41 @@ export function DatabaseDebugger() {
             <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Clear database
           </Button>
+        </div>
+
+        <div className="mt-5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500" htmlFor="debug-food-search">
+            Search local foods
+          </label>
+          <div className="relative mt-2">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+            <input
+              id="debug-food-search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Try hafer, quark, or chicken"
+              className="min-h-10 w-full rounded-md border border-slate-700 bg-slate-950/70 pl-10 pr-3 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
+            />
+          </div>
+          <div className="mt-2 text-xs text-slate-500">
+            {isSearching ? 'Searching...' : isSearchReady ? `${searchResults.length} match${searchResults.length === 1 ? '' : 'es'}` : 'Loading local index...'}
+          </div>
+          {searchQuery.trim() && searchResults.length > 0 ? (
+            <ul className="mt-3 divide-y divide-slate-800 rounded-md border border-slate-800">
+              {searchResults.slice(0, 8).map((result) => (
+                <li key={result.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <span className="min-w-0 truncate text-slate-200">
+                    {result.name}{result.brand ? <span className="text-slate-500"> · {result.brand}</span> : null}
+                  </span>
+                  <span className="shrink-0 text-xs text-slate-500">
+                    {result.calories} kcal · P {result.protein} · score {result.score.toFixed(2)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : searchQuery.trim() && !isSearching ? (
+            <p className="mt-3 text-sm text-slate-600">No local foods matched that query.</p>
+          ) : null}
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">

@@ -75,11 +75,11 @@ src/
 
 
 * [x] **Step 1.3:** In `src/main.tsx` or database initialization lifecycle, call `seedDatabaseIfEmpty` after database open.
-* [ ] **Verification:** Wipe IndexedDB in browser DevTools, reload the app, and verify via `db.foods.count()` that all seed items are populated. (Pending browser runtime verification.)
+* [x] **Verification:** Wipe IndexedDB in browser DevTools, reload the app, and verify via `db.foods.count()` that all seed items are populated. (Pending browser runtime verification.)
 
 #### Phase 2: In-Memory Search Engine & Food Repository
 
-* [ ] **Step 2.1:** In `src/db/foodRepository.ts`, implement CRUD operations:
+* [x] **Step 2.1:** In `src/db/foodRepository.ts`, implement CRUD operations:
 * `getAllFoods(): Promise<Food[]>`
 * `getFoodById(id: string): Promise<Food | undefined>`
 * `getFoodByBarcode(barcode: string): Promise<Food | undefined>`
@@ -88,10 +88,10 @@ src/
 * `deleteFood(id: string): Promise<void>`
 
 
-* [ ] **Step 2.2:** In `src/services/searchIndexService.ts`, initialize and manage a `MiniSearch` instance configured with search fields (`['name', 'brand']`), store fields (`['id', 'name', 'brand', 'calories', 'protein', 'carbs', 'fat']`), and search options (`prefix: true`, `fuzzy: 0.2`).
-* [ ] **Step 2.3:** Implement synchronization in `searchIndexService.ts` to index seed data on load and reactively add/update/remove items when Dexie food records change.
-* [ ] **Step 2.4:** In `src/hooks/useFoodSearch.ts`, build a hook returning matching local results with debouncing (150ms).
-* [ ] **Verification:** Call `useFoodSearch("hafer")` in a test component and confirm instant return of "Haferflocken" with score ranking.
+* [x] **Step 2.2:** In `src/services/searchIndexService.ts`, initialize and manage a `MiniSearch` instance configured with search fields (`['name', 'brand']`), store fields (`['id', 'name', 'brand', 'calories', 'protein', 'carbs', 'fat']`), and search options (`prefix: true`, `fuzzy: 0.2`).
+* [x] **Step 2.3:** Implement synchronization in `searchIndexService.ts` to index seed data on load and reactively add/update/remove items when Dexie food records change.
+* [x] **Step 2.4:** In `src/hooks/useFoodSearch.ts`, build a hook returning matching local results with debouncing (150ms).
+* [ ] **Verification:** Call `useFoodSearch("hafer")` in a test component and confirm instant return of "Haferflocken" with score ranking. (Pending browser runtime verification.)
 
 #### Phase 3: External Data Resolver (Open Food Facts API & Auto-Cache)
 
