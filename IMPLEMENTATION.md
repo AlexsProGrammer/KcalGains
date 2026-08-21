@@ -97,19 +97,19 @@ $$\min \sum w_i \cdot (\text{deviation}_i) \quad \text{subject to} \quad \mathbf
 
 #### Phase 3: Balancer State Hook & Log Integration
 
-* [ ] **Step 3.1:** In `src/hooks/useMealBalancer.ts`, implement state management for:
+* [x] **Step 3.1:** In `src/hooks/useMealBalancer.ts`, implement state management for:
 * Active target macros (prefilled from user's remaining daily allowance).
 * Selected food pool (array of foods pulled from Part 2 search/local DB).
 * Individual food constraint overrides (min/max sliders).
 * Debounced automatic recalculation whenever targets or constraints change.
 
 
-* [ ] **Step 3.2:** In `src/hooks/useMealLogger.ts`, implement `commitBalancedMealToLog(result: BalancerResult, mealType: MealType, date: string)`:
+* [x] **Step 3.2:** In `src/hooks/useMealLogger.ts`, implement `commitBalancedMealToLog(result: BalancerResult, mealType: MealType, date: string)`:
 * Transform the solver output into a valid `MealSchema` object.
 * Write meal and meal items directly into the Dexie `meals` table within an atomic transaction.
 
 
-* [ ] **Verification:** Trigger `useMealBalancer` in a harness, mutate target protein from 30g to 60g, and verify the resulting gram quantities update reactively.
+* [ ] **Verification:** Trigger `useMealBalancer` in a harness, mutate target protein from 30g to 60g, and verify the resulting gram quantities update reactively. (Pending browser/runtime harness verification.)
 
 #### Phase 4: UI Components & Constraint Controls
 

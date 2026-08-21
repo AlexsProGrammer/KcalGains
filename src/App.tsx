@@ -6,6 +6,7 @@ import { BackupManager } from '@/components/BackupManager'
 import { DatabaseDebugger } from '@/components/DatabaseDebugger'
 import { StorageStatus } from '@/components/StorageStatus'
 import { FoodManagement } from '@/components/food/FoodManagement'
+import { BalancerDevPanel } from '@/components/balancer/BalancerDevPanel'
 
 function App() {
   return (
@@ -45,6 +46,10 @@ function App() {
 
         <section className="mt-4 max-w-2xl">
           <FoodManagement />
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <BalancerDevPanel />
         </section>
 
         <section className="mt-4 max-w-2xl">

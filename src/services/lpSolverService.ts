@@ -31,7 +31,8 @@ function buildResult(
     const food = foodCatalog.get(ingredient.foodId)
     if (!food) return []
 
-    const grams = quantizeGrams(solvedValues.get(ingredient.foodId) ?? ingredient.minGrams, ingredient.stepSize)
+    const roundedGrams = quantizeGrams(solvedValues.get(ingredient.foodId) ?? ingredient.minGrams, ingredient.stepSize)
+    const grams = Math.min(ingredient.maxGrams, Math.max(ingredient.minGrams, roundedGrams))
     const computed = calculateFoodMacros(food, grams)
     totalMacros = addMacroTotals(totalMacros, computed)
 
