@@ -98,18 +98,18 @@ npx tailwindcss init -p
 
 #### Phase 3: Dexie.js Database & Storage Persistence Subsystem
 
-* [ ] **Step 3.1:** In `src/db/schema.ts`, define the Dexie database class `FitnessTrackerDB` extending `Dexie`. Configure store version `1` with tables and compound/single indices:
-* `foods`: `++id, name, isCustom, createdAt`
-* `meals`: `++id, date, mealType, [date+mealType]`
-* `workouts`: `++id, date, type`
-* `dailyLogs`: `++id, date`
-* `profile`: `++id`
+* [x] **Step 3.1:** In `src/db/schema.ts`, define the Dexie database class `FitnessTrackerDB` extending `Dexie`. Configure store version `1` with tables and compound/single indices. String `id` keys are used to match the Phase 2 Zod contracts.
+* `foods`: `id, name, isCustom, createdAt`
+* `meals`: `id, date, mealType, [date+mealType]`
+* `workouts`: `id, date, type`
+* `dailyLogs`: `id, date`
+* `profile`: `id`
 
 
-* [ ] **Step 3.2:** In `src/db/index.ts`, instantiate and export a singleton `db` instance of `FitnessTrackerDB`.
-* [ ] **Step 3.3:** In `src/db/persistence.ts`, implement `requestStoragePersistence()` to check and execute `navigator.storage.persist()`, and `getStorageEstimate()` to fetch usage and quota via `navigator.storage.estimate()`.
-* [ ] **Step 3.4:** In `src/hooks/useStoragePersistence.ts`, create a React hook that initializes persistence check on mount and exposes `isPersisted`, `quotaUsageBytes`, and `quotaTotalBytes`.
-* [ ] **Verification:** Create a test unit script or render `StorageStatus.tsx` in `App.tsx` displaying the boolean return of `navigator.storage.persisted()`.
+* [x] **Step 3.2:** In `src/db/index.ts`, instantiate and export a singleton `db` instance of `FitnessTrackerDB`.
+* [x] **Step 3.3:** In `src/db/persistence.ts`, implement `requestStoragePersistence()` to check and execute `navigator.storage.persist()`, and `getStorageEstimate()` to fetch usage and quota via `navigator.storage.estimate()`.
+* [x] **Step 3.4:** In `src/hooks/useStoragePersistence.ts`, create a React hook that initializes persistence check on mount and exposes `isPersisted`, `quotaUsageBytes`, and `quotaTotalBytes`.
+* [ ] **Verification:** Create a test unit script or render `StorageStatus.tsx` in `App.tsx` displaying the boolean return of `navigator.storage.persisted()`. (Rendered; pending dependency installation and browser verification.)
 
 #### Phase 4: Backup, Restore & Validation Engine
 

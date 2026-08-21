@@ -2,6 +2,7 @@ import { Activity, Database, ShieldCheck } from 'lucide-react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { StorageStatus } from '@/components/StorageStatus'
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
             <CardHeader title="Phase 1" />
             <CardContent><Button size="sm">Foundation ready</Button></CardContent>
           </Card>
+        </section>
+
+        <section className="mt-4 max-w-md">
+          <StorageStatus />
         </section>
       </div>
     </main>
