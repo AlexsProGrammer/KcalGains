@@ -97,25 +97,25 @@ src/
 
 #### Phase 3: AI Output Sanitizer & Zod Ingestion Pipeline
 
-* [ ] **Step 3.1:** In `src/services/aiResponseParserService.ts`, implement `extractJsonFromText(rawText: string): string`:
+* [x] **Step 3.1:** In `src/services/aiResponseParserService.ts`, implement `extractJsonFromText(rawText: string): string`:
 * Strip markdown formatting fences (e.g., `json ... ` or `...`).
 * Use regular expressions to extract the outermost JSON object `{ ... }` from surrounding explanatory text.
 * Clean up common LLM syntax anomalies (e.g., unescaped newlines, trailing commas).
 
 
-* [ ] **Step 3.2:** In `src/services/aiResponseParserService.ts`, implement `parseAndValidateAiResponse(rawText: string)`:
+* [x] **Step 3.2:** In `src/services/aiResponseParserService.ts`, implement `parseAndValidateAiResponse(rawText: string)`:
 * Run JSON extraction and parse into a JavaScript object.
 * Execute `AiMealResponseSchema.safeParse()`.
 * Return `{ success: true, data: AiMealResponse }` or `{ success: false, errors: string[] }`.
 
 
-* [ ] **Step 3.3:** In `src/services/aiResponseParserService.ts`, implement `resolveAndLinkFoods(aiMeal: AiMealResponse, db: FitnessTrackerDB)`:
+* [x] **Step 3.3:** In `src/services/aiResponseParserService.ts`, implement `resolveAndLinkFoods(aiMeal: AiMealResponse, db: FitnessTrackerDB)`:
 * For each ingredient in `aiMeal.items`, search existing `foods` table by name.
 * If food exists, link its `foodId`; if not, flag as a new custom food to be automatically registered in Dexie.
 
 
-* [ ] **Step 3.4:** In `src/hooks/useAiIngestion.ts`, implement stateful workflow handling raw text input, real-time validation feedback, parsed preview state, and committing confirmed meals to Dexie.
-* [ ] **Verification:** Pass a messy LLM response string (containing conversational intro, markdown code blocks, and valid JSON) to `parseAndValidateAiResponse()`, verifying successful parsing into typed data.
+* [x] **Step 3.4:** In `src/hooks/useAiIngestion.ts`, implement stateful workflow handling raw text input, real-time validation feedback, parsed preview state, and committing confirmed meals to Dexie.
+* [ ] **Verification:** Pass a messy LLM response string (containing conversational intro, markdown code blocks, and valid JSON) to `parseAndValidateAiResponse()`, verifying successful parsing into typed data. (Pending parser/browser runtime verification.)
 
 #### Phase 4: UI Components & Ingestion Workflow
 
