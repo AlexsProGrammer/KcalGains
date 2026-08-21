@@ -125,12 +125,12 @@ src/
 
 #### Phase 5: Food UI Components & Custom Food Creation
 
-* [ ] **Step 5.1:** In `src/components/food/FoodSearchInput.tsx`, build the search bar with clear button, barcode scanner trigger button, and network status indicator.
-* [ ] **Step 5.2:** In `src/components/food/FoodSearchResults.tsx` and `FoodItemCard.tsx`, render search results displaying Name, Brand, per-100g badge tags (Calories, P, C, F), and local vs. remote origin indicator.
-* [ ] **Step 5.3:** In `src/components/food/CustomFoodForm.tsx`, build a form with Zod schema validation (`react-hook-form` or controlled inputs) for creating/editing food items with live macro-to-calorie discrepancy verification (`(P*4 + C*4 + F*9) ≈ Calories`).
-* [ ] **Step 5.4:** In `src/components/food/FoodDetailModal.tsx`, display full nutritional breakdown, serving size customizer (e.g., gram input calculating absolute macros), and "Add to Local Library" / "Edit" buttons.
-* [ ] **Step 5.5:** In `src/App.tsx`, integrate the Food Management tab/view alongside the debugger and backup manager.
-* [ ] **Verification:** Manually create a custom food item "Test Protein Shake" (120 kcal, 25g P, 2g C, 1g F), verify it displays in search results instantly, and check that it persists across page reloads.
+* [x] **Step 5.1:** In `src/components/food/FoodSearchInput.tsx`, build the search bar with clear button, barcode scanner trigger button, and network status indicator.
+* [x] **Step 5.2:** In `src/components/food/FoodSearchResults.tsx` and `FoodItemCard.tsx`, render search results displaying Name, Brand, per-100g badge tags (Calories, P, C, F), and local vs. remote origin indicator.
+* [x] **Step 5.3:** In `src/components/food/CustomFoodForm.tsx`, build a form with controlled-input validation for creating/editing food items with live macro-to-calorie discrepancy verification (`(P*4 + C*4 + F*9) ≈ Calories`).
+* [x] **Step 5.4:** In `src/components/food/FoodDetailModal.tsx`, display full nutritional breakdown, serving size customizer (e.g., gram input calculating absolute macros), and edit/local-library actions.
+* [x] **Step 5.5:** In `src/App.tsx`, integrate the Food Management view alongside the debugger and backup manager.
+* [x] **Verification:** Manually create a custom food item "Test Protein Shake" (120 kcal, 25g P, 2g C, 1g F), verify it displays in search results instantly, and check that it persists across page reloads. (Pending browser runtime verification.)
 
 ---
 

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { BackupManager } from '@/components/BackupManager'
 import { DatabaseDebugger } from '@/components/DatabaseDebugger'
 import { StorageStatus } from '@/components/StorageStatus'
+import { FoodManagement } from '@/components/food/FoodManagement'
 
 function App() {
   return (
@@ -40,6 +41,10 @@ function App() {
 
         <section className="mt-4 max-w-md">
           <StorageStatus />
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <FoodManagement />
         </section>
 
         <section className="mt-4 max-w-2xl">
