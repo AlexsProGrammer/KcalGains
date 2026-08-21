@@ -80,5 +80,5 @@ export function useWorkoutLogger() {
     return completed
   }
 
-  return { addExercise, addSet, finishWorkout, isResting: restSeconds > 0, removeExercise, removeSet, restSeconds, setRestSeconds, toggleSetCompleted, updateSet, workout }
+  return { addExercise, addSet, finishWorkout, isResting: restSeconds > 0, removeExercise, removeSet, restSeconds, setRestSeconds, toggleSetCompleted, updateSet, updateWorkout, workout }
 }

@@ -8,6 +8,10 @@ import { StorageStatus } from '@/components/StorageStatus'
 import { FoodManagement } from '@/components/food/FoodManagement'
 import { BalancerContainer } from '@/components/balancer/BalancerContainer'
 import { AiBridgeContainer } from '@/components/ai-bridge/AiBridgeContainer'
+import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
+import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
+import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
+import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
 
 function App() {
   return (
@@ -43,6 +47,18 @@ function App() {
 
         <section className="mt-4 max-w-md">
           <StorageStatus />
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <DynamicTargetBanner />
+        </section>
+
+        <section className="mt-4 grid gap-4 lg:grid-cols-2">
+          <WorkoutLoggerCard />
+          <div className="space-y-4">
+            <TdeeStatsCard />
+            <WeightTrendChart />
+          </div>
         </section>
 
         <section className="mt-4 max-w-2xl">

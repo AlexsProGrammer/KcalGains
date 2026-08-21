@@ -136,22 +136,22 @@ $$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
 
 #### Phase 4: UI Components & Dashboard Integration
 
-* [ ] **Step 4.1:** In `src/components/workout/ExerciseSetTable.tsx`, build a mobile-optimized table with numeric inputs for weight, reps, RPE, and a one-tap checkmark button for set completion.
-* [ ] **Step 4.2:** In `src/components/workout/RestTimerOverlay.tsx`, build a floating countdown badge that plays a local chime/vibration when rest time elapses.
-* [ ] **Step 4.3:** In `src/components/workout/ExercisePickerModal.tsx`, build a categorized search interface to select movements or create custom exercises.
-* [ ] **Step 4.4:** In `src/components/analytics/WeightTrendChart.tsx`, build a dual-line chart (Recharts `ResponsiveContainer`, `LineChart`, `Line`, `Tooltip`, `XAxis`, `YAxis`) displaying:
+* [x] **Step 4.1:** In `src/components/workout/ExerciseSetTable.tsx`, build a mobile-optimized table with numeric inputs for weight, reps, RPE, and a one-tap checkmark button for set completion.
+* [x] **Step 4.2:** In `src/components/workout/RestTimerOverlay.tsx`, build a floating countdown badge that plays a local chime/vibration when rest time elapses.
+* [x] **Step 4.3:** In `src/components/workout/ExercisePickerModal.tsx`, build a categorized search interface to select movements or create custom exercises.
+* [x] **Step 4.4:** In `src/components/analytics/WeightTrendChart.tsx`, build a dual-line chart (Recharts `ResponsiveContainer`, `LineChart`, `Line`, `Tooltip`, `XAxis`, `YAxis`) displaying:
 * Raw daily weight dots (semi-transparent scatter dots).
 * Continuous EMA smoothed trend line (bold primary color line).
 
 
-* [ ] **Step 4.5:** In `src/components/analytics/TdeeStatsCard.tsx`, render:
+* [x] **Step 4.5:** In `src/components/analytics/TdeeStatsCard.tsx`, render:
 * Live calculated TDEE readout (e.g., `2,640 kcal/day`).
 * True daily surplus/deficit indicator.
 * Confidence rating badge ("Calibrating: 5/14 days" or "Calibrated").
 
 
-* [ ] **Step 4.6:** In `src/components/dashboard/DynamicTargetBanner.tsx`, render a dynamic banner on the main dashboard showing: *"Workout Day: Macro targets adjusted (+40g Carbs)"*.
-* [ ] **Verification:** In the UI, log weight for 3 consecutive days, complete a workout, and verify both the Weight Chart renders the smoothed line and the dashboard macro target dynamically updates.
+* [x] **Step 4.6:** In `src/components/dashboard/DynamicTargetBanner.tsx`, render a dynamic banner on the main dashboard showing workout-day macro adjustments.
+* [ ] **Verification:** In the UI, log weight for 3 consecutive days, complete a workout, and verify both the Weight Chart renders the smoothed line and the dashboard macro target dynamically updates. (Pending browser/runtime verification.)
 
 ---
 
