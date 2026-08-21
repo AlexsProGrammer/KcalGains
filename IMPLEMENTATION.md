@@ -1,157 +1,164 @@
-# IMPLEMENTATION.md - Part 5: Hybrid Workout Logger & Dynamic TDEE Engine
+# IMPLEMENTATION.md - Part 6: PWA Hardening, Asset Bundling & Zero-Leak Compliance
 
 ## 1. Project Context & Architecture
 
 ### Goal
-Implement a lightweight local workout logging module (supporting strength exercises, sets, reps, weight, RPE, and cardio durations) and couple it directly to the nutrition engine. This part introduces an adaptive Exponential Moving Average (EMA) algorithm that computes true energy expenditure (TDEE) from daily scale weights and calorie logs, and automatically adjusts daily macronutrient targets on workout days.
+Transform the client-side nutrition and workout tracker into a hardened, standalone Progressive Web App (PWA) installable on iOS and Android. This part enforces strict zero-leak DSGVO compliance by locally bundling all static assets, sets up complete offline caching via Service Workers, configures mobile standalone metadata, provides an iOS home-screen installation guide, and sets up automated GitHub Actions workflows for static deployment to GitHub Pages and Android APK generation via Capacitor.
 
 ### Tech Stack & Dependencies
 - **Runtime & Framework:** TypeScript (v5.5+), React 19, Vite (from Part 1)
-- **Local Persistence & State:** `dexie` (v4+), `dexie-react-hooks` (from Part 1)
-- **Data Visualization:** `recharts` (v2.12+)
-- **Validation:** `zod` (v3+)
-- **UI & Icons:** `lucide-react`, Tailwind CSS, `radix-ui` tabs/slider/dialog
+- **PWA Tooling & Service Worker:** `vite-plugin-pwa` (v0.20+), `workbox-window`
+- **Mobile Container (Optional APK compilation):** `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`
+- **Asset Generation & Favicons:** `@vite-pwa/assets-generator`
+- **Icons & Local Fonts:** `lucide-react`, `@fontsource-variable/inter` (from Part 1)
+- **CI/CD:** GitHub Actions (GitHub Pages static deploy & Android Gradle build)
 
 #### Installation Commands:
 ```bash
-npm install recharts
-npm install -D @types/recharts
+npm install vite-plugin-pwa workbox-window
+npm install -D @vite-pwa/assets-generator
+# Optional Capacitor initialization for native Android APK:
+npm install @capacitor/core @capacitor/cli @capacitor/android
+npx cap init "Quirin Fitti" "com.quirin.fitti" --web-dir "dist"
 
 ```
 
 ### File Structure
 
 ```text
-src/
-├── schemas/
-│   ├── workout.schema.ts
-│   ├── weightLog.schema.ts
-│   └── tdee.schema.ts
-├── db/
-│   ├── workoutRepository.ts
-│   └── metricsRepository.ts
-├── services/
-│   ├── tdeeEngineService.ts
-│   ├── volumeCalculatorService.ts
-│   └── dynamicTargetService.ts
-├── hooks/
-│   ├── useWorkoutLogger.ts
-│   ├── useWeightTrends.ts
-│   └── useDynamicTargets.ts
-├── components/
-│   ├── workout/
-│   │   ├── WorkoutLoggerCard.tsx
-│   │   ├── ExerciseSetTable.tsx
-│   │   ├── ExercisePickerModal.tsx
-│   │   ├── RestTimerOverlay.tsx
-│   │   └── WorkoutSummaryModal.tsx
-│   ├── analytics/
-│   │   ├── WeightTrendChart.tsx
-│   │   ├── TdeeStatsCard.tsx
-│   │   ├── CalorieDeficitChart.tsx
-│   │   └── MacroDistributionRadar.tsx
-│   └── dashboard/
-│       └── DynamicTargetBanner.tsx
-└── utils/
-    ├── mathCalculations.ts
-    └── emaCalculations.ts
+├── .github/
+│   └── workflows/
+│       ├── deploy-pages.yml
+│       └── build-android.yml
+├── capacitor.config.ts
+├── pwa-assets.config.ts
+├── vite.config.ts
+├── index.html
+├── public/
+│   ├── favicon.svg
+│   ├── apple-touch-icon.png
+│   ├── pwa-192x192.png
+│   ├── pwa-512x512.png
+│   └── maskable-icon-512x512.png
+└── src/
+    ├── services/
+    │   └── pwaService.ts
+    ├── hooks/
+    │   └── usePWAInstall.ts
+    ├── components/
+    │   └── pwa/
+    │       ├── InstallBanner.tsx
+    │       ├── IosInstallInstructionsModal.tsx
+    │       ├── ReloadPrompt.tsx
+    │       └── OfflineIndicator.tsx
+    └── utils/
+        └── platformDetect.ts
 
 ```
 
 ### Attention Points & DSGVO
 
-* **Zero Cloud Fitness Sync:** All health and workout data (weight, volume, heart rate/calories, exercise names) remain strictly on-device in IndexedDB. No external fitness APIs (Apple HealthKit / Google Health Connect) are queried in this phase.
-* **Adaptive EMA Weight Smoothing:** Daily body weight fluctuates up to $\pm 2\text{ kg}$ due to water retention and glycogen storage. The TDEE calculation must never use single-day raw weight, but rather an Exponential Moving Average:
-
-$$\text{EMA}_{\text{today}} = \alpha \cdot \text{Weight}_{\text{today}} + (1 - \alpha) \cdot \text{EMA}_{\text{yesterday}} \quad (\alpha \approx 0.1 \text{ to } 0.2)$$
-
-
-* **Caloric Balance Inversion:** Caloric expenditure calculation over a 14–28 day rolling window:
-
-$$\text{TDEE}_{\text{avg}} = \text{Calories}_{\text{avg}} - \left( \frac{\Delta \text{EMA Weight (kg)} \times 7700\text{ kcal}}{N \text{ days}} \right)$$
-
-
-* **Zero Stutter Data Rendering:** Use optimized SVG path rendering via `recharts` with debounced time-series downsampling to ensure smooth 60fps chart interactions on mobile viewports.
+* **Strict Zero-Leak Compliance:** Audit and eliminate all external outbound network requests. No remote CDNs, tracking pixels, Google Tag Manager, or remote Google Fonts. Every single script, style, icon, and font must be delivered directly from the local bundle or Service Worker cache.
+* **Cache-First Offline Strategy:** Configure Workbox runtime caching to cache all JavaScript, CSS, HTML, and local JSON seed data so the application loads instantly in airplane mode.
+* **iOS WebKit PWA Sandbox Rules:** On iOS, standalone PWAs run in an isolated WebKit container. Configure `display: standalone`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style: black-translucent`, and proper viewport meta tags to prevent Safari navigation chrome from appearing.
+* **Storage Isolation Protection:** Ensure `navigator.storage.persist()` (from Part 1) runs immediately upon launching the installed PWA instance.
 
 ---
 
 ## 2. Execution Phases
 
-#### Phase 1: Schemas & Database Extensions
+#### Phase 1: PWA Assets & Vite Plugin Configuration
 
-* [x] **Step 1.1:** In `src/schemas/workout.schema.ts`, expand schemas for:
-* `ExerciseDefinitionSchema`: `id` (uuid), `name` (string), `category` (enum: `chest`, `back`, `legs`, `shoulders`, `arms`, `core`, `cardio`), `defaultRestSeconds` (number).
-* `ExerciseSetSchema`: `setId` (string), `setNumber` (number), `type` (enum: `warmup`, `normal`, `drop`, `failure`), `weightKg` (number), `reps` (number), `rpe` (optional number 1–10), `isCompleted` (boolean).
-* `LoggedExerciseSchema`: `exerciseId` (string), `exerciseName` (string), `sets` (array of `ExerciseSetSchema`), `notes` (optional string).
-* `WorkoutLogSchema`: `id` (uuid), `date` (string YYYY-MM-DD), `startTime` (timestamp), `endTime` (optional timestamp), `title` (string), `exercises` (array of `LoggedExerciseSchema`), `estimatedCaloriesBurned` (optional number).
-
-
-* [x] **Step 1.2:** In `src/schemas/weightLog.schema.ts`, define `WeightEntrySchema` (`id`, `date` YYYY-MM-DD, `weightKg`, `smoothedWeightKg`, `note`).
-* [x] **Step 1.3:** In `src/schemas/tdee.schema.ts`, define `TdeeCalculationResultSchema` (`calculatedTdee`, `trendDirection`, `weeklyWeightDeltaKg`, `confidenceScore`, `recommendedIntake`).
-* [x] **Step 1.4:** In `src/db/schema.ts`, add the v3 migration with `weightLogs` (`id, date`), `exerciseDefinitions`, and a pre-seeded local exercise library of 30 standard gym movements.
-* [ ] **Verification:** Run `npx tsc --noEmit` and execute schema migration tests to ensure database opens without data loss. (Pending runtime verification.)
-
-#### Phase 2: Math & TDEE Calculation Subsystem
-
-* [x] **Step 2.1:** In `src/utils/emaCalculations.ts`, implement `calculateWeightEMA(entries: WeightEntry[], smoothingFactor = 0.1)`:
-* Sort entries chronologically.
-* Compute the weighted exponential trend line and backfill missing day gaps via linear interpolation.
+* [x] **Step 1.1:** In `pwa-assets.config.ts`, configure asset generation presets for minimal crisp vector icons (`favicon.svg`, `apple-touch-icon.png`, `pwa-192x192.png`, `pwa-512x512.png`, and maskable variations with appropriate safe zones).
+* [x] **Step 1.2:** In `vite.config.ts`, configure `VitePWA()`:
+* `registerType: 'autoUpdate'`
+* `includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png']`
+* `manifest`:
+* `name`: "Quirin Fitti - Nährstoff & Workout Tracker"
+* `short_name`: "Quirin Fitti"
+* `description`: "100% lokaler, DSGVO-konformer Nährstoff- und Trainings-Tracker"
+* `theme_color`: "#09090b" (slate-950 dark background)
+* `background_color`: "#09090b"
+* `display`: "standalone"
+* `orientation`: "portrait"
+* `start_url`: "/"
+* `scope`: "/"
+* `icons`: define exact sizes matching generated assets.
 
 
-* [x] **Step 2.2:** In `src/services/tdeeEngineService.ts`, implement `computeAdaptiveTDEE(weightLogs: WeightEntry[], dailyCalorieLogs: DailyLog[], windowDays = 21)`:
-* Calculate average daily caloric intake over the window.
-* Calculate smoothed weight change ($\Delta \text{EMA Weight}$) over the window.
-* Convert weight delta into caloric surplus/deficit using the standard $7700\text{ kcal/kg}$ adipose tissue energy constant.
-* Compute raw TDEE and compute confidence score based on the number of days logged (minimum 7 days required for baseline confidence).
-
-
-* [x] **Step 2.3:** In `src/services/volumeCalculatorService.ts`, implement workout aggregation helpers:
-* `calculateTotalVolume(workout: WorkoutLog): number` ($\sum \text{reps} \times \text{weightKg}$).
-* `calculateEstimated1RM(weightKg: number, reps: number): number` using the Brzycki formula:
-
-$$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
+* `workbox`:
+* `globPatterns`: `['**/*.{js,css,html,ico,png,svg,woff2,json}']`
+* `navigateFallback`: '/index.html'
 
 
 
 
-* [x] **Step 2.4:** In `src/services/dynamicTargetService.ts`, implement `getAdjustedDailyTargets(baseProfile: UserProfile, isWorkoutDay: boolean, workoutType?: string)`:
-* If `isWorkoutDay` is true, add configured delta (e.g., $+40\text{g}$ carbohydrates, $+10\text{g}$ protein, $+250\text{ kcal}$) to base nutritional target.
+* [x] **Step 1.3:** In `index.html`, add required Apple WebKit meta tags:
+* `<meta name="apple-mobile-web-app-capable" content="yes">`
+* `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`
+* `<meta name="apple-mobile-web-app-title" content="Quirin Fitti">`
+* `<link rel="apple-touch-icon" href="/apple-touch-icon.png">`
 
 
-* [ ] **Verification:** Write unit test feeding 14 days of 2500 kcal intake with a steady 0.5 kg weight drop, confirming calculated TDEE outputs approximately $2775\text{ kcal/day} \pm 25\text{ kcal}$. (Pending runtime test execution.)
+* [ ] **Verification:** Run `npm run pwa:assets`, then `npm run build` and inspect `dist/` to confirm `manifest.webmanifest`, `sw.js`, and all pre-cached asset chunks are generated. (Pending dependency/build verification.)
 
-#### Phase 3: Workout Logger & State Hooks
+#### Phase 2: Platform Detection & Install Prompt Subsystem
 
-* [x] **Step 3.1:** In `src/db/workoutRepository.ts`, implement CRUD operations for active and completed workouts.
-* [x] **Step 3.2:** In `src/hooks/useWorkoutLogger.ts`, build state management for:
-* Active workout session (persisted in local state to survive page refreshes).
-* Add/remove exercise, add/remove set, toggle set completion.
-* Auto-trigger rest countdown timer on set completion.
-* "Finish Workout" action that writes final data to Dexie `workouts` table and updates `dailyLogs` for that date.
+* [ ] **Step 2.1:** In `src/utils/platformDetect.ts`, implement helpers:
+* `isIOS(): boolean` (detects iPhone/iPad user agents).
+* `isStandalone(): boolean` (checks `window.matchMedia('(display-mode: standalone)').matches` or `navigator.standalone`).
+* `isAndroid(): boolean`.
 
 
-* [x] **Step 3.3:** In `src/hooks/useWeightTrends.ts`, implement reactive queries pulling weight logs and computing dynamic EMA time-series for chart consumption.
-* [x] **Step 3.4:** In `src/hooks/useDynamicTargets.ts`, combine user profile targets with today's logged workouts to supply the active macro targets to the Part 3 Balancer and Part 4 AI Bridge.
-* [ ] **Verification:** Log a 3-set bench press workout in a test harness; verify set completion updates total volume and saves to Dexie reactively. (Pending browser/runtime verification.)
-
-#### Phase 4: UI Components & Dashboard Integration
-
-* [x] **Step 4.1:** In `src/components/workout/ExerciseSetTable.tsx`, build a mobile-optimized table with numeric inputs for weight, reps, RPE, and a one-tap checkmark button for set completion.
-* [x] **Step 4.2:** In `src/components/workout/RestTimerOverlay.tsx`, build a floating countdown badge that plays a local chime/vibration when rest time elapses.
-* [x] **Step 4.3:** In `src/components/workout/ExercisePickerModal.tsx`, build a categorized search interface to select movements or create custom exercises.
-* [x] **Step 4.4:** In `src/components/analytics/WeightTrendChart.tsx`, build a dual-line chart (Recharts `ResponsiveContainer`, `LineChart`, `Line`, `Tooltip`, `XAxis`, `YAxis`) displaying:
-* Raw daily weight dots (semi-transparent scatter dots).
-* Continuous EMA smoothed trend line (bold primary color line).
+* [ ] **Step 2.2:** In `src/services/pwaService.ts`, handle the `beforeinstallprompt` event on Chromium/Android and store the deferred prompt object.
+* [ ] **Step 2.3:** In `src/hooks/usePWAInstall.ts`, create a React hook exposing:
+* `isInstallable: boolean`
+* `isInstalled: boolean`
+* `platform: 'ios' | 'android' | 'desktop'`
+* `promptInstall(): Promise<void>`
 
 
-* [x] **Step 4.5:** In `src/components/analytics/TdeeStatsCard.tsx`, render:
-* Live calculated TDEE readout (e.g., `2,640 kcal/day`).
-* True daily surplus/deficit indicator.
-* Confidence rating badge ("Calibrating: 5/14 days" or "Calibrated").
+* [ ] **Verification:** Open the web app on desktop Chrome and verify `beforeinstallprompt` registers and triggers the custom installation workflow.
+
+#### Phase 3: PWA UI Components & Update Handling
+
+* [ ] **Step 3.1:** In `src/components/pwa/ReloadPrompt.tsx`, implement a non-intrusive toast notifying the user when a new Service Worker update is downloaded with a "Neu laden" (Reload) button.
+* [ ] **Step 3.2:** In `src/components/pwa/IosInstallInstructionsModal.tsx`, build a step-by-step visual onboarding modal tailored for iOS users:
+1. *"Tippe unten in Safari auf das Teilen-Symbol"* (Share icon).
+2. *"Scrolle nach unten und wähle 'Zum Home-Bildschirm'"* (Add to Home Screen).
+3. *"Bestätige oben rechts mit 'Hinzufügen'"* (Confirm).
+4. Display notice explaining that this step guarantees permanent offline persistence against iOS 7-day cache cleanups.
 
 
-* [x] **Step 4.6:** In `src/components/dashboard/DynamicTargetBanner.tsx`, render a dynamic banner on the main dashboard showing workout-day macro adjustments.
-* [ ] **Verification:** In the UI, log weight for 3 consecutive days, complete a workout, and verify both the Weight Chart renders the smoothed line and the dashboard macro target dynamically updates. (Pending browser/runtime verification.)
+* [ ] **Step 3.3:** In `src/components/pwa/InstallBanner.tsx`, render a dismissible bottom bar shown only to non-standalone users, routing to native `promptInstall()` on Android or opening `IosInstallInstructionsModal` on iOS.
+* [ ] **Step 3.4:** In `src/components/pwa/OfflineIndicator.tsx`, listen to `window.addEventListener('online' | 'offline')` and display a discreet badge when the device is completely offline.
+* [ ] **Step 3.5:** In `src/App.tsx`, mount `ReloadPrompt`, `InstallBanner`, and `OfflineIndicator`.
+* [ ] **Verification:** In browser DevTools, toggle Device Emulation to "iPhone 14 Pro", verify that clicking "App installieren" opens the iOS instructions modal, and toggle Network to "Offline" to check the offline badge.
+
+#### Phase 4: Zero-Leak DSGVO Network Audit
+
+* [ ] **Step 4.1:** Verify that all icons in `src/components/` are imported from `lucide-react` (SVG inlined into JS bundles) and not from external CDNs.
+* [ ] **Step 4.2:** In `src/main.tsx`, ensure `@fontsource-variable/inter` is loaded locally and check `dist/` font chunks after build.
+* [ ] **Step 4.3:** Audit all fetch calls across `openFoodFactsService.ts` and ensure zero telemetry query params or headers are attached.
+* [ ] **Step 4.4:** Set Content Security Policy (CSP) headers in `index.html`:
+`<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.openfoodfacts.org; connect-src 'self' https://world.openfoodfacts.org;">`
+* [ ] **Verification:** Run a full Chrome DevTools Network trace from fresh page load through food search and workout logging. Verify that the ONLY outbound domains contacted are `self` (local assets) and explicitly user-triggered queries to `world.openfoodfacts.org`.
+
+#### Phase 5: CI/CD Pipelines (GitHub Pages & Android Build)
+
+* [ ] **Step 5.1:** In `.github/workflows/deploy-pages.yml`, create a GitHub Actions workflow:
+* Trigger on push to `main` branch.
+* Setup Node.js LTS, run `npm ci`, run `npx tsc --noEmit`, run `npm run build`.
+* Deploy `dist/` directory to GitHub Pages via `actions/deploy-pages@v4`.
+
+
+* [ ] **Step 5.2:** In `.github/workflows/build-android.yml`, create an optional release workflow:
+* Trigger on release tags (e.g., `v*`).
+* Run web build -> `npx cap sync android` -> Run Gradle assembleRelease / assembleDebug.
+* Upload `app-release.apk` / `app-debug.apk` to GitHub Release assets for direct Android downloading without Play Store requirements.
+
+
+* [ ] **Verification:** Push repository to GitHub, trigger actions pipeline, verify static deployment on `https://<username>.github.io/<repo-name>/`, and confirm Lighthouse scores 100/100 on PWA criteria.
 
 ---
 
@@ -159,7 +166,7 @@ $$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
 
 ### Critical Path Edge Cases
 
-1. **Missing Weight Days:** Log weight on Day 1 and Day 5 (skipping Days 2, 3, 4). Verify that `calculateWeightEMA()` handles the time gap without dividing by zero, crashing, or distorting the EMA curvature.
-2. **In-Progress Workout Recovery:** Start a workout, log 2 sets, close the browser tab, and reopen the application. Verify that the active workout state restores without data loss.
-3. **Extreme Outlier Scale Readings:** Input a weight value with an accidental typo (e.g., 8.0 kg instead of 80.0 kg). Verify the Zod schema rejects inputs outside valid biological bounds ($30\text{ kg} - 350\text{ kg}$) before it corrupts the EMA curve.
-4. **Target Synchronization Across Modules:** Log a workout on the current date, then navigate to Part 3 (Meal Balancer) and Part 4 (AI Prompt Synthesizer). Confirm both modules automatically receive the elevated workout-day macro targets without manual re-entry.
+1. **Complete Offline Boot:** Open the installed PWA on a mobile device, enable Airplane Mode, force-close the app from recent apps, and reopen it. Confirm the entire UI, Dexie database, food search, meal balancer, and workout logger initialize seamlessly without network errors.
+2. **PWA Standalone Window Isolation:** Verify on iOS and Android that launching the app from the home screen opens as a borderless full-screen application without URL bars, search bars, or browser navigation buttons.
+3. **CSP Violation Resistance:** Attempt to inject an external script or image from an untrusted CDN in a test component. Verify the browser CSP strictly blocks the request and logs a security policy violation in the console.
+4. **Service Worker Cache Invalidation:** Publish a minor UI version change, reload the app, and verify that `ReloadPrompt.tsx` prompts the user to activate the new version without breaking existing IndexedDB records.
