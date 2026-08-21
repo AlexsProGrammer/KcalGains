@@ -1,0 +1,67 @@
+name: Build Android APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Generate PWA assets
+        run: pnpm run pwa:assets
+
+      - name: Build web bundle
+        run: pnpm run build
+
+      - name: Verify Capacitor project
+        run: test -f capacitor.config.ts && test -d android
+
+      - name: Sync Capacitor
+        run: pnpm exec cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quirin-fitti-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+
+      - name: Upload APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/*.apk

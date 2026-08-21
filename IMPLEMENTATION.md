@@ -146,19 +146,19 @@ npx cap init "Quirin Fitti" "com.quirin.fitti" --web-dir "dist"
 
 #### Phase 5: CI/CD Pipelines (GitHub Pages & Android Build)
 
-* [ ] **Step 5.1:** In `.github/workflows/deploy-pages.yml`, create a GitHub Actions workflow:
+* [x] **Step 5.1:** In `.github/workflows/deploy-pages.yml`, create a GitHub Actions workflow:
 * Trigger on push to `main` branch.
 * Setup Node.js LTS, run `npm ci`, run `npx tsc --noEmit`, run `npm run build`.
 * Deploy `dist/` directory to GitHub Pages via `actions/deploy-pages@v4`.
 
 
-* [ ] **Step 5.2:** In `.github/workflows/build-android.yml`, create an optional release workflow:
+* [x] **Step 5.2:** In `.github/workflows/build-android.yml`, create an optional release workflow:
 * Trigger on release tags (e.g., `v*`).
 * Run web build -> `npx cap sync android` -> Run Gradle assembleRelease / assembleDebug.
 * Upload `app-release.apk` / `app-debug.apk` to GitHub Release assets for direct Android downloading without Play Store requirements.
 
 
-* [ ] **Verification:** Push repository to GitHub, trigger actions pipeline, verify static deployment on `https://<username>.github.io/<repo-name>/`, and confirm Lighthouse scores 100/100 on PWA criteria.
+* [ ] **Verification:** Push repository to GitHub, trigger actions pipeline, verify static deployment on `https://<username>.github.io/<repo-name>/`, and confirm Lighthouse scores 100/100 on PWA criteria. (Pending remote CI/deployment verification.)
 
 ---
 
