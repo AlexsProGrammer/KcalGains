@@ -7,6 +7,7 @@ export const DailyLogSchema = z.object({
   targetProtein: z.number().nonnegative(),
   targetCarbs: z.number().nonnegative(),
   targetFat: z.number().nonnegative(),
+  caloriesConsumed: z.number().nonnegative().optional(),
   weightKg: z.number().positive().optional(),
   notes: z.string().optional(),
 })

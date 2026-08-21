@@ -93,19 +93,19 @@ $$\text{TDEE}_{\text{avg}} = \text{Calories}_{\text{avg}} - \left( \frac{\Delta 
 
 #### Phase 2: Math & TDEE Calculation Subsystem
 
-* [ ] **Step 2.1:** In `src/utils/emaCalculations.ts`, implement `calculateWeightEMA(entries: WeightEntry[], smoothingFactor = 0.1)`:
+* [x] **Step 2.1:** In `src/utils/emaCalculations.ts`, implement `calculateWeightEMA(entries: WeightEntry[], smoothingFactor = 0.1)`:
 * Sort entries chronologically.
 * Compute the weighted exponential trend line and backfill missing day gaps via linear interpolation.
 
 
-* [ ] **Step 2.2:** In `src/services/tdeeEngineService.ts`, implement `computeAdaptiveTDEE(weightLogs: WeightEntry[], dailyCalorieLogs: DailyLog[], windowDays = 21)`:
+* [x] **Step 2.2:** In `src/services/tdeeEngineService.ts`, implement `computeAdaptiveTDEE(weightLogs: WeightEntry[], dailyCalorieLogs: DailyLog[], windowDays = 21)`:
 * Calculate average daily caloric intake over the window.
 * Calculate smoothed weight change ($\Delta \text{EMA Weight}$) over the window.
 * Convert weight delta into caloric surplus/deficit using the standard $7700\text{ kcal/kg}$ adipose tissue energy constant.
 * Compute raw TDEE and compute confidence score based on the number of days logged (minimum 7 days required for baseline confidence).
 
 
-* [ ] **Step 2.3:** In `src/services/volumeCalculatorService.ts`, implement workout aggregation helpers:
+* [x] **Step 2.3:** In `src/services/volumeCalculatorService.ts`, implement workout aggregation helpers:
 * `calculateTotalVolume(workout: WorkoutLog): number` ($\sum \text{reps} \times \text{weightKg}$).
 * `calculateEstimated1RM(weightKg: number, reps: number): number` using the Brzycki formula:
 
@@ -114,11 +114,11 @@ $$\text{1RM} = \frac{\text{weightKg}}{1.0278 - (0.0278 \times \text{reps})}$$
 
 
 
-* [ ] **Step 2.4:** In `src/services/dynamicTargetService.ts`, implement `getAdjustedDailyTargets(baseProfile: UserProfile, isWorkoutDay: boolean, workoutType?: string)`:
+* [x] **Step 2.4:** In `src/services/dynamicTargetService.ts`, implement `getAdjustedDailyTargets(baseProfile: UserProfile, isWorkoutDay: boolean, workoutType?: string)`:
 * If `isWorkoutDay` is true, add configured delta (e.g., $+40\text{g}$ carbohydrates, $+10\text{g}$ protein, $+250\text{ kcal}$) to base nutritional target.
 
 
-* [ ] **Verification:** Write unit test feeding 14 days of 2500 kcal intake with a steady 0.5 kg weight drop, confirming calculated TDEE outputs approximately $2775\text{ kcal/day} \pm 25\text{ kcal}$.
+* [ ] **Verification:** Write unit test feeding 14 days of 2500 kcal intake with a steady 0.5 kg weight drop, confirming calculated TDEE outputs approximately $2775\text{ kcal/day} \pm 25\text{ kcal}$. (Pending runtime test execution.)
 
 #### Phase 3: Workout Logger & State Hooks
 
