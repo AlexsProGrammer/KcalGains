@@ -5,6 +5,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from '@/routes'
+import { ThemeProvider } from '@/theme/ThemeProvider'
 import { db } from '@/db'
 import { seedDatabaseIfEmpty } from '@/db/seed'
 import { initializeSearchIndex } from '@/services/searchIndexService'
@@ -20,8 +21,10 @@ void db.open()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </ThemeProvider>
   </StrictMode>,
 )

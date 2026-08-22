@@ -99,5 +99,33 @@ export class FitnessTrackerDB extends Dexie {
       exerciseDefinitions: 'id, name, category',
       settings: 'id',
     })
+
+    this.version(7)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        const current = await transaction.table('settings').get('app-settings')
+        const merged = {
+          ...(DEFAULT_APP_SETTINGS as any),
+          ...(current ?? {}),
+          id: 'app-settings',
+          accent: current?.accent ?? 'emerald',
+          todayHero: current?.todayHero ?? 'ring',
+          locale: current?.locale ?? 'en',
+          density: current?.density ?? 'comfortable',
+          reduceMotion: current?.reduceMotion ?? 'system',
+          updatedAt: new Date(),
+        }
+
+        await transaction.table('settings').put(merged)
+      })
   }
 }

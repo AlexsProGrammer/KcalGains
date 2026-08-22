@@ -4,7 +4,7 @@ import { DailyLogSchema } from '@/schemas/dailyLog.schema'
 import { FoodSchema } from '@/schemas/food.schema'
 import { MealItemSchema, MealSchema } from '@/schemas/meal.schema'
 import { ProfileSchema, ActivityLevelSchema, BiologicalSexSchema, FitnessGoalSchema } from '@/schemas/profile.schema'
-import { AppSettingsSchema, ViewModeSchema } from '@/schemas/settings.schema'
+import { AppSettingsSchema, ViewModeSchema, AccentSchema, TodayHeroSchema, LocaleSchema, DensitySchema, ReduceMotionSchema } from '@/schemas/settings.schema'
 import { ExerciseDefinitionSchema, ExerciseSetSchema, LoggedExerciseSchema, SetSchema, WorkoutLogSchema, WorkoutSchema } from '@/schemas/workout.schema'
 import { WeightEntrySchema } from '@/schemas/weightLog.schema'
 import { TdeeCalculationResultSchema } from '@/schemas/tdee.schema'
@@ -23,6 +23,11 @@ export type ActivityLevel = z.infer<typeof ActivityLevelSchema>
 export type FitnessGoal = z.infer<typeof FitnessGoalSchema>
 export type AppSettings = z.infer<typeof AppSettingsSchema>
 export type ViewMode = z.infer<typeof ViewModeSchema>
+export type AccentName = z.infer<typeof AccentSchema>
+export type TodayHero = z.infer<typeof TodayHeroSchema>
+export type Locale = z.infer<typeof LocaleSchema>
+export type Density = z.infer<typeof DensitySchema>
+export type ReduceMotion = z.infer<typeof ReduceMotionSchema>
 export type BackupPayload = z.infer<typeof BackupPayloadSchema>
 export type PromptContext = z.infer<typeof PromptContextSchema>
 export type AiMealItem = z.infer<typeof AiMealItemSchema>
