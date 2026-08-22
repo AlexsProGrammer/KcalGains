@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
-import type { DailyLog, ExerciseDefinition, Food, Meal, Profile, WeightEntry, Workout } from '@/types'
+import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
+import type { AppSettings, DailyLog, ExerciseDefinition, Food, Meal, Profile, WeightEntry, Workout } from '@/types'
 
 export class FitnessTrackerDB extends Dexie {
   foods!: Table<Food, string>
@@ -9,6 +10,7 @@ export class FitnessTrackerDB extends Dexie {
   profile!: Table<Profile, string>
   weightLogs!: Table<WeightEntry, string>
   exerciseDefinitions!: Table<ExerciseDefinition, string>
+  settings!: Table<AppSettings, string>
 
   constructor() {
     super('KcalGains')
@@ -38,5 +40,28 @@ export class FitnessTrackerDB extends Dexie {
       weightLogs: 'id, date',
       exerciseDefinitions: 'id, name, category',
     })
+
+    this.version(4)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table('settings').put(DEFAULT_APP_SETTINGS)
+        await transaction
+          .table('profile')
+          .toCollection()
+          .modify((profile: Partial<Profile>) => {
+            profile.goal ??= 'maintain'
+            profile.activityLevel ??= 'moderate'
+            profile.goalRateKgPerWeek ??= 0
+          })
+      })
   }
 }

@@ -3,7 +3,8 @@ import { BackupPayloadSchema } from '@/schemas/backup.schema'
 import { DailyLogSchema } from '@/schemas/dailyLog.schema'
 import { FoodSchema } from '@/schemas/food.schema'
 import { MealItemSchema, MealSchema } from '@/schemas/meal.schema'
-import { ProfileSchema } from '@/schemas/profile.schema'
+import { ProfileSchema, ActivityLevelSchema, BiologicalSexSchema, FitnessGoalSchema } from '@/schemas/profile.schema'
+import { AppSettingsSchema, ViewModeSchema } from '@/schemas/settings.schema'
 import { ExerciseDefinitionSchema, ExerciseSetSchema, LoggedExerciseSchema, SetSchema, WorkoutLogSchema, WorkoutSchema } from '@/schemas/workout.schema'
 import { WeightEntrySchema } from '@/schemas/weightLog.schema'
 import { TdeeCalculationResultSchema } from '@/schemas/tdee.schema'
@@ -17,6 +18,11 @@ export type Set = z.infer<typeof SetSchema>
 export type Workout = z.infer<typeof WorkoutSchema>
 export type DailyLog = z.infer<typeof DailyLogSchema>
 export type Profile = z.infer<typeof ProfileSchema>
+export type BiologicalSex = z.infer<typeof BiologicalSexSchema>
+export type ActivityLevel = z.infer<typeof ActivityLevelSchema>
+export type FitnessGoal = z.infer<typeof FitnessGoalSchema>
+export type AppSettings = z.infer<typeof AppSettingsSchema>
+export type ViewMode = z.infer<typeof ViewModeSchema>
 export type BackupPayload = z.infer<typeof BackupPayloadSchema>
 export type PromptContext = z.infer<typeof PromptContextSchema>
 export type AiMealItem = z.infer<typeof AiMealItemSchema>

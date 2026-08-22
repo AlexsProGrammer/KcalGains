@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
+import { ProfileSchema } from '@/schemas/profile.schema'
 import { getAdjustedDailyTargets, type DynamicMacroTargets } from '@/services/dynamicTargetService'
 import type { Profile } from '@/types'
 
-const fallbackProfile: Profile = { id: 'default', targetCalories: 2000, targetMacros: { protein: 120, carbs: 220, fat: 65 } }
+const fallbackProfile: Profile = ProfileSchema.parse({ id: 'default', targetCalories: 2000, targetMacros: { protein: 120, carbs: 220, fat: 65 } })
 
 export function useDynamicTargets(): DynamicMacroTargets & { isWorkoutDay: boolean } {
   const state = useLiveQuery(async () => {

@@ -13,6 +13,7 @@ import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
 import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
 import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
 import { WeightLoggerCard } from '@/components/analytics/WeightLoggerCard'
+import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
@@ -56,6 +57,10 @@ function App() {
 
         <section className="mt-4 max-w-2xl">
           <DynamicTargetBanner />
+        </section>
+
+        <section className="mt-4">
+          <SettingsPanel />
         </section>
 
         <section className="mt-4 grid gap-4 lg:grid-cols-2">

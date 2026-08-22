@@ -5,15 +5,15 @@ import type { z } from 'zod'
 
 const BACKUP_VERSION = 1
 
+type BackupTables = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile'>
+
+type BackupTableCounts = { [Key in keyof BackupTables]: number }
+
 export type ImportDatabaseResult =
   | {
       success: true
-  counts: BackupTableCounts
+      counts: BackupTableCounts
     }
-
-type BackupTableCounts = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile'> extends infer Tables
-  ? { [Key in keyof Tables]: number }
-  : never
   | {
       success: false
       error: string
