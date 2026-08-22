@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Calculator, Check, Plus, WandSparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -11,10 +11,13 @@ import { MacroTargetControls } from '@/components/balancer/MacroTargetControls'
 import { OptimizationErrorAlert } from '@/components/balancer/OptimizationErrorAlert'
 import { BalancerResultsCard } from '@/components/balancer/BalancerResultsCard'
 import { SelectedFoodList } from '@/components/balancer/SelectedFoodList'
+import { resolveDailyTargets } from '@/services/targetResolverService'
 import type { Food } from '@/types'
 
 export function BalancerContainer() {
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])
+  const profile = useLiveQuery(() => db.profile.toCollection().first(), [])
+  const settings = useLiveQuery(() => db.settings.get('app-settings'), [])
   const balancer = useMealBalancer()
   const { commitBalancedMealToLog } = useMealLogger()
   const [query, setQuery] = useState('')
@@ -22,6 +25,19 @@ export function BalancerContainer() {
   const [proteinFocus, setProteinFocus] = useState(50)
   const visibleFoods = foods.filter((food) => food.name.toLowerCase().includes(query.toLowerCase())).slice(0, 24)
   const names = new Map(balancer.selectedFoods.map((food) => [food.id, food.name]))
+  const targetSource = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg }).source
+
+  useEffect(() => {
+    if (settings?.moduleChaining === false || settings?.autoTargetsFromGoal === false) return
+
+    const resolved = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg })
+    balancer.setTargets({
+      calories: resolved.calories,
+      protein: resolved.protein,
+      carbs: resolved.carbs,
+      fat: resolved.fat,
+    })
+  }, [profile, settings])
 
   function toggleFood(food: Food) {
     if (balancer.selectedFoods.some((selected) => selected.id === food.id)) balancer.removeFood(food.id)

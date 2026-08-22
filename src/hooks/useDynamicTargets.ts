@@ -1,18 +1,40 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
-import { ProfileSchema } from '@/schemas/profile.schema'
-import { getAdjustedDailyTargets, type DynamicMacroTargets } from '@/services/dynamicTargetService'
-import type { Profile } from '@/types'
+import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
+import { resolveDailyTargets } from '@/services/targetResolverService'
+import type { DynamicMacroTargets } from '@/services/dynamicTargetService'
 
-const fallbackProfile: Profile = ProfileSchema.parse({ id: 'default', targetCalories: 2000, targetMacros: { protein: 120, carbs: 220, fat: 65 } })
+const fallbackSettings = DEFAULT_APP_SETTINGS
 
-export function useDynamicTargets(): DynamicMacroTargets & { isWorkoutDay: boolean } {
+export function useDynamicTargets(): DynamicMacroTargets & { isWorkoutDay: boolean; source: 'goal' | 'manual' } {
   const state = useLiveQuery(async () => {
     const today = new Date().toISOString().slice(0, 10)
     const profile = await db.profile.toCollection().first()
+    const settings = await db.settings.get('app-settings') ?? fallbackSettings
     const workouts = await db.workouts.toArray()
     const isWorkoutDay = workouts.some((workout) => 'date' in workout && workout.date === today)
-    return { targets: getAdjustedDailyTargets(profile ?? fallbackProfile, isWorkoutDay), isWorkoutDay }
-  }, [], { targets: getAdjustedDailyTargets(fallbackProfile, false), isWorkoutDay: false })
-  return { ...state.targets, isWorkoutDay: state.isWorkoutDay }
+    const resolved = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg, isWorkoutDay })
+
+    return {
+      targets: {
+        calories: resolved.calories,
+        protein: resolved.protein,
+        carbs: resolved.carbs,
+        fat: resolved.fat,
+      },
+      isWorkoutDay,
+      source: resolved.source,
+    }
+  }, [], {
+    targets: {
+      calories: 2000,
+      protein: 150,
+      carbs: 220,
+      fat: 65,
+    },
+    isWorkoutDay: false,
+    source: 'goal',
+  })
+
+  return { ...state.targets, isWorkoutDay: state.isWorkoutDay, source: state.source }
 }

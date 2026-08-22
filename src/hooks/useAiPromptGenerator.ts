@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '@/db'
 import { copyToClipboard } from '@/services/clipboardService'
+import { resolveDailyTargets } from '@/services/targetResolverService'
 import { generatePrompt } from '@/services/promptSynthesizerService'
 import type { PromptContext } from '@/types'
 
@@ -21,21 +22,34 @@ export function useAiPromptGenerator(initialContext: Partial<PromptContext> = {}
 
   useEffect(() => {
     let active = true
-    const date = new Date().toISOString().slice(0, 10)
-    void db.dailyLogs.where('date').equals(date).last().then((dailyLog) => {
-      if (!active || !dailyLog) return
+
+    Promise.all([
+      db.profile.toCollection().first(),
+      db.settings.get('app-settings'),
+    ]).then(([profile, settings]) => {
+      if (!active) return
+      if (settings?.moduleChaining === false || settings?.autoTargetsFromGoal === false) return
+
+      const resolved = resolveDailyTargets({
+        profile,
+        settings,
+        recentWeightKg: profile?.weightKg,
+      })
+
       const nextContext: PromptContext = {
         ...context,
         remainingMacros: {
-          calories: dailyLog.targetCalories,
-          protein: dailyLog.targetProtein,
-          carbs: dailyLog.targetCarbs,
-          fat: dailyLog.targetFat,
+          calories: resolved.calories,
+          protein: resolved.protein,
+          carbs: resolved.carbs,
+          fat: resolved.fat,
         },
       }
+
       setContext(nextContext)
       setPrompt(generatePrompt(nextContext))
     })
+
     return () => { active = false }
   }, [])
 
