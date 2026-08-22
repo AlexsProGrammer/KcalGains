@@ -66,7 +66,7 @@ export function parseOpenFoodFactsProduct(rawProduct: unknown, fallbackBarcode?:
       zinc: getNutrient(nutriments, 'zinc_100g'),
     },
     isCustom: false,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   })
 }
 

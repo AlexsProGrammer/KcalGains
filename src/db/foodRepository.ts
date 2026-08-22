@@ -23,7 +23,7 @@ export async function createFood(food: InsertFoodInput): Promise<string> {
   const parsedFood = FoodSchema.parse({
     ...food,
     id: food.id ?? crypto.randomUUID(),
-    createdAt: food.createdAt ?? new Date(),
+    createdAt: typeof food.createdAt === 'string' ? food.createdAt : (food.createdAt?.toISOString?.() ?? new Date().toISOString()),
   })
 
   await db.foods.add(parsedFood)

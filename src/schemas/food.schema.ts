@@ -13,5 +13,5 @@ export const FoodSchema = z.object({
   fiber: z.number().nonnegative().default(0),
   micros: z.record(z.string(), z.number()).optional(),
   isCustom: z.boolean(),
-  createdAt: z.coerce.date(),
+  createdAt: z.string().datetime().or(z.string()),
 })

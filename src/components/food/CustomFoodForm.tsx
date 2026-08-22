@@ -75,7 +75,7 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       if (initialFood) {
         await updateFood(id, foodData)
       }
-      onSaved({ ...initialFood, ...foodData, id, createdAt: initialFood?.createdAt ?? new Date() })
+      onSaved({ ...initialFood, ...foodData, id, createdAt: initialFood?.createdAt ?? new Date().toISOString() })
     } catch {
       setError('The food could not be saved locally.')
     }

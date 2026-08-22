@@ -21,6 +21,10 @@ import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
 import { ViewModeToggle } from '@/components/history/ViewModeToggle'
 import { WeightHistoryList } from '@/components/history/WeightHistoryList'
 import { MealHistoryList } from '@/components/history/MealHistoryList'
+import { WorkoutHistoryList } from '@/components/history/WorkoutHistoryList'
+import { FoodHistoryList } from '@/components/history/FoodHistoryList'
+import { MacroTrendChart } from '@/components/analytics/MacroTrendChart'
+import { MealBreakdownChart } from '@/components/analytics/MealBreakdownChart'
 import { useSettings } from '@/hooks/useSettings'
 import type { ViewMode } from '@/types'
 
@@ -85,12 +89,21 @@ function App() {
           </div>
         </section>
 
-        <section className="mt-4 max-w-2xl">
+        <section className="mt-4 grid gap-4 lg:grid-cols-2">
+          <MacroTrendChart />
+          <MealBreakdownChart />
+        </section>
+
+        <section className="mt-4">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-100">History</h2>
+            <h2 className="text-lg font-semibold text-slate-100">History & Records</h2>
             <ViewModeToggle value={viewMode} onChange={handleViewChange} />
           </div>
-          <MealHistoryList viewMode={viewMode} />
+          <div className="grid gap-4">
+            <MealHistoryList viewMode={viewMode} />
+            <WorkoutHistoryList viewMode={viewMode} />
+            <FoodHistoryList viewMode={viewMode} />
+          </div>
         </section>
 
         <section className="mt-4 max-w-2xl">

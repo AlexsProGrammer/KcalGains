@@ -65,7 +65,7 @@ export async function resolveAndLinkFoods(aiMeal: AiMealResponse, database: Fitn
       fat: item.fat,
       fiber: 0,
       isCustom: true,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     })
     return { item, foodId: newFood.id, newFood }
   })

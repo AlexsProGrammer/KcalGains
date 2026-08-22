@@ -29,7 +29,7 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     fat: 5,
     fiber: 2,
     isCustom: true,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   }))
   const meals: Meal[] = [1, 2].map((index) => ({
     id: `backup-check-meal-${index}`,
@@ -110,7 +110,7 @@ export function DatabaseDebugger() {
       fat: 4,
       fiber: 2,
       isCustom: true,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     }))
 
     await db.foods.bulkAdd(foods)

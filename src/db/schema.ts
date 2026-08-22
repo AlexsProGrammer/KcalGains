@@ -63,5 +63,41 @@ export class FitnessTrackerDB extends Dexie {
             profile.goalRateKgPerWeek ??= 0
           })
       })
+
+    this.version(5)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        await transaction
+          .table('foods')
+          .toCollection()
+          .modify((food: any) => {
+            if (food.createdAt instanceof Date) {
+              food.createdAt = food.createdAt.toISOString()
+            } else if (typeof food.createdAt !== 'string') {
+              food.createdAt = new Date().toISOString()
+            }
+          })
+      })
+
+    // v5 dropped the createdAt index to purge Date-valued keys; ISO strings index cleanly again.
+    this.version(6).stores({
+      foods: 'id, name, brand, barcode, isCustom, createdAt',
+      meals: 'id, date, mealType, [date+mealType]',
+      workouts: 'id, date, type',
+      dailyLogs: 'id, date',
+      profile: 'id',
+      weightLogs: 'id, date',
+      exerciseDefinitions: 'id, name, category',
+      settings: 'id',
+    })
   }
 }
