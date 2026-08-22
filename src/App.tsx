@@ -11,6 +11,7 @@ import { AiBridgeContainer } from '@/components/ai-bridge/AiBridgeContainer'
 import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
 import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
+import { BmiCard } from '@/components/analytics/BmiCard'
 import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
 import { WeightLoggerCard } from '@/components/analytics/WeightLoggerCard'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
@@ -66,6 +67,7 @@ function App() {
         <section className="mt-4 grid gap-4 lg:grid-cols-2">
           <WorkoutLoggerCard />
           <div className="space-y-4">
+            <BmiCard />
             <WeightLoggerCard />
             <TdeeStatsCard />
             <WeightTrendChart />
