@@ -57,7 +57,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: quirin-fitti-release-apk
+          name: kcalgains-release-apk
           path: android/app/build/outputs/apk/release/*.apk
 
       - name: Upload APK to GitHub Release

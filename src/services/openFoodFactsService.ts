@@ -5,7 +5,7 @@ import type { Food } from '@/types'
 
 const SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl'
 const PRODUCT_URL = 'https://world.openfoodfacts.org/api/v2/product'
-const USER_AGENT = 'QuirinFittiTracker - PWA - Version 1.0'
+const USER_AGENT = 'KcalGains - PWA - Version 0.5.1'
 
 type RawProduct = {
   code?: unknown

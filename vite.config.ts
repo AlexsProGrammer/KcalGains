@@ -9,9 +9,9 @@ export default defineConfig({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
     manifest: {
-      name: 'Quirin Fitti - Nährstoff & Workout Tracker',
-      short_name: 'Quirin Fitti',
-      description: '100% lokaler, DSGVO-konformer Nährstoff- und Trainings-Tracker',
+      name: 'KcalGains',
+      short_name: 'KcalGains',
+      description: '100% local, GDPR-compliant nutrient and training tracker',
       theme_color: '#09090b',
       background_color: '#09090b',
       display: 'standalone',
