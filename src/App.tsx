@@ -25,6 +25,7 @@ import { WorkoutHistoryList } from '@/components/history/WorkoutHistoryList'
 import { FoodHistoryList } from '@/components/history/FoodHistoryList'
 import { MacroTrendChart } from '@/components/analytics/MacroTrendChart'
 import { MealBreakdownChart } from '@/components/analytics/MealBreakdownChart'
+import { AutoMealPlanner } from '@/components/planner/AutoMealPlanner'
 import { useSettings } from '@/hooks/useSettings'
 import type { ViewMode } from '@/types'
 
@@ -104,6 +105,10 @@ function App() {
             <WorkoutHistoryList viewMode={viewMode} />
             <FoodHistoryList viewMode={viewMode} />
           </div>
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <AutoMealPlanner />
         </section>
 
         <section className="mt-4 max-w-2xl">
