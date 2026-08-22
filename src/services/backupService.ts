@@ -128,7 +128,7 @@ export async function importDatabaseFromJson(
 
         if (mode === 'overwrite') {
           await table.clear()
-          await table.bulkAdd(incoming as never[])
+          await (table as any).bulkAdd(incoming)
           summary[name].added = incoming.length
           continue
         }
@@ -152,7 +152,7 @@ export async function importDatabaseFromJson(
           }
         }
 
-        if (writes.length > 0) await table.bulkPut(writes as never[])
+        if (writes.length > 0) await (table as any).bulkPut(writes)
       }
     })
   } catch {

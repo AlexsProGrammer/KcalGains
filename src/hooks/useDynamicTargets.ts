@@ -47,10 +47,12 @@ export function useDynamicTargets(): DynamicMacroTargets & {
     fat: 65,
   }
 
+  const source: 'goal' | 'manual' = state?.source === 'manual' ? 'manual' : 'goal'
+
   return {
     ...resolvedTargets,
     targets: resolvedTargets,
     isWorkoutDay: state?.isWorkoutDay ?? false,
-    source: state?.source ?? 'goal',
+    source,
   }
 }

@@ -30,7 +30,7 @@ export function useAiIngestion() {
     return { ...result, links }
   }
 
-  async function commit(mealType: Meal['mealType'] = 'flexible' as Meal['mealType'], date = new Date().toISOString().slice(0, 10)): Promise<Meal | undefined> {
+  async function commit(mealType: Meal['mealType'] = 'snack', date = new Date().toISOString().slice(0, 10)): Promise<Meal | undefined> {
     if (!parsedMeal || linkedFoods.length === 0) return undefined
     setIsProcessing(true)
     try {
@@ -38,7 +38,7 @@ export function useAiIngestion() {
       const mealRecord: Meal = {
         id: crypto.randomUUID(),
         date,
-        mealType: mealType === 'flexible' ? 'snack' : mealType,
+        mealType,
         items: linkedFoods.map(({ item, foodId }) => ({ foodId: foodId!, amountInGrams: item.grams, calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat })),
         totalCalories: meal.totalCalories,
         totalProtein: meal.totalProtein,

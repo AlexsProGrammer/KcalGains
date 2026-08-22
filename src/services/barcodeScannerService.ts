@@ -83,7 +83,8 @@ export async function startBarcodeScanner(
       }
 
       const settings = track.getSettings() as MediaTrackSettings & { torch?: boolean }
-      await track.applyConstraints({ advanced: [{ torch: !settings.torch }] } as MediaTrackConstraints)
+      const constraints = { advanced: [{ torch: !settings.torch }] } as unknown as MediaTrackConstraints
+      await track.applyConstraints(constraints)
       return true
     },
   }

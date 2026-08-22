@@ -11,7 +11,11 @@ type WorkoutHistoryListProps = {
   viewMode: 'graph' | 'list'
 }
 
-const EMPTY_FORM = { date: new Date().toISOString().slice(0, 10), type: 'strength', durationMinutes: '' }
+const EMPTY_FORM: { date: string; type: Workout['type']; durationMinutes: string } = {
+  date: new Date().toISOString().slice(0, 10),
+  type: 'strength',
+  durationMinutes: '',
+}
 
 export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
   const [draft, setDraft] = useState(EMPTY_FORM)
@@ -58,7 +62,7 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
     return null
   }
 
-  const workoutTypes = Array.from(new Set(['strength', 'cardio', 'flexibility', 'sports', 'rest']))
+  const workoutTypes: Workout['type'][] = ['strength', 'cardio', 'other']
 
   return (
     <Card>
@@ -69,7 +73,7 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
             <TextInput type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} />
           </Field>
           <Field label="Type">
-            <SelectInput value={draft.type} onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value }))}>
+            <SelectInput value={draft.type} onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value as Workout['type'] }))}>
               {workoutTypes.map((type) => <option key={type} value={type}>{type}</option>)}
             </SelectInput>
           </Field>
@@ -99,7 +103,7 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
 
                 <Field label="Type">
                   <SelectInput defaultValue={workout.type} onBlur={(event) => {
-                    void updateWorkout(workout, { type: event.target.value })
+                    void updateWorkout(workout, { type: event.target.value as Workout['type'] })
                   }}>
                     {workoutTypes.map((type) => <option key={type} value={type}>{type}</option>)}
                   </SelectInput>

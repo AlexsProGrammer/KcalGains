@@ -63,5 +63,5 @@ export function searchFoods(query: string): FoodSearchResult[] {
   return searchIndex.search(normalizedQuery, {
     prefix: true,
     fuzzy: 0.2,
-  }) as FoodSearchResult[]
+  }) as unknown as FoodSearchResult[]
 }
