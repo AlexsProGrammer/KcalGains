@@ -12,12 +12,21 @@ export function getLocale(): LocaleKey {
   return LocaleSchema.safeParse(locale).success ? (locale as LocaleKey) : 'en'
 }
 
+type TranslateFn = {
+  <K extends keyof typeof en>(key: K): (typeof en)[K]
+} & typeof en
+
 export function useT() {
   const { settings } = useSettings()
   const dictionary = dictionaries[settings.locale] ?? dictionaries.en
 
+  const translate = Object.assign(
+    ((key: keyof typeof en) => dictionary[key]) as TranslateFn,
+    dictionary,
+  )
+
   return {
-    t: <K extends keyof typeof en>(key: K) => dictionary[key],
+    t: translate,
     locale: settings.locale,
     formatNumber: (value: number, options?: Intl.NumberFormatOptions) =>
       new Intl.NumberFormat(settings.locale, options).format(value),

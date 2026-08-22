@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Home, UtensilsCrossed, Dumbbell, TrendingUp, MoreHorizontal, Plus } from 'lucide-react'
-import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { clsx } from 'clsx'
 import { QuickActionSheet } from '@/components/app-shell/QuickActionSheet'
@@ -23,6 +23,10 @@ export function AppShell() {
   const [quickActionOpen, setQuickActionOpen] = useState(false)
   const { t } = useT()
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+  }, [location.pathname])
+
   const currentTitle = useMemo(() => {
     const match = navItems.find((item) => item.to === location.pathname)
     if (match) return t.nav[match.to.replace('/', '') as keyof typeof t.nav] ?? match.label
@@ -33,7 +37,6 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-surface-0 text-ink-hi">
-      <ScrollRestoration />
       <div className="mx-auto flex max-w-[1600px]">
         <aside className="hidden w-72 shrink-0 border-r border-line bg-surface-1/70 backdrop-blur-xl lg:flex lg:flex-col lg:pt-6">
           <div className="px-5 pb-6">

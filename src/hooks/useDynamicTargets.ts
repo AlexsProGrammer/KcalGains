@@ -6,7 +6,11 @@ import type { DynamicMacroTargets } from '@/services/dynamicTargetService'
 
 const fallbackSettings = DEFAULT_APP_SETTINGS
 
-export function useDynamicTargets(): DynamicMacroTargets & { isWorkoutDay: boolean; source: 'goal' | 'manual' } {
+export function useDynamicTargets(): DynamicMacroTargets & {
+  targets: DynamicMacroTargets
+  isWorkoutDay: boolean
+  source: 'goal' | 'manual'
+} {
   const state = useLiveQuery(async () => {
     const today = new Date().toISOString().slice(0, 10)
     const profile = await db.profile.toCollection().first()
@@ -36,5 +40,17 @@ export function useDynamicTargets(): DynamicMacroTargets & { isWorkoutDay: boole
     source: 'goal',
   })
 
-  return { ...state.targets, isWorkoutDay: state.isWorkoutDay, source: state.source }
+  const resolvedTargets = state?.targets ?? {
+    calories: 2000,
+    protein: 150,
+    carbs: 220,
+    fat: 65,
+  }
+
+  return {
+    ...resolvedTargets,
+    targets: resolvedTargets,
+    isWorkoutDay: state?.isWorkoutDay ?? false,
+    source: state?.source ?? 'goal',
+  }
 }
