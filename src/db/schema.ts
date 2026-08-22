@@ -122,10 +122,35 @@ export class FitnessTrackerDB extends Dexie {
           locale: current?.locale ?? 'en',
           density: current?.density ?? 'comfortable',
           reduceMotion: current?.reduceMotion ?? 'system',
+          onboardingCompleted: current?.onboardingCompleted ?? false,
+          onboardingDismissed: current?.onboardingDismissed ?? false,
           updatedAt: new Date(),
         }
 
         await transaction.table('settings').put(merged)
+      })
+
+    this.version(8)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        const current = await transaction.table('settings').get('app-settings')
+        await transaction.table('settings').put({
+          ...(DEFAULT_APP_SETTINGS as any),
+          ...(current ?? {}),
+          id: 'app-settings',
+          onboardingCompleted: current?.onboardingCompleted ?? false,
+          onboardingDismissed: current?.onboardingDismissed ?? false,
+          updatedAt: new Date(),
+        })
       })
   }
 }

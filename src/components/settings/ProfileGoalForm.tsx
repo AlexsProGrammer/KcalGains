@@ -1,11 +1,14 @@
 import { Target } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput, TextInput } from '@/components/ui/field'
 import { useProfile } from '@/hooks/useProfile'
+import { useSettings } from '@/hooks/useSettings'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
+import { clearOnboardingState } from '@/db/settingsRepository'
 import type { ActivityLevel, BiologicalSex, FitnessGoal } from '@/types'
 
 const GOAL_OPTIONS: { value: FitnessGoal; label: string }[] = [
@@ -30,7 +33,9 @@ function toNumberOrUndefined(value: string): number | undefined {
 }
 
 export function ProfileGoalForm() {
+  const navigate = useNavigate()
   const { profile, isLoading, saveProfile } = useProfile()
+  const { setSetting } = useSettings()
   const [heightCm, setHeightCm] = useState('')
   const [weightKg, setWeightKg] = useState('')
   const [birthYear, setBirthYear] = useState('')
@@ -128,7 +133,12 @@ export function ProfileGoalForm() {
             />
           </Field>
 
-          <Button type="submit">Save profile</Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit">Save profile</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate('/onboarding')}>
+              Open setup wizard
+            </Button>
+          </div>
           {message ? <Alert variant="success">{message}</Alert> : null}
           {error ? <Alert variant="error">{error}</Alert> : null}
         </form>

@@ -22,6 +22,8 @@ export const AppSettingsSchema = z.object({
   locale: LocaleSchema.default('en'),
   density: DensitySchema.default('comfortable'),
   reduceMotion: ReduceMotionSchema.default('system'),
+  onboardingCompleted: z.boolean().default(false),
+  onboardingDismissed: z.boolean().default(false),
   updatedAt: z.coerce.date().default(() => new Date()),
 })
 

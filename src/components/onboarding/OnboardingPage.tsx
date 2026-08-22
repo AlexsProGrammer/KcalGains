@@ -32,7 +32,7 @@ function toNumberOrUndefined(value: string): number | undefined {
   return value.trim() === '' || Number.isNaN(parsed) ? undefined : parsed
 }
 
-export function OnboardingPage() {
+export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
   const navigate = useNavigate()
   const { profile, isLoading, saveProfile } = useProfile()
   const { settings, setSetting } = useSettings()
@@ -94,12 +94,19 @@ export function OnboardingPage() {
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
       await setSetting('accent', accent)
+      await setSetting('onboardingCompleted', true)
+      await setSetting('onboardingDismissed', false)
       navigate('/today', { replace: true })
     } catch {
       setError('Your profile could not be saved. Please check the values and try again.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  async function handleSkip() {
+    await setSetting('onboardingDismissed', true)
+    navigate('/today', { replace: true })
   }
 
   const stepInfo = [
@@ -231,8 +238,8 @@ export function OnboardingPage() {
   const nextStepLabel = step === totalSteps - 1 ? 'Finish setup' : 'Continue'
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center">
-      <Card className="w-full max-w-2xl overflow-hidden">
+    <div className={modalMode ? 'fixed inset-0 z-[80] flex items-center justify-center bg-surface-0/65 p-4 backdrop-blur-sm' : 'flex min-h-[70vh] items-center justify-center'}>
+      <Card className={modalMode ? 'w-full max-w-2xl overflow-hidden border border-line/80 shadow-2xl' : 'w-full max-w-2xl overflow-hidden'}>
         <div className="border-b border-line bg-surface-1 p-4">
           <div className="mb-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-low">
             <span>Setup</span>
@@ -255,7 +262,7 @@ export function OnboardingPage() {
           {error ? <Alert variant="error">{error}</Alert> : null}
 
           <div className="flex items-center justify-between gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={() => (step === 0 ? navigate('/today', { replace: true }) : setStep((value) => Math.max(value - 1, 0)))} disabled={isSubmitting}>
+            <Button type="button" variant="secondary" onClick={() => (step === 0 ? void handleSkip() : setStep((value) => Math.max(value - 1, 0)))} disabled={isSubmitting}>
               <ArrowLeft className="h-4 w-4" />
               {step === 0 ? 'Skip for now' : 'Back'}
             </Button>

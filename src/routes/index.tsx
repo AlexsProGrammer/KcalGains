@@ -60,7 +60,7 @@ export function AppRoutes() {
         <Route path="/progress" element={<RoutePage element={<ProgressPage />} />} />
         <Route path="/more" element={<Navigate to="/more/profile" replace />} />
         <Route path="/more/:section" element={<RoutePage element={<MorePage />} />} />
-        <Route path="/onboarding" element={<RoutePage element={<OnboardingPage />} />} />
+        <Route path="/onboarding" element={<RoutePage element={<OnboardingPage modalMode />} />} />
       </Route>
     </Routes>
   )
