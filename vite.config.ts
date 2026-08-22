@@ -7,15 +7,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [react(), basicSsl(), VitePWA({
     registerType: 'autoUpdate',
-    includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+    includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'theme-bootstrap.js'],
     manifest: {
       name: 'KcalGains',
       short_name: 'KcalGains',
       description: '100% local, GDPR-compliant nutrient and training tracker',
-      theme_color: '#09090b',
-      background_color: '#09090b',
+      theme_color: '#0a0b0d',
+      background_color: '#0a0b0d',
       display: 'standalone',
-      orientation: 'portrait',
+      orientation: 'any',
       start_url: '/',
       scope: '/',
       icons: [
