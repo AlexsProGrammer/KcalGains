@@ -1,6 +1,7 @@
 import { Component, Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell/AppShell'
+import { TodayPage } from '@/components/today/TodayPage'
 import { Button } from '@/components/ui/button'
 
 const App = lazy(() => import('@/App'))
@@ -48,7 +49,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<Navigate to="/today" replace />} />
-        <Route path="/today" element={<RoutePage element={<App />} />} />
+        <Route path="/today" element={<RoutePage element={<TodayPage />} />} />
         <Route path="/nutrition" element={<RoutePage element={<App />} />} />
         <Route path="/train" element={<RoutePage element={<App />} />} />
         <Route path="/progress" element={<RoutePage element={<App />} />} />
