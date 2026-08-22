@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-const controlStyles = 'min-h-10 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400'
+const controlStyles = 'min-h-[44px] w-full rounded-md border border-line bg-surface-0 px-3 text-sm text-ink-hi placeholder:text-ink-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/70'
 
 type FieldProps = {
   label: string
@@ -14,9 +14,9 @@ type FieldProps = {
 export function Field({ label, hint, children, className }: FieldProps) {
   return (
     <label className={twMerge(clsx('block', className))}>
-      <span className="mb-1 block text-xs text-slate-400">{label}</span>
+      <span className="mb-1 block text-xs font-medium uppercase tracking-[0.08em] text-ink-low">{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-xs text-ink-low">{hint}</span> : null}
     </label>
   )
 }
