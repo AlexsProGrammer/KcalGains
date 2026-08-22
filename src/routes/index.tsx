@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell/AppShell'
 import { TodayPage } from '@/components/today/TodayPage'
 import { NutritionPage } from '@/components/nutrition/NutritionPage'
+import { TrainPage } from '@/components/train/TrainPage'
 import { Button } from '@/components/ui/button'
 
 const App = lazy(() => import('@/App'))
@@ -52,7 +53,7 @@ export function AppRoutes() {
         <Route path="/" element={<Navigate to="/today" replace />} />
         <Route path="/today" element={<RoutePage element={<TodayPage />} />} />
         <Route path="/nutrition" element={<RoutePage element={<NutritionPage />} />} />
-        <Route path="/train" element={<RoutePage element={<App />} />} />
+        <Route path="/train" element={<RoutePage element={<TrainPage />} />} />
         <Route path="/progress" element={<RoutePage element={<App />} />} />
         <Route path="/more" element={<RoutePage element={<App />} />} />
         <Route path="/onboarding" element={<RoutePage element={<App />} />} />
