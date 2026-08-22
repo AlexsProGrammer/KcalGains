@@ -2,13 +2,18 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useNutritionTrend } from '@/hooks/useNutritionTrend'
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-export function MacroTrendChart() {
-  const { trend } = useNutritionTrend(30)
+type MacroTrendChartProps = {
+  days?: number | 'all'
+}
+
+export function MacroTrendChart({ days = 30 }: MacroTrendChartProps) {
+  const effectiveDays = days === 'all' ? 365 : days
+  const { trend } = useNutritionTrend(effectiveDays)
 
   if (trend.length === 0) {
     return (
       <Card>
-        <CardHeader title="Macro trend (30 days)" />
+        <CardHeader title={days === 'all' ? 'Macro trend (all time)' : `Macro trend (${days}d)`} />
         <CardContent>
           <div className="py-16 text-center text-sm text-slate-500">Log some meals to see your nutrition trends.</div>
         </CardContent>
@@ -18,7 +23,7 @@ export function MacroTrendChart() {
 
   return (
     <Card>
-      <CardHeader title="Macro trend (30 days)" />
+      <CardHeader title={days === 'all' ? 'Macro trend (all time)' : `Macro trend (${days}d)`} />
       <CardContent>
         <div className="space-y-4">
           <div className="h-56">

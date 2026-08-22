@@ -4,6 +4,7 @@ import { AppShell } from '@/components/app-shell/AppShell'
 import { TodayPage } from '@/components/today/TodayPage'
 import { NutritionPage } from '@/components/nutrition/NutritionPage'
 import { TrainPage } from '@/components/train/TrainPage'
+import { ProgressPage } from '@/components/progress/ProgressPage'
 import { Button } from '@/components/ui/button'
 
 const App = lazy(() => import('@/App'))
@@ -54,7 +55,7 @@ export function AppRoutes() {
         <Route path="/today" element={<RoutePage element={<TodayPage />} />} />
         <Route path="/nutrition" element={<RoutePage element={<NutritionPage />} />} />
         <Route path="/train" element={<RoutePage element={<TrainPage />} />} />
-        <Route path="/progress" element={<RoutePage element={<App />} />} />
+        <Route path="/progress" element={<RoutePage element={<ProgressPage />} />} />
         <Route path="/more" element={<RoutePage element={<App />} />} />
         <Route path="/onboarding" element={<RoutePage element={<App />} />} />
       </Route>
