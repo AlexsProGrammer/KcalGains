@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { BarChart3, Camera, Dumbbell, UtensilsCrossed, Weight, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/i18n'
 
 type QuickActionSheetProps = {
   open: boolean
@@ -16,6 +17,8 @@ const actions = [
 ]
 
 export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
+  const { t } = useT()
+
   return (
     <AnimatePresence>
       {open ? (
@@ -37,10 +40,10 @@ export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-surface-3" />
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Quick actions</p>
-                <h3 className="text-lg font-semibold text-ink-hi">What do you want to log?</h3>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.shell.quickActions}</p>
+                <h3 className="text-lg font-semibold text-ink-hi">{t.shell.quickActionsPrompt}</h3>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close quick actions">
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label={t.common.close}>
                 <X className="h-4 w-4" />
               </Button>
             </div>

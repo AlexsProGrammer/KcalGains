@@ -1,0 +1,33 @@
+export const de = {
+  appName: 'KcalGains',
+  shell: {
+    overview: 'Übersicht',
+    performanceTracker: 'Leistungstracker',
+    setup: 'Einrichtung',
+    startSetup: 'Einrichtung starten',
+    quickActions: 'Schnellaktionen',
+    quickActionsPrompt: 'Was möchtest du erfassen?',
+  },
+  nav: {
+    today: 'Heute',
+    nutrition: 'Ernährung',
+    train: 'Training',
+    progress: 'Fortschritt',
+    more: 'Mehr',
+    onboarding: 'Einführung',
+  },
+  common: {
+    refresh: 'Aktualisieren',
+    offline: 'Offline-Modus',
+    install: 'Installieren',
+    installPrompt: 'Installiere KcalGains für schnellen Offline-Zugriff.',
+    dismiss: 'Installationsbanner schließen',
+    close: 'Schnellaktionen schließen',
+    newVersion: 'Neue Version verfügbar',
+  },
+  app: {
+    somethingWentWrong: 'Etwas ist schiefgelaufen',
+    pageCouldNotLoad: 'Diese Seite konnte nicht geladen werden',
+    tryAgain: 'Versuche es erneut oder lade die Seite neu.',
+  },
+} as const

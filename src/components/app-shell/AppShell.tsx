@@ -8,6 +8,7 @@ import { QuickActionSheet } from '@/components/app-shell/QuickActionSheet'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
+import { useT } from '@/i18n'
 
 const navItems = [
   { to: '/today', label: 'Today', icon: Home },
@@ -20,14 +21,15 @@ const navItems = [
 export function AppShell() {
   const location = useLocation()
   const [quickActionOpen, setQuickActionOpen] = useState(false)
+  const { t } = useT()
 
   const currentTitle = useMemo(() => {
     const match = navItems.find((item) => item.to === location.pathname)
-    if (match) return match.label
-    if (location.pathname.startsWith('/more')) return 'More'
-    if (location.pathname === '/onboarding') return 'Onboarding'
-    return 'Today'
-  }, [location.pathname])
+    if (match) return t.nav[match.to.replace('/', '') as keyof typeof t.nav] ?? match.label
+    if (location.pathname.startsWith('/more')) return t.nav.more
+    if (location.pathname === '/onboarding') return t.nav.onboarding
+    return t.nav.today
+  }, [location.pathname, t])
 
   return (
     <div className="min-h-screen bg-surface-0 text-ink-hi">
@@ -35,8 +37,8 @@ export function AppShell() {
       <div className="mx-auto flex max-w-[1600px]">
         <aside className="hidden w-72 shrink-0 border-r border-line bg-surface-1/70 backdrop-blur-xl lg:flex lg:flex-col lg:pt-6">
           <div className="px-5 pb-6">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-text">KcalGains</div>
-            <h1 className="text-xl font-semibold text-ink-hi">Performance Tracker</h1>
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-text">{t.appName}</div>
+            <h1 className="text-xl font-semibold text-ink-hi">{t.shell.performanceTracker}</h1>
           </div>
 
           <nav className="space-y-2 px-3">
@@ -60,7 +62,7 @@ export function AppShell() {
           <div className="mt-auto p-3">
             <Button className="w-full justify-center" onClick={() => window.location.assign('/onboarding')}>
               <Plus className="h-4 w-4" />
-              Start setup
+              {t.shell.startSetup}
             </Button>
           </div>
         </aside>
@@ -69,12 +71,12 @@ export function AppShell() {
           <header className="sticky top-0 z-20 border-b border-line bg-surface-0/85 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Overview</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.shell.overview}</p>
                 <h2 className="text-lg font-semibold text-ink-hi">{currentTitle}</h2>
               </div>
 
               <Button variant="secondary" size="sm" onClick={() => window.location.assign('/onboarding')}>
-                Setup
+                {t.shell.setup}
               </Button>
             </div>
           </header>
