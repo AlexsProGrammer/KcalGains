@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { db } from '@/db'
 import { copyToClipboard } from '@/services/clipboardService'
 import { resolveDailyTargets } from '@/services/targetResolverService'
-import { generatePrompt } from '@/services/promptSynthesizerService'
+import { generateBackupImportPrompt, generatePrompt, type PromptMode } from '@/services/promptSynthesizerService'
 import type { PromptContext } from '@/types'
 
 const defaultContext: PromptContext = {
@@ -16,6 +16,8 @@ const defaultContext: PromptContext = {
 export function useAiPromptGenerator(initialContext: Partial<PromptContext> = {}) {
   const [context, setContext] = useState<PromptContext>({ ...defaultContext, ...initialContext, remainingMacros: { ...defaultContext.remainingMacros, ...initialContext.remainingMacros } })
   const [prompt, setPrompt] = useState(() => generatePrompt(context))
+  const [mode, setModeState] = useState<PromptMode>('meal')
+  const [sourceText, setSourceTextState] = useState('')
   const [isCopying, setIsCopying] = useState(false)
   const [copyError, setCopyError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -47,16 +49,28 @@ export function useAiPromptGenerator(initialContext: Partial<PromptContext> = {}
       }
 
       setContext(nextContext)
-      setPrompt(generatePrompt(nextContext))
+      if (mode === 'meal') setPrompt(generatePrompt(nextContext))
     })
 
     return () => { active = false }
   }, [])
 
+  function setMode(next: PromptMode) {
+    setModeState(next)
+    setCopied(false)
+    setPrompt(next === 'meal' ? generatePrompt(context) : generateBackupImportPrompt(sourceText))
+  }
+
+  function setSourceText(text: string) {
+    setSourceTextState(text)
+    setCopied(false)
+    if (mode === 'import') setPrompt(generateBackupImportPrompt(text))
+  }
+
   function updateContext(updates: Partial<PromptContext>) {
     setContext((current) => {
       const next = { ...current, ...updates, remainingMacros: { ...current.remainingMacros, ...updates.remainingMacros } }
-      setPrompt(generatePrompt(next))
+      if (mode === 'meal') setPrompt(generatePrompt(next))
       setCopied(false)
       return next
     })
@@ -73,5 +87,5 @@ export function useAiPromptGenerator(initialContext: Partial<PromptContext> = {}
     return success
   }
 
-  return { context, copyError, copyPrompt, copied, isCopying, prompt, setContext: updateContext }
+  return { context, copyError, copyPrompt, copied, isCopying, mode, prompt, setContext: updateContext, setMode, setSourceText, sourceText }
 }

@@ -7,18 +7,30 @@ const BACKUP_VERSION = 1
 
 type BackupTables = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile'>
 
-type BackupTableCounts = { [Key in keyof BackupTables]: number }
+export type BackupTableName = keyof BackupTables
+
+export type BackupTableCounts = { [Key in BackupTableName]: number }
+
+export type ImportMode = 'overwrite' | 'merge'
+
+export type ImportTableSummary = { added: number; updated: number; skipped: number }
+
+export type ImportSummary = { [Key in BackupTableName]: ImportTableSummary }
 
 export type ImportDatabaseResult =
   | {
       success: true
+      mode: ImportMode
       counts: BackupTableCounts
+      summary: ImportSummary
     }
   | {
       success: false
       error: string
       issues?: z.ZodIssue[]
     }
+
+const TABLE_NAMES: BackupTableName[] = ['foods', 'meals', 'workouts', 'dailyLogs', 'profile']
 
 function downloadBackup(payload: BackupPayload): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -55,7 +67,37 @@ export async function exportDatabaseToJson(): Promise<BackupPayload> {
   return payload
 }
 
-export async function importDatabaseFromJson(file: File): Promise<ImportDatabaseResult> {
+function emptySummary(): ImportSummary {
+  return {
+    foods: { added: 0, updated: 0, skipped: 0 },
+    meals: { added: 0, updated: 0, skipped: 0 },
+    workouts: { added: 0, updated: 0, skipped: 0 },
+    dailyLogs: { added: 0, updated: 0, skipped: 0 },
+    profile: { added: 0, updated: 0, skipped: 0 },
+  }
+}
+
+function recordTimestamp(record: unknown): number | null {
+  const value = record as { createdAt?: unknown; updatedAt?: unknown } | null
+  const raw = value?.updatedAt ?? value?.createdAt
+  if (raw == null) return null
+
+  const time = raw instanceof Date ? raw.getTime() : new Date(String(raw)).getTime()
+  return Number.isNaN(time) ? null : time
+}
+
+/** Records without any timestamp cannot be compared, so the incoming copy wins. */
+function isIncomingNewer(incoming: unknown, existing: unknown): boolean {
+  const incomingTime = recordTimestamp(incoming)
+  const existingTime = recordTimestamp(existing)
+  if (incomingTime === null || existingTime === null) return true
+  return incomingTime >= existingTime
+}
+
+export async function importDatabaseFromJson(
+  file: File,
+  mode: ImportMode = 'overwrite',
+): Promise<ImportDatabaseResult> {
   let parsedJson: unknown
 
   try {
@@ -75,23 +117,43 @@ export async function importDatabaseFromJson(file: File): Promise<ImportDatabase
   }
 
   const payload = validation.data
+  const summary = emptySummary()
+  const tables = [db.foods, db.meals, db.workouts, db.dailyLogs, db.profile]
 
   try {
-    await db.transaction('rw', [db.foods, db.meals, db.workouts, db.dailyLogs, db.profile], async () => {
-      await Promise.all([
-        db.foods.clear(),
-        db.meals.clear(),
-        db.workouts.clear(),
-        db.dailyLogs.clear(),
-        db.profile.clear(),
-      ])
-      await Promise.all([
-        db.foods.bulkAdd(payload.foods),
-        db.meals.bulkAdd(payload.meals),
-        db.workouts.bulkAdd(payload.workouts),
-        db.dailyLogs.bulkAdd(payload.dailyLogs),
-        db.profile.bulkAdd(payload.profile),
-      ])
+    await db.transaction('rw', tables, async () => {
+      for (const [index, name] of TABLE_NAMES.entries()) {
+        const table = tables[index]
+        const incoming = payload[name] as { id: string }[]
+
+        if (mode === 'overwrite') {
+          await table.clear()
+          await table.bulkAdd(incoming as never[])
+          summary[name].added = incoming.length
+          continue
+        }
+
+        const existing = new Map(
+          (await table.toArray()).map((record) => [(record as { id: string }).id, record]),
+        )
+        const writes: unknown[] = []
+
+        for (const record of incoming) {
+          const current = existing.get(record.id)
+
+          if (!current) {
+            writes.push(record)
+            summary[name].added += 1
+          } else if (isIncomingNewer(record, current)) {
+            writes.push(record)
+            summary[name].updated += 1
+          } else {
+            summary[name].skipped += 1
+          }
+        }
+
+        if (writes.length > 0) await table.bulkPut(writes as never[])
+      }
     })
   } catch {
     return { success: false, error: 'The backup could not be written to browser storage.' }
@@ -99,6 +161,8 @@ export async function importDatabaseFromJson(file: File): Promise<ImportDatabase
 
   return {
     success: true,
+    mode,
+    summary,
     counts: {
       foods: payload.foods.length,
       meals: payload.meals.length,

@@ -1,18 +1,26 @@
 import { useState } from 'react'
 import type { z } from 'zod'
-import { exportDatabaseToJson, importDatabaseFromJson, type ImportDatabaseResult } from '@/services/backupService'
+import {
+  exportDatabaseToJson,
+  importDatabaseFromJson,
+  type ImportDatabaseResult,
+  type ImportMode,
+  type ImportSummary,
+} from '@/services/backupService'
 
 export function useBackup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [validationIssues, setValidationIssues] = useState<z.ZodIssue[]>([])
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [summary, setSummary] = useState<ImportSummary | null>(null)
 
   async function exportBackup() {
     setIsLoading(true)
     setError(null)
     setValidationIssues([])
     setSuccessMessage(null)
+    setSummary(null)
 
     try {
       const payload = await exportDatabaseToJson()
@@ -24,17 +32,19 @@ export function useBackup() {
     }
   }
 
-  async function importBackup(file: File): Promise<ImportDatabaseResult> {
+  async function importBackup(file: File, mode: ImportMode = 'overwrite'): Promise<ImportDatabaseResult> {
     setIsLoading(true)
     setError(null)
     setValidationIssues([])
     setSuccessMessage(null)
+    setSummary(null)
 
     try {
-      const result = await importDatabaseFromJson(file)
+      const result = await importDatabaseFromJson(file, mode)
 
       if (result.success) {
-        setSuccessMessage('Backup imported successfully.')
+        setSummary(result.summary)
+        setSuccessMessage(`Backup imported in ${result.mode} mode.`)
       } else {
         setError(result.error)
         setValidationIssues(result.issues ?? [])
@@ -50,5 +60,5 @@ export function useBackup() {
     }
   }
 
-  return { error, exportBackup, importBackup, isLoading, successMessage, validationIssues }
+  return { error, exportBackup, importBackup, isLoading, successMessage, summary, validationIssues }
 }
