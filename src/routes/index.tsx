@@ -2,6 +2,7 @@ import { Component, Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell/AppShell'
 import { MorePage } from '@/components/more/MorePage'
+import { OnboardingPage } from '@/components/onboarding/OnboardingPage'
 import { TodayPage } from '@/components/today/TodayPage'
 import { NutritionPage } from '@/components/nutrition/NutritionPage'
 import { TrainPage } from '@/components/train/TrainPage'
@@ -59,7 +60,7 @@ export function AppRoutes() {
         <Route path="/progress" element={<RoutePage element={<ProgressPage />} />} />
         <Route path="/more" element={<Navigate to="/more/profile" replace />} />
         <Route path="/more/:section" element={<RoutePage element={<MorePage />} />} />
-        <Route path="/onboarding" element={<RoutePage element={<App />} />} />
+        <Route path="/onboarding" element={<RoutePage element={<OnboardingPage />} />} />
       </Route>
     </Routes>
   )
