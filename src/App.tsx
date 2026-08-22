@@ -18,8 +18,19 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
+import { ViewModeToggle } from '@/components/history/ViewModeToggle'
+import { WeightHistoryList } from '@/components/history/WeightHistoryList'
+import { MealHistoryList } from '@/components/history/MealHistoryList'
+import { useSettings } from '@/hooks/useSettings'
+import type { ViewMode } from '@/types'
 
 function App() {
+  const { settings, setSetting } = useSettings()
+  const viewMode: ViewMode = settings.defaultView
+
+  const handleViewChange = async (next: ViewMode) => {
+    await setSetting('defaultView', next)
+  }
   return (
     <>
       <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
@@ -70,8 +81,16 @@ function App() {
             <BmiCard />
             <WeightLoggerCard />
             <TdeeStatsCard />
-            <WeightTrendChart />
+            {viewMode === 'graph' ? <WeightTrendChart /> : <WeightHistoryList viewMode={viewMode} />}
           </div>
+        </section>
+
+        <section className="mt-4 max-w-2xl">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-slate-100">History</h2>
+            <ViewModeToggle value={viewMode} onChange={handleViewChange} />
+          </div>
+          <MealHistoryList viewMode={viewMode} />
         </section>
 
         <section className="mt-4 max-w-2xl">
