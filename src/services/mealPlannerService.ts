@@ -49,6 +49,11 @@ export function splitTargetsForMeal(daily: MealTargets, mealType: MealType): Mea
   }
 }
 
+function getBudgetForMeal(profileBudget?: number, enableBudget = true): number | undefined {
+  if (!enableBudget) return undefined
+  return typeof profileBudget === 'number' && Number.isFinite(profileBudget) && profileBudget > 0 ? profileBudget : undefined
+}
+
 function pickRandom<T>(items: T[], count: number, random: () => number): T[] {
   const pool = [...items]
   const picked: T[] = []
@@ -88,11 +93,11 @@ function buildCandidateFoods(
   return selected.slice(0, MAX_INGREDIENTS)
 }
 
-function balanceCandidate(foods: Food[], targets: MealTargets): BalancerResult | null {
+function balanceCandidate(foods: Food[], targets: MealTargets, maxBudget?: number): BalancerResult | null {
   if (foods.length === 0) return null
 
   const input: BalancerInput = {
-    targets: { ...targets, priority: 'balanced' },
+    targets: { ...targets, priority: 'balanced', maxBudget },
     ingredients: foods.map((food) => ({ foodId: food.id, minGrams: 0, maxGrams: 400 })),
   }
 
@@ -105,6 +110,7 @@ export function suggestMeal(
   dailyTargets: MealTargets,
   mealType: MealType,
   random: () => number = Math.random,
+  maxBudget?: number,
 ): PlannedMeal | null {
   if (foods.length < 2) return null
 
@@ -116,7 +122,7 @@ export function suggestMeal(
 
   for (let attempt = 0; attempt < CANDIDATES_PER_TEMPLATE; attempt += 1) {
     const candidate = buildCandidateFoods(groups, template, random)
-    const result = balanceCandidate(candidate, targets)
+    const result = balanceCandidate(candidate, targets, maxBudget)
     if (!result || result.status === 'infeasible') continue
 
     const score = macroDeviationMagnitude(result)
@@ -133,12 +139,13 @@ export function planDay(
   dailyTargets: MealTargets,
   mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'],
   random: () => number = Math.random,
+  maxBudget?: number,
 ): PlanDayResult {
   const meals: PlannedMeal[] = []
   const unplanned: MealType[] = []
 
   for (const mealType of mealTypes) {
-    const planned = suggestMeal(foods, dailyTargets, mealType, random)
+    const planned = suggestMeal(foods, dailyTargets, mealType, random, maxBudget)
     if (planned) meals.push(planned)
     else unplanned.push(mealType)
   }

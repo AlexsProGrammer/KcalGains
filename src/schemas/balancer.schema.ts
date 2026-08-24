@@ -6,6 +6,7 @@ export const MacroTargetSchema = z.object({
   carbs: z.number().nonnegative(),
   fat: z.number().nonnegative(),
   priority: z.enum(['balanced', 'protein-first', 'exact-calories']),
+  maxBudget: z.number().nonnegative().optional(),
 })
 
 export const IngredientConstraintSchema = z.object({
@@ -50,5 +51,6 @@ export const BalancerResultSchema = z.object({
   status: z.enum(['feasible', 'infeasible', 'bounded']),
   solution: z.array(SolutionItemSchema),
   totalMacros: MacroTotalsSchema,
+  totalCost: z.number().nonnegative().default(0),
   deviation: MacroDeviationSchema,
 })

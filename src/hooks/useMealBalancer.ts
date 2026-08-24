@@ -24,10 +24,15 @@ const defaultTargets: MacroTarget = {
   carbs: 50,
   fat: 15,
   priority: 'balanced',
+  maxBudget: 15,
 }
 
 export function useMealBalancer(initialTargets: Partial<MacroTarget> = {}): MealBalancerState {
-  const [targets, setTargetState] = useState<MacroTarget>({ ...defaultTargets, ...initialTargets })
+  const [targets, setTargetState] = useState<MacroTarget>({
+    ...defaultTargets,
+    ...initialTargets,
+    maxBudget: initialTargets.maxBudget ?? defaultTargets.maxBudget,
+  })
   const [selectedFoods, setSelectedFoods] = useState<Food[]>([])
   const [constraints, setConstraints] = useState<IngredientConstraint[]>([])
   const [result, setResult] = useState<BalancerResult>()

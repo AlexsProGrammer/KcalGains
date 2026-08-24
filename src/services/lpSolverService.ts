@@ -20,6 +20,12 @@ function quantizeGrams(grams: number, stepSize?: number): number {
   return Math.max(0, Math.round(grams / step) * step)
 }
 
+function getFoodCost(food: Food): number {
+  if (typeof food.costPer100g === 'number' && Number.isFinite(food.costPer100g)) return food.costPer100g
+  if (typeof food.price === 'number' && Number.isFinite(food.price)) return food.price
+  return 0
+}
+
 export function buildResult(
   input: BalancerInput,
   foodCatalog: Map<string, Food>,
@@ -27,6 +33,7 @@ export function buildResult(
   status: BalancerResult['status'],
 ): BalancerResult {
   let totalMacros = { ...emptyTotals }
+  let totalCost = 0
   const solution = input.ingredients.flatMap((ingredient) => {
     const food = foodCatalog.get(ingredient.foodId)
     if (!food) return []
@@ -35,6 +42,7 @@ export function buildResult(
     const grams = Math.min(ingredient.maxGrams, Math.max(ingredient.minGrams, roundedGrams))
     const computed = calculateFoodMacros(food, grams)
     totalMacros = addMacroTotals(totalMacros, computed)
+    totalCost += (getFoodCost(food) / 100) * grams
 
     return [{
       foodId: ingredient.foodId,
@@ -53,7 +61,7 @@ export function buildResult(
     deltaFat: totalMacros.fat - input.targets.fat,
   }
 
-  return BalancerResultSchema.parse({ status, solution, totalMacros, deviation })
+  return BalancerResultSchema.parse({ status, solution, totalMacros, totalCost, deviation })
 }
 
 function isCloseToTarget(result: BalancerResult): boolean {
