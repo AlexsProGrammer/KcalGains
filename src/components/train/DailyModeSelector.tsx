@@ -4,43 +4,47 @@ import { Dumbbell, HeartPulse, MoonStar, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { useSettings } from '@/hooks/useSettings'
 import { type TrainingDayContext } from '@/types'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 type QuickMode = Extract<TrainingDayContext['sportType'], 'strength' | 'mma' | 'cardio' | 'rest'>
 
-const MODES: Array<{ key: QuickMode; label: string; icon: typeof Dumbbell }> = [
+const defaultBuiltinModes = [
   { key: 'strength', label: 'Gym', icon: Dumbbell },
   { key: 'mma', label: 'MMA', icon: Trophy },
   { key: 'cardio', label: 'Cardio', icon: HeartPulse },
   { key: 'rest', label: 'Rest', icon: MoonStar },
-]
+] as const
 
-const defaultContext = (mode: QuickMode): TrainingDayContext => ({
+const defaultContext = (mode: string): TrainingDayContext => ({
   id: `training-context-${TODAY}`,
   date: TODAY,
   sportType: mode,
-  intensity: 'moderate',
+  intensity: mode === 'rest' ? 'low' : 'moderate',
   durationMinutes: mode === 'rest' ? 0 : 60,
-  seasonPhase: 'offseason',
+  seasonPhase: mode === 'rest' ? 'recovery' : 'offseason',
   createdAt: new Date().toISOString(),
 })
 
 export function DailyModeSelector() {
+  const { settings } = useSettings()
   const existing = useLiveQuery(() => db.trainingContext.where('date').equals(TODAY).first(), [TODAY])
-  const [selected, setSelected] = useState<QuickMode>('strength')
+  const [selected, setSelected] = useState<string>('strength')
+
+  const modes = useMemo(() => {
+    const configured = settings.trainingModes ?? []
+    return [...configured.map((mode) => ({ key: mode.sportType, label: mode.label, icon: Dumbbell }))]
+  }, [settings.trainingModes])
 
   useEffect(() => {
-    const sportType = existing?.sportType
-    const current = sportType === 'strength' || sportType === 'mma' || sportType === 'cardio' || sportType === 'rest'
-      ? sportType
-      : 'strength'
-    setSelected(current)
+    const sportType = existing?.sportType ?? 'strength'
+    setSelected(sportType)
   }, [existing])
 
   const current = useMemo(() => existing ?? defaultContext(selected), [existing, selected])
 
-  async function applyMode(mode: QuickMode) {
+  async function applyMode(mode: string) {
     const next = defaultContext(mode)
     await db.trainingContext.put(next)
     setSelected(mode)
@@ -51,7 +55,18 @@ export function DailyModeSelector() {
       <CardHeader icon={<Dumbbell />} title="Today’s training mode" />
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
-          {MODES.map(({ key, label, icon: Icon }) => (
+          {modes.length > 0 ? modes.map(({ key, label, icon: Icon }) => (
+            <Button
+              key={key}
+              type="button"
+              size="sm"
+              variant={selected === key ? 'tonal' : 'secondary'}
+              onClick={() => void applyMode(key)}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </Button>
+          )) : defaultBuiltinModes.map(({ key, label, icon: Icon }) => (
             <Button
               key={key}
               type="button"

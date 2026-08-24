@@ -1,4 +1,4 @@
-import { AlertTriangle, Database, FileLock2, Gauge, Palette, ShieldCheck, Sparkles, Target, Wand2, Wrench } from 'lucide-react'
+import { AlertTriangle, Database, Dumbbell, FileLock2, Gauge, Palette, ShieldCheck, Sparkles, Target, Wand2, Wrench } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { BackupManager } from '@/components/BackupManager'
 import { StorageStatus } from '@/components/StorageStatus'
@@ -9,6 +9,7 @@ import { AppearanceSettings } from '@/components/settings/AppearanceSettings'
 import { ModuleSettingsPanel } from '@/components/settings/ModuleSettingsPanel'
 import { AllergyConstraintsForm } from '@/components/settings/AllergyConstraintsForm'
 import { ProfileGoalForm } from '@/components/settings/ProfileGoalForm'
+import { TrainingModeSettingsForm } from '@/components/settings/TrainingModeSettingsForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
@@ -20,6 +21,7 @@ const developerNavItem = { to: '/more/developer', label: 'Developer', icon: Wren
 const navItems = [
   { to: '/more/profile', label: 'Profile', icon: Target },
   { to: '/more/goals', label: 'Goals', icon: Gauge },
+  { to: '/more/training', label: 'Training', icon: Dumbbell },
   { to: '/more/appearance', label: 'Appearance', icon: Palette },
   { to: '/more/modules', label: 'Modules', icon: ShieldCheck },
   { to: '/more/data', label: 'Data', icon: FileLock2 },
@@ -132,6 +134,7 @@ export function MorePage() {
   const contentMap: Record<string, React.ReactNode> = {
     profile: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
     goals: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
+    training: <TrainingModeSettingsForm />,
     appearance: <AppearanceSettings />,
     modules: <ModuleSettingsPanel />,
     data: (

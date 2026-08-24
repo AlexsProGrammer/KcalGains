@@ -9,9 +9,9 @@ import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { WeightTrendChart } from '@/components/analytics/WeightTrendChart'
 import { TdeeStatsCard } from '@/components/analytics/TdeeStatsCard'
 import { BmiCard } from '@/components/analytics/BmiCard'
-import { DynamicTargetBanner } from '@/components/dashboard/DynamicTargetBanner'
 import { WeightLoggerCard } from '@/components/analytics/WeightLoggerCard'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
+import { DailyModeSelector } from '@/components/train/DailyModeSelector'
 import { InstallBanner } from '@/components/pwa/InstallBanner'
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
@@ -51,7 +51,7 @@ function App() {
         </section>
 
         <section className="mt-4 max-w-2xl">
-          <DynamicTargetBanner />
+          <DailyModeSelector />
         </section>
 
         <section className="mt-4">

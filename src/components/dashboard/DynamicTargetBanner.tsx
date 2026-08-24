@@ -14,6 +14,7 @@ export function DynamicTargetBanner() {
         {targets.calories} kcal · {targetMacros.protein}P / {targetMacros.carbs}C / {targetMacros.fat}F
         <span className="text-slate-300">· recommended {recommendedIntake} kcal/day</span>
       </span>
+      {targets.reason ? <p className="mt-2 text-xs text-slate-300">{targets.reason}</p> : null}
     </Alert>
   )
 }

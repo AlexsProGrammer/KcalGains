@@ -10,14 +10,16 @@ export function useDynamicTargets(): DynamicMacroTargets & {
   targets: DynamicMacroTargets
   isWorkoutDay: boolean
   source: 'goal' | 'manual'
+  reason?: string
 } {
   const state = useLiveQuery(async () => {
     const today = new Date().toISOString().slice(0, 10)
     const profile = await db.profile.toCollection().first()
     const settings = await db.settings.get('app-settings') ?? fallbackSettings
     const workouts = await db.workouts.toArray()
-    const isWorkoutDay = workouts.some((workout) => 'date' in workout && workout.date === today)
-    const resolved = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg, isWorkoutDay })
+    const trainingContext = await db.trainingContext.where('date').equals(today).first()
+    const isWorkoutDay = workouts.some((workout) => 'date' in workout && workout.date === today) || Boolean(trainingContext && trainingContext.sportType !== 'rest')
+    const resolved = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg, isWorkoutDay, trainingContext })
 
     return {
       targets: {
@@ -28,6 +30,7 @@ export function useDynamicTargets(): DynamicMacroTargets & {
       },
       isWorkoutDay,
       source: resolved.source,
+      reason: resolved.reason,
     }
   }, [], {
     targets: {
@@ -38,6 +41,7 @@ export function useDynamicTargets(): DynamicMacroTargets & {
     },
     isWorkoutDay: false,
     source: 'goal',
+    reason: 'Baseline daily targets',
   })
 
   const resolvedTargets = state?.targets ?? {
@@ -54,5 +58,6 @@ export function useDynamicTargets(): DynamicMacroTargets & {
     targets: resolvedTargets,
     isWorkoutDay: state?.isWorkoutDay ?? false,
     source,
+    reason: state?.reason ?? 'Baseline daily targets',
   }
 }

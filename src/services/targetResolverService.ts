@@ -1,7 +1,7 @@
 import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
 import { calculateEnergyNeeds } from '@/services/energyNeedsService'
-import type { AppSettings } from '@/types'
-import type { Profile } from '@/types'
+import { resolveSportsPeriodization } from '@/services/sportsPeriodizationService'
+import type { AppSettings, Profile, TrainingDayContext } from '@/types'
 
 export type TargetSource = 'goal' | 'manual'
 
@@ -11,6 +11,7 @@ export type ResolvedDailyTargets = {
   carbs: number
   fat: number
   source: TargetSource
+  reason?: string
 }
 
 export function resolveDailyTargets({
@@ -19,12 +20,14 @@ export function resolveDailyTargets({
   recentWeightKg,
   isWorkoutDay = false,
   workoutType,
+  trainingContext,
 }: {
   profile?: Profile | null
   settings?: AppSettings | null
   recentWeightKg?: number
   isWorkoutDay?: boolean
   workoutType?: string
+  trainingContext?: Partial<TrainingDayContext> | null
 }): ResolvedDailyTargets {
   const baseProfile = profile ?? {
     id: 'default-profile',
@@ -60,15 +63,29 @@ export function resolveDailyTargets({
     fat: derived.targetMacros.fat,
   }
 
-  if (isWorkoutDay) {
-    const multiplier = workoutType === 'cardio' ? 1.2 : 1
-    adjusted.calories += 250 * multiplier
-    adjusted.protein += 10
-    adjusted.carbs += 40 * multiplier
+  const fallbackSportType = workoutType === 'strength' || workoutType === 'hypertrophy' || workoutType === 'cardio' || workoutType === 'mma' || workoutType === 'combat_sport' || workoutType === 'endurance' || workoutType === 'rest'
+    ? workoutType
+    : 'strength'
+
+  const fallbackContext: Partial<TrainingDayContext> = {
+    sportType: fallbackSportType,
+    seasonPhase: 'offseason',
+    intensity: 'moderate',
+  }
+
+  const effectiveContext = trainingContext ?? (isWorkoutDay ? fallbackContext : null)
+  const adjustment = resolveSportsPeriodization(effectiveContext, recentWeightKg ?? baseProfile.weightKg ?? 75)
+
+  if (effectiveContext && effectiveContext.sportType !== 'rest') {
+    adjusted.calories += adjustment.caloriesDelta
+    adjusted.protein += adjustment.proteinDelta
+    adjusted.carbs += adjustment.carbsDelta
+    adjusted.fat += adjustment.fatDelta
   }
 
   return {
     ...adjusted,
     source: shouldUseGoalTargets ? 'goal' : 'manual',
+    reason: adjustment.reason,
   }
 }

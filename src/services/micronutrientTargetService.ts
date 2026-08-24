@@ -82,20 +82,29 @@ export function calculateMealMicrosFromItems(
   return totals
 }
 
-export function resolveMicronutrientTargets(profile?: Partial<Profile> | null): MicronutrientTargets {
+export function resolveMicronutrientTargets(
+  profile?: Partial<Profile> | null,
+  offsets?: Partial<Pick<MicronutrientTargets, 'sodiumMg' | 'potassiumMg'>>,
+): MicronutrientTargets {
   const sex = profile?.sex ?? 'male'
   const base = sex === 'female' ? DEFAULT_FEMALE_TARGETS : DEFAULT_MALE_TARGETS
   const age = profile?.birthYear ? Math.max(18, new Date().getFullYear() - profile.birthYear) : 35
 
+  const adjusted = {
+    ...base,
+    sodiumMg: base.sodiumMg + (offsets?.sodiumMg ?? 0),
+    potassiumMg: base.potassiumMg + (offsets?.potassiumMg ?? 0),
+  }
+
   if (age >= 65) {
     return {
-      ...base,
-      vitaminDMcg: Math.max(15, base.vitaminDMcg * 0.8),
-      calciumMg: Math.max(800, base.calciumMg * 0.9),
+      ...adjusted,
+      vitaminDMcg: Math.max(15, adjusted.vitaminDMcg * 0.8),
+      calciumMg: Math.max(800, adjusted.calciumMg * 0.9),
     }
   }
 
-  return base
+  return adjusted
 }
 
 export function getMicronutrientProgress(value: number, target: number): number {

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Calculator, Check, Plus, WandSparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -8,6 +8,7 @@ import { db } from '@/db'
 import { useMealBalancer } from '@/hooks/useMealBalancer'
 import { useMealLogger } from '@/hooks/useMealLogger'
 import { useProfile } from '@/hooks/useProfile'
+import { useSettings } from '@/hooks/useSettings'
 import { filterFoodsByProfile } from '@/services/foodFilterService'
 import { MacroTargetControls } from '@/components/balancer/MacroTargetControls'
 import { OptimizationErrorAlert } from '@/components/balancer/OptimizationErrorAlert'
@@ -18,6 +19,7 @@ import type { Food } from '@/types'
 
 export function BalancerContainer() {
   const { profile: currentProfile } = useProfile()
+  const { settings: appSettings } = useSettings()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])
   const profile = useLiveQuery(() => db.profile.toCollection().first(), [])
   const settings = useLiveQuery(() => db.settings.get('app-settings'), [])
@@ -31,6 +33,31 @@ export function BalancerContainer() {
   const names = new Map(balancer.selectedFoods.map((food) => [food.id, food.name]))
   const targetSource = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg }).source
   const foodMap = new Map(foods.map((food) => [food.id, food]))
+  const todayContext = useLiveQuery(
+    () => db.trainingContext.where('date').equals(new Date().toISOString().slice(0, 10)).first(),
+    [],
+    null,
+  )
+  const activeTrainingMode = useMemo(() => {
+    if (!todayContext) return appSettings.trainingModes[0] ?? null
+    return appSettings.trainingModes.find((mode) => mode.sportType === todayContext.sportType) ?? {
+      id: todayContext.sportType,
+      label: todayContext.sportType,
+      sportType: todayContext.sportType,
+      description: `${todayContext.intensity} • ${todayContext.durationMinutes} min`,
+      intensity: todayContext.intensity,
+      durationMinutes: todayContext.durationMinutes,
+      seasonPhase: todayContext.seasonPhase,
+      caloriesDelta: 0,
+      proteinDelta: 0,
+      carbsDelta: 0,
+      fatDelta: 0,
+      sodiumMgDelta: 0,
+      potassiumMgDelta: 0,
+      hydrationMl: 0,
+      notes: '',
+    }
+  }, [appSettings.trainingModes, todayContext])
 
   useEffect(() => {
     if (settings?.moduleChaining === false || settings?.autoTargetsFromGoal === false) return

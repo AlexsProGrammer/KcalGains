@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Home, UtensilsCrossed, Dumbbell, TrendingUp, MoreHorizontal, Plus } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '@/components/ui/button'
 import { OnboardingPage } from '@/components/onboarding/OnboardingPage'
 import { clsx } from 'clsx'
@@ -12,6 +13,7 @@ import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useSettings } from '@/hooks/useSettings'
 import { useT } from '@/i18n'
+import { db } from '@/db'
 
 const navItems = [
   { to: '/today', label: 'Today', icon: Home },
@@ -27,6 +29,13 @@ export function AppShell() {
   const { settings, isLoading } = useSettings()
   const { t } = useT()
   const reduceMotion = useReducedMotion()
+  const today = new Date().toISOString().slice(0, 10)
+  const todayTrainingContext = useLiveQuery(() => db.trainingContext.where('date').equals(today).first(), [today], null)
+  const trainingModeLabel = useMemo(() => {
+    if (!todayTrainingContext) return 'No training set'
+    const preset = settings.trainingModes.find((mode) => mode.sportType === todayTrainingContext.sportType)
+    return preset?.label ?? todayTrainingContext.sportType
+  }, [settings.trainingModes, todayTrainingContext])
 
   const forceOnboarding =
     typeof window !== 'undefined' &&
@@ -94,6 +103,11 @@ export function AppShell() {
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.shell.overview}</p>
                   <h2 className="text-lg font-semibold text-ink-hi">{currentTitle}</h2>
+                </div>
+
+                <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-right shadow-sm">
+                  <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">Today</div>
+                  <div className="mt-1 text-sm font-medium text-ink-hi">{trainingModeLabel}</div>
                 </div>
               </div>
             </header>
