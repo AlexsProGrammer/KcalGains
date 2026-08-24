@@ -16,6 +16,7 @@ export function FoodDetailModal({ food, onClose, onSaved }: FoodDetailModalProps
 
   if (!food) return null
   const factor = grams / food.servingSize
+  const currency = food.currency ?? 'EUR'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4" role="dialog" aria-modal="true" aria-labelledby="food-detail-title">
@@ -29,6 +30,17 @@ export function FoodDetailModal({ food, onClose, onSaved }: FoodDetailModalProps
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
             {[['Calories', food.calories * factor, 'kcal'], ['Protein', food.protein * factor, 'g'], ['Carbs', food.carbs * factor, 'g'], ['Fat', food.fat * factor, 'g']].map(([label, value, unit]) => <div key={label} className="rounded-md border border-slate-800 bg-slate-950/60 p-3"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 font-semibold text-slate-100">{Number(value).toFixed(1)} {unit}</p></div>)}
           </div>
+          {(food.price !== undefined || food.costPer100g !== undefined || food.notes || (food.allergenTags && food.allergenTags.length > 0)) ? (
+            <div className="mt-5 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-sm text-slate-300">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Food metadata</p>
+              <div className="mt-2 space-y-2">
+                {food.price !== undefined ? <p>Price: {food.price.toFixed(2)} {currency}</p> : null}
+                {food.costPer100g !== undefined ? <p>Cost / 100g: {food.costPer100g.toFixed(2)} {currency}</p> : null}
+                {food.notes ? <p>Notes: {food.notes}</p> : null}
+                {food.allergenTags && food.allergenTags.length > 0 ? <p>Allergens: {food.allergenTags.join(', ')}</p> : null}
+              </div>
+            </div>
+          ) : null}
           <label className="mt-5 block text-sm text-slate-300">Amount: {grams}g<input type="range" min="1" max="500" value={grams} onChange={(event) => setGrams(Number(event.target.value))} className="mt-2 w-full accent-emerald-400" /></label>
           <div className="mt-5 flex gap-2"><Button type="button" onClick={() => setIsEditing(true)}>Edit</Button><Button type="button" variant="ghost" onClick={onClose}>Close</Button></div>
         </>}

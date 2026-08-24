@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { createFood, updateFood } from '@/db/foodRepository'
-import { normalizeFoodMicros } from '@/schemas/food.schema'
+import { normalizeFoodMicros, type AllergenTag } from '@/schemas/food.schema'
 import type { Food } from '@/types'
 
 type CustomFoodFormProps = {
@@ -20,6 +20,11 @@ type FormValues = {
   fat: string
   fiber: string
   servingSize: string
+  price: string
+  costPer100g: string
+  currency: string
+  notes: string
+  allergenTags: AllergenTag[]
   sodiumMg: string
   potassiumMg: string
   magnesiumMg: string
@@ -33,6 +38,8 @@ type FormValues = {
   vitaminCMg: string
 }
 
+const allergenOptions: AllergenTag[] = ['gluten', 'lactose', 'nuts', 'soy', 'eggs', 'fish', 'fructose']
+
 function valuesFromFood(food?: Food): FormValues {
   const micros = normalizeFoodMicros(food?.micros as Record<string, unknown> | undefined)
 
@@ -45,6 +52,11 @@ function valuesFromFood(food?: Food): FormValues {
     fat: String(food?.fat ?? ''),
     fiber: String(food?.fiber ?? 0),
     servingSize: String(food?.servingSize ?? 100),
+    price: String(food?.price ?? ''),
+    costPer100g: String(food?.costPer100g ?? ''),
+    currency: String(food?.currency ?? 'EUR'),
+    notes: String(food?.notes ?? ''),
+    allergenTags: (food?.allergenTags ?? []) as AllergenTag[],
     sodiumMg: String(micros.sodiumMg ?? ''),
     potassiumMg: String(micros.potassiumMg ?? ''),
     magnesiumMg: String(micros.magnesiumMg ?? ''),
@@ -74,6 +86,15 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
     setValues((current) => ({ ...current, [field]: value }))
   }
 
+  function toggleAllergen(tag: AllergenTag) {
+    setValues((current) => ({
+      ...current,
+      allergenTags: current.allergenTags.includes(tag)
+        ? current.allergenTags.filter((currentTag) => currentTag !== tag)
+        : [...current.allergenTags, tag],
+    }))
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -98,6 +119,10 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       vitaminCMg: Number(values.vitaminCMg) || undefined,
     }
 
+    const selectedAllergens = values.allergenTags
+    const costPer100g = Number(values.costPer100g) || undefined
+    const price = Number(values.price) || undefined
+
     const foodData = {
       name: values.name.trim(),
       brand: values.brand.trim() || undefined,
@@ -107,7 +132,12 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       carbs,
       fat,
       fiber: Number(values.fiber),
-      allergenTags: initialFood?.allergenTags ?? [],
+      allergenTags: selectedAllergens,
+      price,
+      costPer100g,
+      currency: values.currency.trim() || 'EUR',
+      notes: values.notes.trim() || undefined,
+      source: initialFood?.source ?? (initialFood?.isCustom ? 'manual' : 'openfoodfacts'),
       micros: Object.values(micros).some((value) => value !== undefined) ? micros : undefined,
       isCustom: true,
     }
@@ -122,7 +152,12 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
         ...foodData,
         id,
         createdAt: initialFood?.createdAt ?? new Date().toISOString(),
-        allergenTags: initialFood?.allergenTags ?? foodData.allergenTags,
+        allergenTags: foodData.allergenTags,
+        price: foodData.price,
+        costPer100g: foodData.costPer100g,
+        currency: foodData.currency,
+        source: foodData.source,
+        notes: foodData.notes,
         micros: foodData.micros ?? initialFood?.micros,
       })
     } catch {
@@ -134,6 +169,13 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
     ['name', 'Name', 'text'], ['brand', 'Brand (optional)', 'text'], ['servingSize', 'Serving size (g)', 'number'],
     ['calories', 'Calories / 100g', 'number'], ['protein', 'Protein (g)', 'number'], ['carbs', 'Carbs (g)', 'number'],
     ['fat', 'Fat (g)', 'number'], ['fiber', 'Fiber (g)', 'number'],
+  ]
+
+  const metadataFields: Array<[keyof Pick<FormValues, 'price' | 'costPer100g' | 'currency' | 'notes'>, string, string]> = [
+    ['price', 'Price', 'number'],
+    ['costPer100g', 'Cost / 100g', 'number'],
+    ['currency', 'Currency', 'text'],
+    ['notes', 'Notes', 'text'],
   ]
 
   const micronutrientFields: Array<[keyof Pick<FormValues, 'sodiumMg' | 'potassiumMg' | 'magnesiumMg' | 'calciumMg' | 'zincMg' | 'ironMg' | 'seleniumMcg' | 'vitaminDMcg' | 'vitaminB6Mg' | 'vitaminB12Mcg' | 'vitaminCMg'>, string]> = [
@@ -159,6 +201,26 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
             <input required={field === 'name'} type={type} min={type === 'number' ? '0' : undefined} step="any" value={values[field]} onChange={(event) => updateField(field, event.target.value)} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400" />
           </label>
         ))}
+      </div>
+      <div className="space-y-3 rounded-md border border-slate-700 bg-slate-950/40 p-3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {metadataFields.map(([field, label, type]) => (
+            <label key={field} className={field === 'notes' ? 'sm:col-span-2' : ''}>
+              <span className="mb-1 block text-xs font-medium text-slate-400">{label}</span>
+              <input type={type} min={type === 'number' ? '0' : undefined} step="any" value={values[field]} onChange={(event) => updateField(field, event.target.value)} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400" />
+            </label>
+          ))}
+        </div>
+        <div>
+          <span className="mb-2 block text-xs font-medium text-slate-400">Allergens</span>
+          <div className="flex flex-wrap gap-2">
+            {allergenOptions.map((tag) => (
+              <button key={tag} type="button" onClick={() => toggleAllergen(tag)} className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${values.allergenTags.includes(tag) ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300' : 'border-slate-700 bg-slate-900 text-slate-300'}`}>
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="rounded-md border border-slate-700 bg-slate-950/40 p-2">
         <button type="button" onClick={() => setIsAdvancedOpen((current) => !current)} className="flex w-full items-center justify-between text-left text-sm font-medium text-slate-200">

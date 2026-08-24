@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const AllergenTagSchema = z.enum(['gluten', 'lactose', 'nuts', 'soy', 'eggs', 'fish', 'fructose'])
+export type AllergenTag = z.infer<typeof AllergenTagSchema>
 
 const LEGACY_MICRONUTRIENT_ALIASES = {
   sodium: 'sodiumMg',
@@ -89,6 +90,15 @@ export const MicronutrientSchema = z.object({
   }
 })
 
+export const AdditionalFoodMetadataSchema = z.object({
+  price: z.number().nonnegative().optional(),
+  costPer100g: z.number().nonnegative().optional(),
+  currency: z.string().default('EUR'),
+  source: z.string().optional(),
+  notes: z.string().optional(),
+  allergenTags: z.array(AllergenTagSchema).default([]),
+}).passthrough()
+
 export const FoodSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -102,7 +112,11 @@ export const FoodSchema = z.object({
   fiber: z.number().nonnegative().default(0),
   micros: MicronutrientSchema.optional(),
   allergenTags: z.array(AllergenTagSchema).default([]),
+  price: z.number().nonnegative().optional(),
   costPer100g: z.number().nonnegative().optional(),
+  currency: z.string().optional(),
+  source: z.string().optional(),
+  notes: z.string().optional(),
   isCustom: z.boolean(),
   createdAt: z.string().datetime().or(z.string()),
-})
+}).passthrough()

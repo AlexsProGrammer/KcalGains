@@ -1,6 +1,7 @@
 [
   {
     "name": "banana",
+    "aliases": ["banane", "banana", "bananas"],
     "micros": {
       "sodiumMg": 1,
       "potassiumMg": 358,
@@ -13,10 +14,16 @@
       "vitaminB6Mg": 0.37,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 8.7
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.2,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Common fruit, naturally lactose-free and low in sodium."
   },
   {
     "name": "oatmeal",
+    "aliases": ["haferflocken", "oats", "oatmeal", "hafer"],
     "micros": {
       "sodiumMg": 2,
       "potassiumMg": 362,
@@ -29,10 +36,16 @@
       "vitaminB6Mg": 0.12,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 0
-    }
+    },
+    "allergenTags": ["gluten"],
+    "costPer100g": 0.18,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Often gluten-free only when certified; standard oats may be cross-contaminated."
   },
   {
     "name": "chicken breast",
+    "aliases": ["hähnchenbrust", "chicken breast", "chicken", "chickenbreast"],
     "micros": {
       "sodiumMg": 65,
       "potassiumMg": 256,
@@ -45,10 +58,16 @@
       "vitaminB6Mg": 0.6,
       "vitaminB12Mcg": 0.3,
       "vitaminCMg": 0
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.9,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Lean protein source with no common major allergens."
   },
   {
     "name": "salmon",
+    "aliases": ["lachs", "salmon", "salmon fillet"],
     "micros": {
       "sodiumMg": 59,
       "potassiumMg": 363,
@@ -61,10 +80,16 @@
       "vitaminB6Mg": 0.7,
       "vitaminB12Mcg": 4.5,
       "vitaminCMg": 0
-    }
+    },
+    "allergenTags": ["fish"],
+    "costPer100g": 2.4,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "High omega-3 fish; contains fish protein and is not suitable for fish allergy."
   },
   {
     "name": "eggs",
+    "aliases": ["ei", "eggs", "egg"],
     "micros": {
       "sodiumMg": 142,
       "potassiumMg": 138,
@@ -77,10 +102,16 @@
       "vitaminB6Mg": 0.17,
       "vitaminB12Mcg": 0.89,
       "vitaminCMg": 0
-    }
+    },
+    "allergenTags": ["eggs"],
+    "costPer100g": 0.35,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Eggs are a complete protein but a common allergen for many people."
   },
   {
     "name": "milk",
+    "aliases": ["milch", "milk", "milk 15", "milch 15"],
     "micros": {
       "sodiumMg": 43,
       "potassiumMg": 150,
@@ -93,10 +124,16 @@
       "vitaminB6Mg": 0.05,
       "vitaminB12Mcg": 0.5,
       "vitaminCMg": 1.0
-    }
+    },
+    "allergenTags": ["lactose"],
+    "costPer100g": 0.3,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Milk is lactose-containing and should be excluded for lactose intolerance."
   },
   {
     "name": "spinach",
+    "aliases": ["spinat", "spinach"],
     "micros": {
       "sodiumMg": 79,
       "potassiumMg": 558,
@@ -109,10 +146,16 @@
       "vitaminB6Mg": 0.2,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 28
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.4,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Leafy green; low-calorie but high in potassium and iron."
   },
   {
     "name": "avocado",
+    "aliases": ["avocado", "avocados"],
     "micros": {
       "sodiumMg": 7,
       "potassiumMg": 485,
@@ -125,10 +168,16 @@
       "vitaminB6Mg": 0.29,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 10
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.55,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Low in sugar and rich in potassium and monounsaturated fats."
   },
   {
     "name": "lentils",
+    "aliases": ["linsen", "lentils", "lentils cooked"],
     "micros": {
       "sodiumMg": 2,
       "potassiumMg": 369,
@@ -141,10 +190,16 @@
       "vitaminB6Mg": 0.18,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 4.4
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.25,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Legume with plant protein and useful iron content."
   },
   {
     "name": "almonds",
+    "aliases": ["mandeln", "almonds", "almond"],
     "micros": {
       "sodiumMg": 1,
       "potassiumMg": 733,
@@ -157,10 +212,16 @@
       "vitaminB6Mg": 0.14,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 0
-    }
+    },
+    "allergenTags": ["nuts"],
+    "costPer100g": 1.1,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Nut allergen; calorie-dense and rich in magnesium and vitamin E-like profile."
   },
   {
     "name": "tofu",
+    "aliases": ["tofu", "tofu natur", "tofu natural"],
     "micros": {
       "sodiumMg": 7,
       "potassiumMg": 121,
@@ -173,10 +234,16 @@
       "vitaminB6Mg": 0.1,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 0.1
-    }
+    },
+    "allergenTags": ["soy"],
+    "costPer100g": 0.45,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Soy-based protein; important soy allergen flag."
   },
   {
     "name": "broccoli",
+    "aliases": ["brokkoli", "broccoli"],
     "micros": {
       "sodiumMg": 33,
       "potassiumMg": 316,
@@ -189,6 +256,11 @@
       "vitaminB6Mg": 0.2,
       "vitaminB12Mcg": 0,
       "vitaminCMg": 89.2
-    }
+    },
+    "allergenTags": [],
+    "costPer100g": 0.3,
+    "currency": "EUR",
+    "source": "default-food-reference",
+    "notes": "Very high vitamin C content; low calorie and easy to fit into most diets."
   }
 ]

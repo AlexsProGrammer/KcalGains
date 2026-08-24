@@ -29,6 +29,11 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     fat: 5,
     fiber: 2,
     allergenTags: [],
+    price: undefined,
+    costPer100g: undefined,
+    currency: 'EUR',
+    source: 'manual',
+    notes: undefined,
     isCustom: true,
     createdAt: new Date().toISOString(),
   }))
@@ -124,6 +129,11 @@ export function DatabaseDebugger() {
       fat: 4,
       fiber: 2,
       allergenTags: [],
+      price: undefined,
+      costPer100g: undefined,
+      currency: 'EUR',
+      source: 'manual',
+      notes: undefined,
       isCustom: true,
       createdAt: new Date().toISOString(),
     }))

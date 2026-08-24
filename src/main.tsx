@@ -7,12 +7,13 @@ import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from '@/routes'
 import { ThemeProvider } from '@/theme/ThemeProvider'
 import { db } from '@/db'
-import { seedDatabaseIfEmpty } from '@/db/seed'
+import { hydrateDefaultFoodReferenceIntoDatabase, seedDatabaseIfEmpty } from '@/db/seed'
 import { initializeSearchIndex } from '@/services/searchIndexService'
 import { seedExerciseLibraryIfEmpty } from '@/db/exerciseSeed'
 
 void db.open()
   .then(() => seedDatabaseIfEmpty(db))
+  .then(() => hydrateDefaultFoodReferenceIntoDatabase(db))
   .then(() => seedExerciseLibraryIfEmpty(db))
   .then(() => initializeSearchIndex())
   .catch((error: unknown) => {

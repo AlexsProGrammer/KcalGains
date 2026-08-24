@@ -1,5 +1,5 @@
-import nutrientReferenceData from '@/data/nutrientReference.json'
-import type { Food, Micronutrients } from '@/types'
+import defaultFoodReferenceData from '@/data/defaultFoodReference.json'
+import type { AllergenTag, Food, Micronutrients } from '@/types'
 
 type MicronutrientKey = keyof NonNullable<Food['micros']>
 
@@ -19,10 +19,17 @@ type MicronutrientRecord = {
 
 type NutrientReferenceEntry = {
   name: string
+  aliases?: string[]
   micros: MicronutrientRecord
+  allergenTags?: AllergenTag[]
+  costPer100g?: number
+  price?: number
+  currency?: string
+  source?: string
+  notes?: string
 }
 
-const nutrientReference = nutrientReferenceData as NutrientReferenceEntry[]
+const nutrientReference = defaultFoodReferenceData as NutrientReferenceEntry[]
 
 function finalizeMicronutrients(value: Partial<Record<MicronutrientKey, number>> | undefined): Micronutrients | undefined {
   if (!value) {
@@ -100,10 +107,18 @@ export function findBestMicronutrientMatch(foodName: string): NutrientReferenceE
   let bestScore = 0
 
   for (const entry of nutrientReference) {
-    const score = scoreMatch(normalizedInput, entry.name)
+    const candidateNames = [entry.name, ...(entry.aliases ?? [])]
+    let candidateBestScore = 0
 
-    if (score > bestScore) {
-      bestScore = score
+    for (const candidateName of candidateNames) {
+      const score = scoreMatch(normalizedInput, candidateName)
+      if (score > candidateBestScore) {
+        candidateBestScore = score
+      }
+    }
+
+    if (candidateBestScore > bestScore) {
+      bestScore = candidateBestScore
       bestEntry = entry
     }
   }
@@ -132,6 +147,38 @@ export function mergeMicronutrients(
   return finalizeMicronutrients(merged as Partial<Record<MicronutrientKey, number>>)
 }
 
+export function applyDefaultFoodReference(food: Food): Food {
+  const match = findBestMicronutrientMatch(food.name)
+
+  if (!match) {
+    return food
+  }
+
+  const defaultMetadata = {
+    allergenTags: match.allergenTags ?? [],
+    costPer100g: match.costPer100g,
+    price: match.price,
+    currency: match.currency ?? 'EUR',
+    source: match.source ?? 'default-food-reference',
+    notes: match.notes,
+  }
+
+  const allergenTags = food.allergenTags && food.allergenTags.length > 0
+    ? food.allergenTags
+    : defaultMetadata.allergenTags
+
+  return {
+    ...food,
+    allergenTags,
+    costPer100g: food.costPer100g ?? defaultMetadata.costPer100g,
+    price: food.price ?? defaultMetadata.price,
+    currency: food.currency ?? defaultMetadata.currency ?? 'EUR',
+    source: food.source ?? defaultMetadata.source ?? 'default-food-reference',
+    notes: food.notes ?? defaultMetadata.notes,
+    micros: mergeMicronutrients(food.micros, match.micros),
+  }
+}
+
 export function enrichFoodMicros(food: Food): Food {
   const currentMicros = food.micros
 
@@ -142,7 +189,7 @@ export function enrichFoodMicros(food: Food): Food {
     }
 
     const normalizedMicros = finalizeMicronutrients(match.micros as Partial<Record<MicronutrientKey, number>>)
-    return { ...food, micros: normalizedMicros ?? undefined }
+    return applyDefaultFoodReference({ ...food, micros: normalizedMicros ?? undefined })
   }
 
   const match = findBestMicronutrientMatch(food.name)
@@ -150,8 +197,8 @@ export function enrichFoodMicros(food: Food): Food {
     return food
   }
 
-  return {
+  return applyDefaultFoodReference({
     ...food,
     micros: mergeMicronutrients(currentMicros, match.micros),
-  }
+  })
 }

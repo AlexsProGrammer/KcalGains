@@ -200,5 +200,33 @@ export class FitnessTrackerDB extends Dexie {
           food.micros = normalizeFoodMicros(food.micros)
         })
       })
+
+    this.version(11)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table('foods').toCollection().modify((food: any) => {
+          const metadata = food.additionalFoodMetadata ?? {}
+          const allergenTags = Array.isArray(metadata.allergenTags) ? metadata.allergenTags : (Array.isArray(food.allergenTags) ? food.allergenTags : [])
+          const costPer100g = metadata.costPer100g ?? food.costPer100g ?? undefined
+
+          food.allergenTags = allergenTags
+          food.costPer100g = costPer100g
+          food.price = metadata.price ?? food.price ?? undefined
+          food.currency = metadata.currency ?? food.currency ?? 'EUR'
+          food.source = metadata.source ?? food.source ?? (food.isCustom ? 'manual' : 'openfoodfacts')
+          food.notes = metadata.notes ?? food.notes ?? undefined
+          delete food.additionalFoodMetadata
+          food.micros = normalizeFoodMicros(food.micros)
+        })
+      })
   }
 }
