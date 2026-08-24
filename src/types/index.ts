@@ -10,6 +10,7 @@ import { WeightEntrySchema } from '@/schemas/weightLog.schema'
 import { TdeeCalculationResultSchema } from '@/schemas/tdee.schema'
 import { PromptContextSchema } from '@/schemas/aiPrompt.schema'
 import { AiMealItemSchema, AiMealResponseSchema } from '@/schemas/aiResponse.schema'
+import { TrainingDayContextSchema } from '@/schemas/trainingContext.schema'
 
 export type Food = z.infer<typeof FoodSchema>
 export type Micronutrients = z.infer<typeof MicronutrientSchema>
@@ -42,3 +43,4 @@ export type LoggedExercise = z.infer<typeof LoggedExerciseSchema>
 export type WorkoutLog = z.infer<typeof WorkoutLogSchema>
 export type WeightEntry = z.infer<typeof WeightEntrySchema>
 export type TdeeCalculationResult = z.infer<typeof TdeeCalculationResultSchema>
+export type TrainingDayContext = z.infer<typeof TrainingDayContextSchema>

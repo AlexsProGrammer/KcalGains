@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Clock3, Dumbbell, Flame, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { DailyModeSelector } from '@/components/train/DailyModeSelector'
 import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { db } from '@/db'
 import type { WorkoutLog } from '@/types'
@@ -39,6 +40,8 @@ export function TrainPage() {
           <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Active session and recent volume</h2>
         </div>
       </div>
+
+      <DailyModeSelector />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
