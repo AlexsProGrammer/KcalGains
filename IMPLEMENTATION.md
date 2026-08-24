@@ -1,100 +1,323 @@
-## Plan: KcalGains Adaptive Dual-Plan Engine (Nutrition + Training)
+Updated todo list
 
-Turns KcalGains from a tracker into an adaptive system: health/allergy-aware nutrition planning with budget constraints, micronutrient tracking, and a rule-based training plan generator that talks to the nutrition engine. Everything stays 100% local (Dexie + in-browser JSON/LP-solver), no server, DSGVO-safe. AI chat and photo recognition are pushed to low-priority phases at the end per your choice.
+I’m mapping your reported issues into a concrete implementation sequence and will turn them into a prioritized, phased plan with clear fixes, affected files, and verification gates.
 
-**Phases** (10 core, sequential with some parallel sub-tracks, + 3 low-priority)
+Searched for regex `QuickActions|quick actions|MorePage|SettingsPage|OnboardingPage|TodayPage|MealPlanner|TrainingPlanGenerator|DatePicker|progress.*trend|NutritionPage` (`**/src/**`), 35 results
 
----
+Created memory file 
 
-### Phase 1: Health & Constraint Data Model
-Foundation schema work everything else depends on.
-- Extend `profile.schema.ts:11-26`: add `allergens: z.array(z.enum(['gluten','lactose','nuts','soy','eggs','fish','fructose']))`, `dietaryPattern: z.enum(['standard','ketogenic','diabetic_friendly','low_fodmap']).default('standard')`, `sweatType: z.enum(['low','normal','heavy_salty']).default('normal')`, `budgetPerDay: z.number().nonnegative().optional()`.
-- Extend `food.schema.ts:1-14`: replace loose `micros: z.record(...)` with a structured `MicronutrientsSchema` (sodiumMg, potassiumMg, magnesiumMg, calciumMg, zincMg, ironMg, seleniumMcg, vitaminDMcg, vitaminB6Mg, vitaminB12Mcg, vitaminCMg — all optional numbers), add `allergenTags: z.array(...).default([])`, add `costPer100g: z.number().nonnegative().optional()`.
-- Bump `schema.ts:1-150` to a new Dexie `version(9)` with an `.upgrade()` that fills defaults (`allergens: []`, `dietaryPattern: 'standard'`, `sweatType: 'normal'`, `allergenTags: []`) on existing profile/food rows — follow the exact pattern used in `version(7)`/`version(8)`.
-- Add i18n strings for new fields in `en.ts` and `de.ts`.
-- **Verification:** `pnpm lint` (tsc -b) passes; open the app, run the existing `runBackupRoundTripCheck` in `DatabaseDebugger.tsx:13-49` and confirm it still passes with new optional fields defaulted.
+Read 
 
----
+Created memory file 
 
-### Phase 2: Micronutrient Dataset & Enrichment *(depends on Phase 1)*
-- Add a static reference dataset `src/data/nutrientReference.json` (~500KB subset of common raw foods with full micronutrient profiles, USDA/BLS-style).
-- Create `src/services/nutrientEnrichmentService.ts`: fuzzy-matches a food name against the reference dataset and merges missing micronutrient fields into a `Food`.
-- Extend `openFoodFactsService.ts:41-71` `parseOpenFoodFactsProduct`: add parsing for `calcium_100g`, `vitamin-d_100g`, `vitamin-b6_100g`, `vitamin-b12_100g`, `vitamin-c_100g`, `iron_100g`, `selenium_100g` (extends the current sodium/potassium/magnesium/zinc block), then call the enrichment service as a fallback when OFF data is missing.
-- Add an "advanced nutrients" collapsible section to `CustomFoodForm.tsx` for manual micronutrient entry.
-- **Verification:** search "banana" locally/remotely, confirm the resulting `Food` object has non-zero micronutrient fields; `pnpm lint` passes.
+## Plan: KcalGains UX, mobile, and state-fix pass
 
----
+This is the implementation roadmap I’d use to fix the issues you listed. I grouped them by root cause and user flow so the app becomes stable before we add more polish. The key idea is to fix state integrity first, then mobile UX, then feature completeness, then test coverage.
 
-### Phase 3: Micronutrient Target Resolver & Radar UI *(depends on Phase 1, 2)*
-- Create `src/services/micronutrientTargetService.ts`: DACH/DGE-style daily reference values by sex/age (sodium, potassium, magnesium, calcium, zinc, iron, selenium, vitamin D, B6, B12, C).
-- Extend `meal.schema.ts` `MealItemSchema`/`MealSchema` to also store a `totalMicros` snapshot (mirrors existing `totalProtein/totalCarbs/totalFat` pattern).
-- Extend `nutritionAggregationService.ts` to sum `totalMicros` across a day's meals.
-- Create `src/components/nutrition/MicronutrientRadar.tsx`: heatmap/progress list comparing today's intake vs. targets.
-- Wire it into `NutritionPage.tsx:1-105` as a new section/tab.
-- **Verification:** log a meal built from a food with populated micros, confirm the radar reflects it; `pnpm lint` passes.
+### Executive summary
+The remaining problems cluster into five major areas:
+
+- Mobile shell and navigation issues
+- Broken persistence / quick action / onboarding state
+- Nutrition planner + logging + favorites + micros gaps
+- Training/date logic and edit-mode problems
+- Dynamic targets, chart behavior, and test/documentation gaps
+
+The safest order is:
+1. stable shell + shared state + onboarding
+2. meal/workout logging + planner/favorites
+3. training/date logic
+4. dynamic targets and charts
+5. tests + docs
 
 ---
 
-### Phase 4: Allergen & Health Constraint Enforcement (hard filter) *(depends on Phase 1)*
-- Create `src/services/foodFilterService.ts`: `filterFoodsByProfile(foods, profile)` excludes any food whose `allergenTags` intersects `profile.allergens`, and applies simple `dietaryPattern` tag rules.
-- Apply the filter in: `useFoodSearch.ts:1-91` (local + remote results), `BalancerContainer.tsx:17-24` (food pool), `AutoMealPlanner.tsx:22-37` (food pool), `mealPlannerService.ts:1-20` (candidate generation).
-- Show a small "N foods hidden due to your allergy settings" hint where filtering happens (FoodManagement, BalancerContainer, AutoMealPlanner).
-- Create `src/components/settings/AllergyConstraintsForm.tsx` (checkboxes for allergens, select for dietary pattern/sweat type), mounted from `MorePage.tsx` next to `ProfileGoalForm`.
-- **Verification:** set allergen "lactose" in profile, search "milk" — confirm it's absent from local/remote results and from the balancer/planner food pools; `pnpm lint` passes.
+## Phase 1: Repair the app shell and mobile UX
+
+### Goal
+Fix the layout and interaction issues that make the app feel broken on mobile, especially in settings and more.
+
+### Work
+- Fix responsive layout and bottom spacing in:
+  - `AppShell.tsx`
+  - `MorePage.tsx`
+- Make settings / more screens mobile-friendly with:
+  - safe-area bottom spacing
+  - proper tap target sizes
+  - stacked forms on narrow screens
+  - no clipped action buttons
+- Remove the redundant goals tab from settings / more and keep a single profile-centered flow.
+- Keep the tabs as the primary navigation, while quick actions stay as a secondary convenience entry point.
+- Ensure date and top-level controls live in the correct page header only where intended.
+
+### Why this is first
+These are high-visibility issues and they affect navigation and data entry across the whole app. If the shell is broken, every other fix becomes harder to validate.
+
+### Verification
+- Open each page on a narrow mobile viewport and check no overlaps or hidden controls
+- Confirm the settings/more flows still open and scroll properly
+- Confirm the app does not force onboarding repeatedly after skip
 
 ---
 
-### Phase 5: Budget-Aware Meal Planning *(depends on Phase 1, uses Phase 4 pattern)*
-- Add manual `costPer100g` entry field to `CustomFoodForm.tsx` and to the Open Food Facts detail/cache flow (optional, user-entered since OFF has no price data).
-- Extend `balancer.schema.ts` `MacroTargetSchema`/`BalancerInputSchema` with an optional `maxBudget: z.number().nonnegative().optional()`.
-- Extend `balancerTransformer.ts:31-69` `buildLpModel`: add a `cost` contribution per food variable (`costPer100g/100 * grams`) and a `budget` constraint (`{ max: input.targets.maxBudget }`) when set.
-- Update `lpSolverService.ts:1-95` result building to include a `totalCost` in `BalancerResult` (schema update in `balancer.schema.ts` `BalancerResultSchema`).
-- Update `useMealBalancer.ts:1-87` to pass `profile.budgetPerDay` as default `maxBudget`.
-- Surface cost in `BalancerResultsCard.tsx` and in the plan cards of `AutoMealPlanner.tsx:146-166`.
-- **Verification:** set food costs + a low `budgetPerDay`, run auto-balance, confirm total cost stays under budget or the solver reports infeasible when it can't; `pnpm lint` passes.
+## Phase 2: Fix persistence, onboarding, and quick actions
+
+### Goal
+Repair the broken state flow behind the “saved” message, onboarding skip behavior, and the fact that quick actions do nothing.
+
+### Work
+- Trace and fix the persistent “data saved” banner logic so it appears on the main screen instead of only when entering settings/data.
+- Investigate the root state source in:
+  - `TodayPage.tsx`
+  - `AppShell.tsx`
+  - `useSettings.ts`
+- Fix broken quick-action dispatch in:
+  - `QuickActionSheet.tsx`
+- Ensure add-meal, add-weight, add-workout, and similar actions actually mutate state and trigger re-render.
+- Add tab-level plus buttons on key screens such as:
+  - weight trend
+  - nutrition today log
+  - other relevant summary cards
+- Extend onboarding wizard in:
+  - `OnboardingPage.tsx`
+- Add:
+  - allergies
+  - nutrition defaults
+  - training defaults
+  - profile defaults
+- Ensure skip and finish both persist correctly and do not pop up again on reload.
+
+### Why this is second
+These bugs create trust issues and block all daily usage. They are state bugs, not cosmetic bugs.
+
+### Verification
+- Quick action opens and dispatches correctly
+- Main page shows the saved state indicator without opening settings
+- Onboarding skip does not reappear after reload
+- Onboarding finish saves the expected defaults
 
 ---
 
-### Phase 6: Sport & Training Context Model *(independent, can run parallel with Phases 2-5)*
-- Create `src/schemas/trainingContext.schema.ts`: `TrainingDayContextSchema` with `date`, `sportType: z.enum(['strength','hypertrophy','cardio','mma','combat_sport','endurance','rest'])`, `intensity: z.enum(['low','moderate','high'])`, `durationMinutes`, `seasonPhase: z.enum(['offseason','competition_prep','competition','recovery'])`.
-- Add a `trainingContext: 'id, date'` table to `schema.ts` as Dexie `version(10)`.
-- Create `src/db/trainingContextRepository.ts` mirroring the CRUD pattern in `profileRepository.ts`.
-- Create `src/components/train/DailyModeSelector.tsx`: quick-pick UI ("Today: Gym / MMA / Cardio / Rest") writing today's `TrainingDayContext`; mount in `TrainPage.tsx:13-22`.
-- **Verification:** pick a mode, confirm the record persists in Dexie (inspect via `DatabaseDebugger` or devtools), survives reload; `pnpm lint` passes.
+## Phase 3: Nutrition logging, meal planner, favorites, and micros UX
+
+### Goal
+Complete the nutrition flow so logging, generation, favorites, and micronutrients work as a coherent system.
+
+### Work
+- Fix meal logging in:
+  - `useMealLogger.ts`
+  - `NutritionPage.tsx`
+- Support:
+  - add meal
+  - remove meal from logs
+  - edit existing log entries
+  - visible green success state after logging
+  - breakfast/lunch/snack/dinner selection
+- Improve planner flow in:
+  - `AutoMealPlanner.tsx`
+  - `mealPlannerService.ts`
+- Add:
+  - lock button for full-day planner regeneration
+  - keep locked meals stable while regenerating others
+  - move a meal from planner to balancer for editing
+  - meal type dropdown in balancer
+- Add favorites tab:
+  - between logs and micros
+  - add meals from balancer or logs
+  - edit favorite in balancer as a template
+  - directly log favorite as meal type
+- Add expandable micros list to the today page and nutrition page
+- Add drinks / shakes / water / fluid tracking to the same system
+- Add daily micronutrient target configuration under profile settings, defaulted from body type, goal, and sweat type, but overrideable manually
+
+### Why this is next
+This is the biggest user-facing workflow after state reliability. It touches logging, planner, macros, micros, and favorites together.
+
+### Verification
+- Log a meal and see a green success state
+- Remove and edit already-logged meals
+- Regenerate planner with locked meals preserved
+- Add a favorite and add it directly to logs
+- Micronutrient totals update on today page and nutrition page
 
 ---
 
-### Phase 7: Sports Periodization Engine *(depends on Phase 6, integrates with Phase 3 for hydration/electrolytes)*
-- Create `src/services/sportsPeriodizationService.ts`: pure function mapping `{ sportType, seasonPhase, intensity, bodyWeightKg }` to macro/hydration offsets — e.g. MMA: `+1.5g carbs/kg`, `+500mg sodium`, `+300–600 kcal`; strength: `+0.4g protein/kg`; competition phase: `-500 kcal`; offseason: `+250 kcal`.
-- Update `targetResolverService.ts:16-65`: replace the current ad-hoc `isWorkoutDay/workoutType` params with a lookup of today's `TrainingDayContext` (Phase 6 repo) and delegate offset math to `sportsPeriodizationService`.
-- Extend `micronutrientTargetService.ts` (Phase 3) to accept sodium/potassium offsets from the periodization result.
-- Update `DynamicTargetBanner.tsx` to show why targets changed, e.g. "Adjusted for MMA session (+420 kcal, +1.5g carbs/kg)".
-- **Verification:** set today's mode to MMA, confirm `NutritionPage` targets and the banner reflect the boost; switch to Rest, confirm it reverts; `pnpm lint` passes.
+## Phase 4: Fix training plan generation, mode logic, and date handling
+
+### Goal
+Repair the training app flow so planner behavior is clear and consistent.
+
+### Work
+- Fix default plan generation and duplicates in:
+  - `TrainingPlanGenerator.tsx`
+  - `TrainPage.tsx`
+- Add:
+  - week 4 repeat support
+  - infinite repeat option
+  - correct default training plan templates
+  - no duplicate default plans
+- Make default training mode rest, not active training mode
+- Ensure mode persistence works via:
+  - `DailyModeSelector.tsx`
+  - training context repository
+- Fix date navigation bug:
+  - no day drift
+  - no going past today
+  - forward button disabled correctly
+  - back/forward buttons work predictably
+- Move date/time controls into the relevant page header, but hide them only where requested (progress and more)
+- Separate finish-workout actions for planner days vs active workout logger so they do not share the same state
+- Fix edit mode in training plan so read/edit mode is clear and compact, and visually highlight active edit mode green
+
+### Why this matters
+The planner and daily mode logic currently creates stale state and wrong-day logging; this is the biggest cause of confusion in the app’s training flow.
+
+### Verification
+- Different days log their own data correctly
+- Planner finish workout does not log the wrong day
+- Date buttons respect current day boundary
+- Training mode defaults to rest and persists
 
 ---
 
-### Phase 8: Rule-Based Training Plan Generator *(depends on Phase 6)*
-- Create `src/data/trainingTemplates.json`: weekly split templates keyed by `goal + sportType + frequency` (e.g. lose-fat+gym+4d → upper/lower; gain-muscle+gym+5d → PPL; mma+3d → skill+conditioning+strength).
-- Create `src/services/trainingPlanGeneratorService.ts`: `generateWeeklyPlan(profile, preferences)` → array of `{ day, sportType, focus, durationMinutes }`.
-- Create `src/schemas/trainingPlan.schema.ts` + add a `trainingPlans: 'id, weekStart'` Dexie table (bundle into the same version bump as Phase 6 or its own `version(11)`), plus `src/db/trainingPlanRepository.ts`.
-- Create `src/components/train/TrainingPlanGenerator.tsx` (inputs: goal, sport, frequency, optional competition date → generate button → weekly plan cards), mount in `TrainPage.tsx`.
-- **Verification:** generate a plan for "gain-muscle, gym, 4x/week", confirm 4 populated training days + rest days, persists after reload; `pnpm lint` passes.
+## Phase 5: Dynamic targets, progress trends, and micronutrient charts
+
+### Goal
+Make targets and trend lines respond to the real profile + training mode + date state.
+
+### Work
+- Fix shared target logic in:
+  - `targetResolverService.ts`
+  - `useDynamicTargets.ts`
+  - `sportsPeriodizationService.ts`
+- Ensure kcal target and macro targets update based on:
+  - profile
+  - training mode
+  - date
+  - body metrics
+- Update progress trend behavior so target kcal is a daily curve, not a static value
+- Add configurable micronutrient chart / radar / list as a settings option
+- Standardize floating-point display to two decimal places in the UI, while keeping internal precision intact
+
+### Why this is a separate phase
+This is not just a chart visual issue; it is a source-of-truth problem across nutrition and training.
+
+### Verification
+- Switch training mode and confirm targets update
+- Move date backward/forward and confirm the target line reflects the correct day
+- Micronutrient view can be displayed in compact or detailed mode
 
 ---
 
-### Phase 9: Dual-Plan Bridge *(depends on Phases 6, 7, 8 — the integration phase)*
-- Wire `TrainingPlanGenerator` (Phase 8) output so each day of the generated plan auto-writes a `TrainingDayContext` (Phase 6) for its date, unless the user manually overrides via `DailyModeSelector`.
-- Add a "recalculate nutrition" trigger: when `DailyModeSelector` changes today's mode mid-day, re-run `resolveDailyTargets` and refresh `DynamicTargetBanner`, `BalancerContainer`, and `AutoMealPlanner` targets live (no reload).
-- Update `OnboardingPage.tsx:1-60`: after goal selection, immediately generate both a starter nutrition target (existing `resolveDailyTargets`) and a starter weekly training plan (Phase 8) in one finish step — matches "Ich sag ich möchte abnehmen → Bäm, beide Pläne".
-- **Verification:** run onboarding end-to-end and confirm both a nutrition target and a training plan exist afterward; change today's sport mid-day and confirm nutrition targets update without reload; `pnpm lint` passes.
+## Phase 6: Editing for recent logs, workouts, meals, and weight
+
+### Goal
+Restore the “edit list” workflows that users expect across app sections.
+
+### Work
+- Reintroduce edit list controls for:
+  - meals
+  - workouts
+  - logs
+  - weight entries
+- Reuse the graph/list toggle patterns consistently across screens rather than keeping them isolated to one page
+- Add edit actions to:
+  - recent workouts
+  - nutrition today log
+- Add visible success confirmation after successful edits/logs
+- Keep interactions consistent in history, today, and planner views
+
+### Verification
+- Each list can be edited inline
+- Recent workout cards can be edited
+- Meal logs can be removed or modified without leaving the current screen
 
 ---
 
-### Phase 10: Backup/Export Compatibility & Migration Safety *(depends on all schema changes in Phases 1, 6, 8)*
-- Update `backup.schema.ts:1-14` `BackupPayloadSchema` to include `trainingContext` and `trainingPlans` arrays.
-- Update `backupService.ts` export/import functions to read/write the new tables.
-- Extend the round-trip check in `DatabaseDebugger.tsx:13-49` to cover the new tables and fields.
-- **Verification:** export a backup after using the new features, wipe/reset the DB, re-import, confirm all new fields and tables are restored intact.
+## Phase 7: Tests, QA, and documentation
+
+### Goal
+Add the safety net so the app stops regressing in the same spots.
+
+### Work
+- Add a lightweight automated test setup for:
+  - onboarding persistence
+  - quick action dispatch
+  - meal logging add/remove/edit
+  - date navigation
+  - target resolution
+  - backup import/export
+  - duplicate default plan generation
+- Add a QA checklist covering:
+  - old core flows
+  - new dual-plan flows
+- Update:
+  - `README.md`
+  - `package.json`
+- Document the exact manual test flow and the expected app behavior
+
+### Verification
+- Run the automated tests after the reliability fixes
+- Verify each high-risk regression is covered
+- Confirm the dev/test instructions are clear for future work
+
+---
+
+## Relevant files to touch
+This is the main implementation map:
+
+- `AppShell.tsx`
+- `QuickActionSheet.tsx`
+- `MorePage.tsx`
+- `OnboardingPage.tsx`
+- `TodayPage.tsx`
+- `NutritionPage.tsx`
+- `AutoMealPlanner.tsx`
+- `useMealLogger.ts`
+- `useDynamicTargets.ts`
+- `mealPlannerService.ts`
+- `targetResolverService.ts`
+- `sportsPeriodizationService.ts`
+- `TrainingPlanGenerator.tsx`
+- `TrainPage.tsx`
+- `DailyModeSelector.tsx`
+- `backupService.ts`
+- `schemas`
+- `README.md`
+- `package.json`
+
+---
+
+## Execution order recommendation
+I’d do it in this order:
+
+1. Phase 1: shell + mobile
+2. Phase 2: persistence + onboarding + quick actions
+3. Phase 3: nutrition logging + planner + favorites
+4. Phase 4: training + dates + planner state
+5. Phase 5: target math + charts
+6. Phase 6: list editing + success states
+7. Phase 7: automated tests + docs
+
+This sequence keeps the app stable while gradually finishing the requested feature set.
+
+---
+
+## Decisions to keep in mind
+- Fix state root causes before cosmetic refinements.
+- Treat mobile as the primary target.
+- Keep all data local-first and Dexie-backed.
+- Prefer shared hooks over isolated component fixes.
+- Validate each phase with real app behavior, not only static code changes.
+
+If you want, I can take this plan and turn it into a stricter implementation backlog with:
+- exact tasks per file
+- priority labels
+- QA checklist items
+- suggested implementation order for each sprint.
+
+
+
 
 ---
 

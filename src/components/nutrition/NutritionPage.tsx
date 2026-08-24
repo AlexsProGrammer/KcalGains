@@ -57,22 +57,34 @@ export function NutritionPage() {
         <SegmentedControl value={activeTab} onValueChange={handleTabChange} items={tabs} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader icon={<UtensilsCrossed />} title="Calories" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{totals.calories} <span className="text-sm text-ink-mid">/ {targets.calories}</span></CardContent>
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <Card className="min-w-0">
+          <CardHeader icon={<UtensilsCrossed className="h-3.5 w-3.5" />} title="Calories" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
+            {totals.calories}
+            <span className="ml-1 text-[11px] text-ink-mid">/ {targets.calories}</span>
+          </CardContent>
         </Card>
-        <Card>
-          <CardHeader icon={<ChartColumn />} title="Protein" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{totals.protein} <span className="text-sm text-ink-mid">g</span></CardContent>
+        <Card className="min-w-0">
+          <CardHeader icon={<ChartColumn className="h-3.5 w-3.5" />} title="Protein" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
+            {totals.protein}
+            <span className="ml-1 text-[11px] text-ink-mid">g</span>
+          </CardContent>
         </Card>
-        <Card>
-          <CardHeader icon={<CalendarRange />} title="Carbs" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{totals.carbs} <span className="text-sm text-ink-mid">g</span></CardContent>
+        <Card className="min-w-0">
+          <CardHeader icon={<CalendarRange className="h-3.5 w-3.5" />} title="Carbs" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
+            {totals.carbs}
+            <span className="ml-1 text-[11px] text-ink-mid">g</span>
+          </CardContent>
         </Card>
-        <Card>
-          <CardHeader icon={<Dumbbell />} title="Fat" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{totals.fat} <span className="text-sm text-ink-mid">g</span></CardContent>
+        <Card className="min-w-0">
+          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Fat" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
+            {totals.fat}
+            <span className="ml-1 text-[11px] text-ink-mid">g</span>
+          </CardContent>
         </Card>
       </div>
 

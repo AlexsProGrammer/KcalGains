@@ -45,18 +45,18 @@ export function TrainPage() {
       <DailyModeSelector />
       <TrainingPlanGenerator />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader icon={<Dumbbell />} title="Sessions" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{summary.sessions}</CardContent>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <Card className="min-w-0">
+          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Sessions" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.sessions}</CardContent>
         </Card>
-        <Card>
-          <CardHeader icon={<Flame />} title="Volume" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{summary.totalVolume}</CardContent>
+        <Card className="min-w-0">
+          <CardHeader icon={<Flame className="h-3.5 w-3.5" />} title="Volume" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.totalVolume}</CardContent>
         </Card>
-        <Card>
-          <CardHeader icon={<Clock3 />} title="Sets" />
-          <CardContent className="text-2xl font-semibold text-ink-hi num">{summary.totalSets}</CardContent>
+        <Card className="min-w-0">
+          <CardHeader icon={<Clock3 className="h-3.5 w-3.5" />} title="Sets" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.totalSets}</CardContent>
         </Card>
       </div>
 

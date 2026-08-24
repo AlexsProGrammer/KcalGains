@@ -126,18 +126,18 @@ export function TodayPage() {
     if (settings.todayHero === 'stats') {
       return (
         <Card>
-          <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
             {[
               ['Calories', `${totals.calories}/${targets.calories}`],
               ['Protein', `${totals.protein}/${targets.protein}g`],
               ['Carbs', `${totals.carbs}/${targets.carbs}g`],
               ['Fat', `${totals.fat}/${targets.fat}g`],
-              ['Streak', `${streakValue}/7 days`],
+              ['Streak', `${streakValue}/7d`],
               ['Workouts', `${workoutCount}`],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-line bg-surface-0 p-4">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-ink-low">{label}</p>
-                <p className="mt-2 text-xl font-semibold text-ink-hi num">{value}</p>
+              <div key={label} className="min-w-0 rounded-xl border border-line bg-surface-0 p-3">
+                <p className="text-[9px] uppercase tracking-[0.12em] text-ink-low">{label}</p>
+                <p className="mt-1 text-base font-semibold text-ink-hi num sm:text-lg">{value}</p>
               </div>
             ))}
           </CardContent>

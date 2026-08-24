@@ -119,10 +119,10 @@ export function AppShell() {
             </nav>
           </aside>
 
-          <div className="flex-1 lg:ml-72">
+          <div className="min-w-0 flex-1 lg:ml-72">
             <header className="sticky top-0 z-20 border-b border-line bg-surface-0/85 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
               <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.shell.overview}</p>
                   <h2 className="text-lg font-semibold text-ink-hi">{currentTitle}</h2>
                 </div>
@@ -134,7 +134,7 @@ export function AppShell() {
               </div>
             </header>
 
-            <main className="mx-auto max-w-7xl px-4 pb-24 pt-4 sm:px-6 lg:px-8 lg:pb-10">
+            <main className="mx-auto min-w-0 max-w-7xl px-3 pb-28 pt-3 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={location.pathname}
@@ -142,7 +142,7 @@ export function AppShell() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
                   transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
-                  className="min-h-[calc(100vh-8rem)]"
+                  className="min-h-[calc(100vh-8rem)] min-w-0"
                 >
                   <Outlet />
                 </motion.div>
@@ -154,14 +154,14 @@ export function AppShell() {
         {!shouldShowOnboarding ? (
           <>
             <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface-1/95 p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur-xl lg:hidden">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-1.5">
                 {navItems.map(({ to, label, icon: Icon }) => (
                   <NavLink
                     key={to}
                     to={to}
                     className={({ isActive }) =>
                       clsx(
-                        'flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[10px] font-medium transition-colors',
+                        'flex touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[10px] font-medium transition-colors',
                         isActive ? 'bg-accent/12 text-accent-text' : 'text-ink-mid',
                       )
                     }
@@ -174,7 +174,7 @@ export function AppShell() {
             </nav>
 
             <Button
-              className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 w-14 rounded-full shadow-accent-glow lg:bottom-6"
+              className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 w-14 rounded-full shadow-accent-glow lg:bottom-6"
               onClick={() => setQuickActionOpen(true)}
             >
               <Plus className="h-5 w-5" />

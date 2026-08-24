@@ -1,4 +1,4 @@
-import { AlertTriangle, Database, Dumbbell, FileLock2, Gauge, Palette, ShieldCheck, Sparkles, Target, Wand2, Wrench } from 'lucide-react'
+import { AlertTriangle, Database, Dumbbell, FileLock2, Palette, ShieldCheck, Sparkles, Target, Wand2, Wrench } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { BackupManager } from '@/components/BackupManager'
 import { StorageStatus } from '@/components/StorageStatus'
@@ -20,7 +20,6 @@ const developerNavItem = { to: '/more/developer', label: 'Developer', icon: Wren
 
 const navItems = [
   { to: '/more/profile', label: 'Profile', icon: Target },
-  { to: '/more/goals', label: 'Goals', icon: Gauge },
   { to: '/more/training', label: 'Training', icon: Dumbbell },
   { to: '/more/appearance', label: 'Appearance', icon: Palette },
   { to: '/more/modules', label: 'Modules', icon: ShieldCheck },
@@ -135,7 +134,6 @@ export function MorePage() {
 
   const contentMap: Record<string, React.ReactNode> = {
     profile: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
-    goals: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
     training: <TrainingModeSettingsForm />,
     appearance: <AppearanceSettings />,
     modules: <ModuleSettingsPanel />,
@@ -154,16 +152,16 @@ export function MorePage() {
   const activeSection = section in contentMap ? section : 'profile'
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">More</p>
           <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Settings, sync and app tools</h2>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface-1/70 p-2">
-        <nav className="flex gap-2 overflow-x-auto p-1">
+      <div className="w-full overflow-hidden rounded-2xl border border-line bg-surface-1/70 p-2">
+        <nav className="flex min-w-0 flex-wrap gap-2 p-1">
           {navItems.map(({ to, label, icon: Icon }) => {
             const isDanger = label === 'Danger'
             return (
@@ -172,7 +170,7 @@ export function MorePage() {
                 to={to}
                 className={({ isActive }) =>
                   clsx(
-                    'flex min-w-max items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex min-w-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                     isDanger
                       ? isActive
                         ? 'bg-danger/15 text-danger shadow-danger-glow border border-danger/30'
@@ -183,15 +181,15 @@ export function MorePage() {
                   )
                 }
               >
-                <Icon className="h-4 w-4" />
-                {label}
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{label}</span>
               </NavLink>
             )
           })}
         </nav>
       </div>
 
-      <div className="space-y-4">{contentMap[activeSection]}</div>
+      <div className="min-w-0 space-y-4">{contentMap[activeSection]}</div>
     </div>
   )
 }
