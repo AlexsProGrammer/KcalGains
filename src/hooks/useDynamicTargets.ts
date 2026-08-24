@@ -32,7 +32,7 @@ export function useDynamicTargets(): DynamicMacroTargets & {
       source: resolved.source,
       reason: resolved.reason,
     }
-  }, [], {
+  }, [db.trainingContext, db.settings, db.profile, db.workouts], {
     targets: {
       calories: 2000,
       protein: 150,

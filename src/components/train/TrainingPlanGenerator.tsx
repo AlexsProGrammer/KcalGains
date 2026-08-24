@@ -10,7 +10,7 @@ import { saveWorkoutLog } from '@/db/workoutRepository'
 import { useSettings } from '@/hooks/useSettings'
 import { useWorkoutLogger } from '@/hooks/useWorkoutLogger'
 import { TrainingPlanSchema } from '@/schemas/trainingPlan.schema'
-import type { TrainingPlan, WorkoutLog } from '@/types'
+import type { TrainingDayContext, TrainingPlan, WorkoutLog } from '@/types'
 
 const DAY_LABELS = {
   monday: 'Monday',
@@ -23,6 +23,44 @@ const DAY_LABELS = {
 } as const
 
 const DAY_KEYS = Object.keys(DAY_LABELS) as Array<keyof typeof DAY_LABELS>
+
+export function getDateForDayKey(weekStart: string, dayKey: keyof typeof DAY_LABELS): string {
+  const [year, month, day] = weekStart.split('-').map(Number)
+  const base = new Date(year, (month ?? 1) - 1, day ?? 1)
+  const offset = DAY_KEYS.indexOf(dayKey)
+  if (offset < 0) return weekStart
+  base.setDate(base.getDate() + offset)
+  return base.toISOString().slice(0, 10)
+}
+
+export async function syncTrainingPlanContexts(plan: TrainingPlan) {
+  const weekStart = plan.weekStart ?? getCurrentWeekStart()
+
+  for (const day of plan.days) {
+    const date = getDateForDayKey(weekStart, day.dayKey)
+    const existing = await db.trainingContext.where('date').equals(date).first()
+    const sportType = (day.trainingMode ?? 'rest') as TrainingDayContext['sportType']
+    const intensity = (sportType === 'rest' ? 'low' : 'moderate') as TrainingDayContext['intensity']
+    const seasonPhase = (sportType === 'rest' ? 'recovery' : 'offseason') as TrainingDayContext['seasonPhase']
+    const nextContext: TrainingDayContext = {
+      id: `training-context-${date}`,
+      date,
+      sportType,
+      intensity,
+      durationMinutes: sportType === 'rest' ? 0 : 60,
+      seasonPhase,
+      customMode: existing?.customMode,
+      createdAt: new Date().toISOString(),
+    }
+
+    if (existing && existing.customMode) {
+      await db.trainingContext.put({ ...existing, id: `training-context-${date}`, date })
+      continue
+    }
+
+    await db.trainingContext.put(nextContext)
+  }
+}
 
 function getCurrentWeekStart(): string {
   const now = new Date()
@@ -236,6 +274,7 @@ export function TrainingPlanGenerator() {
   async function savePlan(plan: TrainingPlan) {
     const parsed = TrainingPlanSchema.parse(plan)
     await db.trainingPlans.put(parsed)
+    await syncTrainingPlanContexts(parsed)
     setDraftPlan(parsed)
     setMessage('Training profile saved.')
   }

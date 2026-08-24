@@ -45,7 +45,11 @@ export function DailyModeSelector() {
   const current = useMemo(() => existing ?? defaultContext(selected), [existing, selected])
 
   async function applyMode(mode: string) {
-    const next = defaultContext(mode)
+    const preset = settings.trainingModes.find((entry) => entry.sportType === mode)
+    const next: TrainingDayContext = {
+      ...defaultContext(mode),
+      customMode: preset,
+    }
     await db.trainingContext.put(next)
     setSelected(mode)
   }

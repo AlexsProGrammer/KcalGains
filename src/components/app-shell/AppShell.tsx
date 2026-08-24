@@ -127,7 +127,7 @@ export function AppShell() {
                   <h2 className="text-lg font-semibold text-ink-hi">{currentTitle}</h2>
                 </div>
 
-                <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-right shadow-sm">
+                <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-center shadow-sm">
                   <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">Today</div>
                   <div className="mt-1 text-sm font-medium text-ink-hi">{trainingModeLabel}</div>
                 </div>

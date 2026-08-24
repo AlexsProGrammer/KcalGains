@@ -5,11 +5,13 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Field, SelectInput, TextInput } from '@/components/ui/field'
+import { db } from '@/db'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
+import { TrainingPlanSchema } from '@/schemas/trainingPlan.schema'
 import { ACCENT_OPTIONS } from '@/theme/accents'
-import type { AccentName, ActivityLevel, BiologicalSex, FitnessGoal } from '@/types'
+import type { AccentName, ActivityLevel, BiologicalSex, FitnessGoal, TrainingPlan } from '@/types'
 
 const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
   { value: 'sedentary', label: 'Sedentary (desk job)' },
@@ -89,6 +91,50 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
     window.sessionStorage.removeItem('kcalgains.forceOnboarding')
   }
 
+  async function createStarterTrainingPlan(): Promise<TrainingPlan> {
+    const now = new Date()
+    const monday = new Date(now)
+    const dayOffset = (monday.getDay() + 6) % 7
+    monday.setDate(monday.getDate() - dayOffset)
+    monday.setHours(0, 0, 0, 0)
+
+    const weekStart = monday.toISOString().slice(0, 10)
+    const plan = TrainingPlanSchema.parse({
+      id: crypto.randomUUID(),
+      title: goal === 'lose-fat' ? 'Starter fat-loss plan' : goal === 'gain-muscle' ? 'Starter muscle plan' : 'Starter balanced plan',
+      repeatWeeks: 4,
+      weekStart,
+      completedDayIds: [],
+      days: [
+        { id: 'starter-mon', dayKey: 'monday', label: 'Monday', trainingMode: 'strength', notes: 'Main lift day', exercises: [] },
+        { id: 'starter-tue', dayKey: 'tuesday', label: 'Tuesday', trainingMode: goal === 'lose-fat' ? 'cardio' : 'rest', notes: goal === 'lose-fat' ? 'Conditioning' : 'Recovery', exercises: [] },
+        { id: 'starter-wed', dayKey: 'wednesday', label: 'Wednesday', trainingMode: 'strength', notes: 'Secondary lift day', exercises: [] },
+        { id: 'starter-thu', dayKey: 'thursday', label: 'Thursday', trainingMode: 'rest', notes: 'Recovery', exercises: [] },
+        { id: 'starter-fri', dayKey: 'friday', label: 'Friday', trainingMode: 'strength', notes: 'Upper-body emphasis', exercises: [] },
+        { id: 'starter-sat', dayKey: 'saturday', label: 'Saturday', trainingMode: goal === 'gain-muscle' ? 'hypertrophy' : 'cardio', notes: goal === 'gain-muscle' ? 'Volume work' : 'Easy cardio', exercises: [] },
+        { id: 'starter-sun', dayKey: 'sunday', label: 'Sunday', trainingMode: 'rest', notes: 'Full recovery', exercises: [] },
+      ],
+    })
+
+    await db.trainingPlans.put(plan)
+
+    for (const day of plan.days) {
+      const date = new Date(monday)
+      date.setDate(monday.getDate() + ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].indexOf(day.dayKey))
+      await db.trainingContext.put({
+        id: `training-context-${date.toISOString().slice(0, 10)}`,
+        date: date.toISOString().slice(0, 10),
+        sportType: day.trainingMode,
+        intensity: day.trainingMode === 'rest' ? 'low' : 'moderate',
+        durationMinutes: day.trainingMode === 'rest' ? 0 : 60,
+        seasonPhase: day.trainingMode === 'rest' ? 'recovery' : 'offseason',
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    return plan
+  }
+
   async function handleComplete() {
     setError(null)
     setIsSubmitting(true)
@@ -103,6 +149,7 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
         goal,
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
+      await createStarterTrainingPlan()
       await setSetting('accent', accent)
       await setSetting('onboardingCompleted', true)
       await setSetting('onboardingDismissed', false)
