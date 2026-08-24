@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import { normalizeFoodMicros } from '@/schemas/food.schema'
 import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
 import type { AppSettings, DailyLog, ExerciseDefinition, Food, Meal, Profile, WeightEntry, Workout } from '@/types'
 
@@ -178,6 +179,25 @@ export class FitnessTrackerDB extends Dexie {
           profile.dietaryPattern ??= 'standard'
           profile.sweatType ??= 'normal'
           profile.budgetPerDay ??= undefined
+        })
+      })
+
+    this.version(10)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table('foods').toCollection().modify((food: any) => {
+          food.allergenTags ??= []
+          food.costPer100g ??= undefined
+          food.micros = normalizeFoodMicros(food.micros)
         })
       })
   }

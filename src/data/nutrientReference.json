@@ -1,0 +1,194 @@
+[
+  {
+    "name": "banana",
+    "micros": {
+      "sodiumMg": 1,
+      "potassiumMg": 358,
+      "magnesiumMg": 27,
+      "calciumMg": 5,
+      "zincMg": 0.2,
+      "ironMg": 0.3,
+      "seleniumMcg": 1.2,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.37,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 8.7
+    }
+  },
+  {
+    "name": "oatmeal",
+    "micros": {
+      "sodiumMg": 2,
+      "potassiumMg": 362,
+      "magnesiumMg": 138,
+      "calciumMg": 52,
+      "zincMg": 3.6,
+      "ironMg": 4.7,
+      "seleniumMcg": 32,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.12,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 0
+    }
+  },
+  {
+    "name": "chicken breast",
+    "micros": {
+      "sodiumMg": 65,
+      "potassiumMg": 256,
+      "magnesiumMg": 29,
+      "calciumMg": 15,
+      "zincMg": 1,
+      "ironMg": 0.7,
+      "seleniumMcg": 27,
+      "vitaminDMcg": 0.1,
+      "vitaminB6Mg": 0.6,
+      "vitaminB12Mcg": 0.3,
+      "vitaminCMg": 0
+    }
+  },
+  {
+    "name": "salmon",
+    "micros": {
+      "sodiumMg": 59,
+      "potassiumMg": 363,
+      "magnesiumMg": 27,
+      "calciumMg": 12,
+      "zincMg": 0.6,
+      "ironMg": 0.4,
+      "seleniumMcg": 36,
+      "vitaminDMcg": 14,
+      "vitaminB6Mg": 0.7,
+      "vitaminB12Mcg": 4.5,
+      "vitaminCMg": 0
+    }
+  },
+  {
+    "name": "eggs",
+    "micros": {
+      "sodiumMg": 142,
+      "potassiumMg": 138,
+      "magnesiumMg": 12,
+      "calciumMg": 56,
+      "zincMg": 1.3,
+      "ironMg": 1.8,
+      "seleniumMcg": 30,
+      "vitaminDMcg": 41,
+      "vitaminB6Mg": 0.17,
+      "vitaminB12Mcg": 0.89,
+      "vitaminCMg": 0
+    }
+  },
+  {
+    "name": "milk",
+    "micros": {
+      "sodiumMg": 43,
+      "potassiumMg": 150,
+      "magnesiumMg": 11,
+      "calciumMg": 120,
+      "zincMg": 0.4,
+      "ironMg": 0.1,
+      "seleniumMcg": 3,
+      "vitaminDMcg": 2.4,
+      "vitaminB6Mg": 0.05,
+      "vitaminB12Mcg": 0.5,
+      "vitaminCMg": 1.0
+    }
+  },
+  {
+    "name": "spinach",
+    "micros": {
+      "sodiumMg": 79,
+      "potassiumMg": 558,
+      "magnesiumMg": 79,
+      "calciumMg": 99,
+      "zincMg": 0.5,
+      "ironMg": 2.7,
+      "seleniumMcg": 1.7,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.2,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 28
+    }
+  },
+  {
+    "name": "avocado",
+    "micros": {
+      "sodiumMg": 7,
+      "potassiumMg": 485,
+      "magnesiumMg": 29,
+      "calciumMg": 12,
+      "zincMg": 0.6,
+      "ironMg": 0.6,
+      "seleniumMcg": 0.4,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.29,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 10
+    }
+  },
+  {
+    "name": "lentils",
+    "micros": {
+      "sodiumMg": 2,
+      "potassiumMg": 369,
+      "magnesiumMg": 36,
+      "calciumMg": 19,
+      "zincMg": 1.3,
+      "ironMg": 3.3,
+      "seleniumMcg": 1.8,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.18,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 4.4
+    }
+  },
+  {
+    "name": "almonds",
+    "micros": {
+      "sodiumMg": 1,
+      "potassiumMg": 733,
+      "magnesiumMg": 270,
+      "calciumMg": 264,
+      "zincMg": 3.1,
+      "ironMg": 3.7,
+      "seleniumMcg": 4,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.14,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 0
+    }
+  },
+  {
+    "name": "tofu",
+    "micros": {
+      "sodiumMg": 7,
+      "potassiumMg": 121,
+      "magnesiumMg": 30,
+      "calciumMg": 350,
+      "zincMg": 0.8,
+      "ironMg": 1.8,
+      "seleniumMcg": 8,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.1,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 0.1
+    }
+  },
+  {
+    "name": "broccoli",
+    "micros": {
+      "sodiumMg": 33,
+      "potassiumMg": 316,
+      "magnesiumMg": 21,
+      "calciumMg": 47,
+      "zincMg": 0.4,
+      "ironMg": 0.7,
+      "seleniumMcg": 2.5,
+      "vitaminDMcg": 0,
+      "vitaminB6Mg": 0.2,
+      "vitaminB12Mcg": 0,
+      "vitaminCMg": 89.2
+    }
+  }
+]

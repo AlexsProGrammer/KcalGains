@@ -1,5 +1,6 @@
 import { db } from '@/db'
 import { FoodSchema } from '@/schemas/food.schema'
+import { enrichFoodMicros } from '@/services/nutrientEnrichmentService'
 import { initializeSearchIndex } from '@/services/searchIndexService'
 import type { Food } from '@/types'
 
@@ -48,7 +49,21 @@ export function parseOpenFoodFactsProduct(rawProduct: unknown, fallbackBarcode?:
     return undefined
   }
 
-  return FoodSchema.parse({
+  const rawMicros = {
+    sodiumMg: getNutrient(nutriments, 'sodium_100g'),
+    potassiumMg: getNutrient(nutriments, 'potassium_100g'),
+    magnesiumMg: getNutrient(nutriments, 'magnesium_100g'),
+    calciumMg: getNutrient(nutriments, 'calcium_100g'),
+    zincMg: getNutrient(nutriments, 'zinc_100g'),
+    ironMg: getNutrient(nutriments, 'iron_100g'),
+    seleniumMcg: getNutrient(nutriments, 'selenium_100g'),
+    vitaminDMcg: getNutrient(nutriments, 'vitamin-d_100g'),
+    vitaminB6Mg: getNutrient(nutriments, 'vitamin-b6_100g'),
+    vitaminB12Mcg: getNutrient(nutriments, 'vitamin-b12_100g'),
+    vitaminCMg: getNutrient(nutriments, 'vitamin-c_100g'),
+  }
+
+  const parsedFood = FoodSchema.parse({
     id: barcode ? `off-${barcode}` : `off-${crypto.randomUUID()}`,
     name,
     brand: textValue(product.brands),
@@ -59,15 +74,13 @@ export function parseOpenFoodFactsProduct(rawProduct: unknown, fallbackBarcode?:
     carbs: getNutrient(nutriments, 'carbohydrates_100g', 'carbohydrates'),
     fat: getNutrient(nutriments, 'fat_100g'),
     fiber: getNutrient(nutriments, 'fiber_100g', 'fiber'),
-    micros: {
-      sodium: getNutrient(nutriments, 'sodium_100g'),
-      potassium: getNutrient(nutriments, 'potassium_100g'),
-      magnesium: getNutrient(nutriments, 'magnesium_100g'),
-      zinc: getNutrient(nutriments, 'zinc_100g'),
-    },
+    micros: Object.values(rawMicros).some((value) => value > 0) ? rawMicros : undefined,
+    allergenTags: [],
     isCustom: false,
     createdAt: new Date().toISOString(),
   })
+
+  return enrichFoodMicros(parsedFood)
 }
 
 export async function fetchFromOpenFoodFacts(query: string): Promise<Food[]> {
