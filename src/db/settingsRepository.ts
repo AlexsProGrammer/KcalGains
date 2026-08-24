@@ -10,11 +10,14 @@ export async function getSettings(): Promise<AppSettings> {
     return parsed.data
   }
 
-  return {
+  const fallback = {
     ...DEFAULT_APP_SETTINGS,
     ...(stored ?? {}),
     id: SETTINGS_SINGLETON_ID,
   }
+
+  await db.settings.put(fallback)
+  return fallback
 }
 
 export async function updateSettings(updates: Partial<AppSettings>): Promise<AppSettings> {

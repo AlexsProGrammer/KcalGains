@@ -45,7 +45,7 @@ export function AppShell() {
     return undefined
   }, [forceOnboarding])
 
-  const shouldShowOnboarding = !settings.onboardingCompleted && !location.pathname.startsWith('/onboarding') && (forceOnboarding || !settings.onboardingDismissed)
+  const shouldShowOnboarding = !isLoading && !settings.onboardingCompleted && !location.pathname.startsWith('/onboarding') && (forceOnboarding || !settings.onboardingDismissed)
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
@@ -61,7 +61,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-surface-0 text-ink-hi">
-      <div className={clsx(shouldShowOnboarding && 'pointer-events-none select-none')}>
+      <div>
         <div className="flex min-h-screen">
           <aside className="hidden w-72 shrink-0 border-r border-line bg-surface-1/70 backdrop-blur-xl lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:flex-col lg:pt-6">
             <div className="px-5 pb-6">

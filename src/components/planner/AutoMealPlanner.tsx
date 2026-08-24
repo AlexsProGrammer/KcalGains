@@ -8,6 +8,8 @@ import { Field, SelectInput } from '@/components/ui/field'
 import { db } from '@/db'
 import { commitBalancedMealToLog } from '@/hooks/useMealLogger'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
+import { useProfile } from '@/hooks/useProfile'
+import { filterFoodsByProfile } from '@/services/foodFilterService'
 import { planDay, suggestMeal, type MealType, type PlannedMeal } from '@/services/mealPlannerService'
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -20,6 +22,7 @@ const PANTRY_FILTERS = [
 type PantryFilter = (typeof PANTRY_FILTERS)[number]['value']
 
 export function AutoMealPlanner() {
+  const { profile } = useProfile()
   const allFoods = useLiveQuery(() => db.foods.toArray(), [], [])
   const targets = useDynamicTargets()
   const [pantryFilter, setPantryFilter] = useState<PantryFilter>('all')
@@ -28,12 +31,17 @@ export function AutoMealPlanner() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const foods = useMemo(
-    () => (pantryFilter === 'custom' ? allFoods.filter((food) => food.isCustom) : allFoods),
-    [allFoods, pantryFilter],
-  )
+  const foods = useMemo(() => {
+    const pool = (pantryFilter === 'custom' ? allFoods.filter((food) => food.isCustom) : allFoods)
+    const filtered = filterFoodsByProfile(pool, profile)
+    return filtered.filtered
+  }, [allFoods, pantryFilter, profile])
 
   const foodNames = useMemo(() => new Map(allFoods.map((food) => [food.id, food.name])), [allFoods])
+  const hiddenFoodsCount = useMemo(() => {
+    const pool = pantryFilter === 'custom' ? allFoods.filter((food) => food.isCustom) : allFoods
+    return filterFoodsByProfile(pool, profile).hiddenCount
+  }, [allFoods, pantryFilter, profile])
 
   const dailyTargets = {
     calories: targets.calories,
@@ -131,6 +139,7 @@ export function AutoMealPlanner() {
           ) : null}
         </div>
 
+        {hiddenFoodsCount > 0 ? <p className="text-xs text-slate-500">{hiddenFoodsCount} foods hidden due to your allergy settings.</p> : null}
         {error ? <Alert variant="warning">{error}</Alert> : null}
         {message ? <Alert variant="success">{message}</Alert> : null}
 

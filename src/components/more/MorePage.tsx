@@ -7,6 +7,7 @@ import { BalancerDevPanel } from '@/components/balancer/BalancerDevPanel'
 import { DatabaseDebugger } from '@/components/DatabaseDebugger'
 import { AppearanceSettings } from '@/components/settings/AppearanceSettings'
 import { ModuleSettingsPanel } from '@/components/settings/ModuleSettingsPanel'
+import { AllergyConstraintsForm } from '@/components/settings/AllergyConstraintsForm'
 import { ProfileGoalForm } from '@/components/settings/ProfileGoalForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -129,8 +130,8 @@ export function MorePage() {
   const section = location.pathname.replace(/^\/more\//, '').split('/')[0] || 'profile'
 
   const contentMap: Record<string, React.ReactNode> = {
-    profile: <ProfileGoalForm />,
-    goals: <ProfileGoalForm />,
+    profile: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
+    goals: <div className="space-y-4"><ProfileGoalForm /><AllergyConstraintsForm /></div>,
     appearance: <AppearanceSettings />,
     modules: <ModuleSettingsPanel />,
     data: (

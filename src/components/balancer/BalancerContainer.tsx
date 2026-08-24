@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
 import { useMealBalancer } from '@/hooks/useMealBalancer'
 import { useMealLogger } from '@/hooks/useMealLogger'
+import { useProfile } from '@/hooks/useProfile'
+import { filterFoodsByProfile } from '@/services/foodFilterService'
 import { MacroTargetControls } from '@/components/balancer/MacroTargetControls'
 import { OptimizationErrorAlert } from '@/components/balancer/OptimizationErrorAlert'
 import { BalancerResultsCard } from '@/components/balancer/BalancerResultsCard'
@@ -15,6 +17,7 @@ import { resolveDailyTargets } from '@/services/targetResolverService'
 import type { Food } from '@/types'
 
 export function BalancerContainer() {
+  const { profile: currentProfile } = useProfile()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])
   const profile = useLiveQuery(() => db.profile.toCollection().first(), [])
   const settings = useLiveQuery(() => db.settings.get('app-settings'), [])
@@ -23,7 +26,8 @@ export function BalancerContainer() {
   const [query, setQuery] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [proteinFocus, setProteinFocus] = useState(50)
-  const visibleFoods = foods.filter((food) => food.name.toLowerCase().includes(query.toLowerCase())).slice(0, 24)
+  const filteredFoodPool = filterFoodsByProfile(foods, currentProfile)
+  const visibleFoods = filteredFoodPool.filtered.filter((food) => food.name.toLowerCase().includes(query.toLowerCase())).slice(0, 24)
   const names = new Map(balancer.selectedFoods.map((food) => [food.id, food.name]))
   const targetSource = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg }).source
 
