@@ -28,6 +28,7 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     carbs: 10,
     fat: 5,
     fiber: 2,
+    allergenTags: [],
     isCustom: true,
     createdAt: new Date().toISOString(),
   }))
@@ -109,6 +110,7 @@ export function DatabaseDebugger() {
       carbs: 12,
       fat: 4,
       fiber: 2,
+      allergenTags: [],
       isCustom: true,
       createdAt: new Date().toISOString(),
     }))

@@ -67,6 +67,7 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       carbs,
       fat,
       fiber: Number(values.fiber),
+      allergenTags: initialFood?.allergenTags ?? [],
       isCustom: true,
     }
 
@@ -75,7 +76,13 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       if (initialFood) {
         await updateFood(id, foodData)
       }
-      onSaved({ ...initialFood, ...foodData, id, createdAt: initialFood?.createdAt ?? new Date().toISOString() })
+      onSaved({
+        ...initialFood,
+        ...foodData,
+        id,
+        createdAt: initialFood?.createdAt ?? new Date().toISOString(),
+        allergenTags: initialFood?.allergenTags ?? foodData.allergenTags,
+      })
     } catch {
       setError('The food could not be saved locally.')
     }

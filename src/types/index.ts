@@ -1,9 +1,9 @@
 import type { z } from 'zod'
 import { BackupPayloadSchema } from '@/schemas/backup.schema'
 import { DailyLogSchema } from '@/schemas/dailyLog.schema'
-import { FoodSchema } from '@/schemas/food.schema'
+import { AllergenTagSchema, FoodSchema, MicronutrientSchema } from '@/schemas/food.schema'
 import { MealItemSchema, MealSchema } from '@/schemas/meal.schema'
-import { ProfileSchema, ActivityLevelSchema, BiologicalSexSchema, FitnessGoalSchema } from '@/schemas/profile.schema'
+import { ProfileSchema, ActivityLevelSchema, BiologicalSexSchema, DietaryPatternSchema, FitnessGoalSchema, SweatTypeSchema } from '@/schemas/profile.schema'
 import { AppSettingsSchema, ViewModeSchema, AccentSchema, TodayHeroSchema, LocaleSchema, DensitySchema, ReduceMotionSchema } from '@/schemas/settings.schema'
 import { ExerciseDefinitionSchema, ExerciseSetSchema, LoggedExerciseSchema, SetSchema, WorkoutLogSchema, WorkoutSchema } from '@/schemas/workout.schema'
 import { WeightEntrySchema } from '@/schemas/weightLog.schema'
@@ -12,6 +12,8 @@ import { PromptContextSchema } from '@/schemas/aiPrompt.schema'
 import { AiMealItemSchema, AiMealResponseSchema } from '@/schemas/aiResponse.schema'
 
 export type Food = z.infer<typeof FoodSchema>
+export type Micronutrients = z.infer<typeof MicronutrientSchema>
+export type AllergenTag = z.infer<typeof AllergenTagSchema>
 export type MealItem = z.infer<typeof MealItemSchema>
 export type Meal = z.infer<typeof MealSchema>
 export type Set = z.infer<typeof SetSchema>
@@ -21,6 +23,8 @@ export type Profile = z.infer<typeof ProfileSchema>
 export type BiologicalSex = z.infer<typeof BiologicalSexSchema>
 export type ActivityLevel = z.infer<typeof ActivityLevelSchema>
 export type FitnessGoal = z.infer<typeof FitnessGoalSchema>
+export type DietaryPattern = z.infer<typeof DietaryPatternSchema>
+export type SweatType = z.infer<typeof SweatTypeSchema>
 export type AppSettings = z.infer<typeof AppSettingsSchema>
 export type ViewMode = z.infer<typeof ViewModeSchema>
 export type AccentName = z.infer<typeof AccentSchema>

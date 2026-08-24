@@ -152,5 +152,33 @@ export class FitnessTrackerDB extends Dexie {
           updatedAt: new Date(),
         })
       })
+
+    this.version(9)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table('foods').toCollection().modify((food: any) => {
+          food.allergenTags ??= []
+          food.costPer100g ??= undefined
+          if (!food.micros || typeof food.micros !== 'object') {
+            food.micros = { }
+          }
+        })
+
+        await transaction.table('profile').toCollection().modify((profile: any) => {
+          profile.allergens ??= []
+          profile.dietaryPattern ??= 'standard'
+          profile.sweatType ??= 'normal'
+          profile.budgetPerDay ??= undefined
+        })
+      })
   }
 }

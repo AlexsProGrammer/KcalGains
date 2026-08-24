@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AllergenTagSchema } from '@/schemas/food.schema'
 
 export const PROFILE_SINGLETON_ID = 'primary-profile'
 
@@ -7,6 +8,10 @@ export const BiologicalSexSchema = z.enum(['male', 'female'])
 export const ActivityLevelSchema = z.enum(['sedentary', 'light', 'moderate', 'active', 'athlete'])
 
 export const FitnessGoalSchema = z.enum(['lose-fat', 'maintain', 'gain-muscle', 'recomp', 'athletic'])
+
+export const DietaryPatternSchema = z.enum(['standard', 'ketogenic', 'diabetic_friendly', 'low_fodmap'])
+
+export const SweatTypeSchema = z.enum(['low', 'normal', 'heavy_salty'])
 
 export const ProfileSchema = z.object({
   id: z.string().min(1),
@@ -23,6 +28,10 @@ export const ProfileSchema = z.object({
   sex: BiologicalSexSchema.optional(),
   activityLevel: ActivityLevelSchema.default('moderate'),
   goal: FitnessGoalSchema.default('maintain'),
+  allergens: z.array(AllergenTagSchema).default([]),
+  dietaryPattern: DietaryPatternSchema.default('standard'),
+  sweatType: SweatTypeSchema.default('normal'),
+  budgetPerDay: z.number().nonnegative().optional(),
   /** Signed weekly body-weight change target; negative for fat loss. */
   goalRateKgPerWeek: z.number().min(-1.5).max(1.5).default(0),
 })

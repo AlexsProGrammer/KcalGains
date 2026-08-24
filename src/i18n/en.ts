@@ -24,6 +24,10 @@ export const en = {
     dismiss: 'Dismiss install banner',
     close: 'Close quick actions',
     newVersion: 'New version available',
+    budgetPerDay: 'Daily budget (€)',
+    allergens: 'Allergens',
+    dietaryPattern: 'Diet pattern',
+    sweatType: 'Sweat type',
   },
   app: {
     somethingWentWrong: 'Something went wrong',

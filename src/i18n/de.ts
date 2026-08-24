@@ -24,6 +24,10 @@ export const de = {
     dismiss: 'Installationsbanner schließen',
     close: 'Schnellaktionen schließen',
     newVersion: 'Neue Version verfügbar',
+    budgetPerDay: 'Tagesbudget (€)',
+    allergens: 'Allergene',
+    dietaryPattern: 'Ernährungsstil',
+    sweatType: 'Schweißtyp',
   },
   app: {
     somethingWentWrong: 'Etwas ist schiefgelaufen',

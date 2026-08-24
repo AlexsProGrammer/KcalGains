@@ -8,8 +8,7 @@ import { Field, SelectInput, TextInput } from '@/components/ui/field'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
-import { clearOnboardingState } from '@/db/settingsRepository'
-import type { ActivityLevel, BiologicalSex, FitnessGoal } from '@/types'
+import type { ActivityLevel, AllergenTag, BiologicalSex, DietaryPattern, FitnessGoal, SweatType } from '@/types'
 
 const GOAL_OPTIONS: { value: FitnessGoal; label: string }[] = [
   { value: 'lose-fat', label: 'Lose fat' },
@@ -25,6 +24,29 @@ const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
   { value: 'moderate', label: 'Moderate (3-4 sessions/week)' },
   { value: 'active', label: 'Active (5-6 sessions/week)' },
   { value: 'athlete', label: 'Athlete (daily training)' },
+]
+
+const ALLERGEN_OPTIONS: { value: AllergenTag; label: string }[] = [
+  { value: 'gluten', label: 'Gluten' },
+  { value: 'lactose', label: 'Lactose' },
+  { value: 'nuts', label: 'Nuts' },
+  { value: 'soy', label: 'Soy' },
+  { value: 'eggs', label: 'Eggs' },
+  { value: 'fish', label: 'Fish' },
+  { value: 'fructose', label: 'Fructose' },
+]
+
+const DIETARY_OPTIONS: { value: DietaryPattern; label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'ketogenic', label: 'Ketogenic' },
+  { value: 'diabetic_friendly', label: 'Diabetic-friendly' },
+  { value: 'low_fodmap', label: 'Low-FODMAP' },
+]
+
+const SWEAT_OPTIONS: { value: SweatType; label: string }[] = [
+  { value: 'low', label: 'Low sweat / low sodium loss' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'heavy_salty', label: 'Heavy sweater / salty sweat' },
 ]
 
 function toNumberOrUndefined(value: string): number | undefined {
@@ -43,6 +65,10 @@ export function ProfileGoalForm() {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate')
   const [goal, setGoal] = useState<FitnessGoal>('maintain')
   const [goalRate, setGoalRate] = useState('0')
+  const [dietaryPattern, setDietaryPattern] = useState<DietaryPattern>('standard')
+  const [sweatType, setSweatType] = useState<SweatType>('normal')
+  const [budgetPerDay, setBudgetPerDay] = useState('')
+  const [allergens, setAllergens] = useState<AllergenTag[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,11 +81,21 @@ export function ProfileGoalForm() {
     setActivityLevel(profile.activityLevel)
     setGoal(profile.goal)
     setGoalRate(profile.goalRateKgPerWeek.toString())
+    setDietaryPattern(profile.dietaryPattern ?? 'standard')
+    setSweatType(profile.sweatType ?? 'normal')
+    setBudgetPerDay(profile.budgetPerDay?.toString() ?? '')
+    setAllergens(profile.allergens ?? [])
   }, [isLoading, profile])
 
   function selectGoal(nextGoal: FitnessGoal) {
     setGoal(nextGoal)
     setGoalRate(GOAL_DEFAULT_RATES[nextGoal].toString())
+  }
+
+  function toggleAllergen(allergen: AllergenTag) {
+    setAllergens((current) => current.includes(allergen)
+      ? current.filter((item) => item !== allergen)
+      : [...current, allergen])
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -75,9 +111,13 @@ export function ProfileGoalForm() {
         sex: sex === '' ? undefined : sex,
         activityLevel,
         goal,
+        dietaryPattern,
+        sweatType,
+        budgetPerDay: toNumberOrUndefined(budgetPerDay),
+        allergens,
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
-      setMessage('Profile saved. Connected modules will pick up the new goal.')
+      setMessage('Profile saved. Connected modules will pick up the new goal and health constraints.')
     } catch {
       setError('Check your entries: height 80-260 cm, weight above 0, rate between -1.5 and 1.5 kg/week.')
     }
@@ -119,6 +159,42 @@ export function ProfileGoalForm() {
                 ))}
               </SelectInput>
             </Field>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Diet pattern">
+              <SelectInput value={dietaryPattern} onChange={(event) => setDietaryPattern(event.target.value as DietaryPattern)}>
+                {DIETARY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </SelectInput>
+            </Field>
+            <Field label="Sweat type">
+              <SelectInput value={sweatType} onChange={(event) => setSweatType(event.target.value as SweatType)}>
+                {SWEAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </SelectInput>
+            </Field>
+          </div>
+
+          <Field label="Daily budget (€)" hint="Optional: used by future budget-aware meal planning.">
+            <TextInput type="number" min="0" step="1" value={budgetPerDay} onChange={(event) => setBudgetPerDay(event.target.value)} placeholder="15" />
+          </Field>
+
+          <div className="rounded-md border border-line bg-surface-0 p-3">
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">Allergens</div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {ALLERGEN_OPTIONS.map((option) => {
+                const checked = allergens.includes(option.value)
+                return (
+                  <label key={option.value} className="flex items-center gap-2 rounded-md border border-line bg-surface-1 px-2 py-2 text-sm text-ink-hi">
+                    <input type="checkbox" checked={checked} onChange={() => toggleAllergen(option.value)} className="h-4 w-4 accent-emerald-500" />
+                    <span>{option.label}</span>
+                  </label>
+                )
+              })}
+            </div>
           </div>
 
           <Field label={`Target rate: ${Number(goalRate) > 0 ? '+' : ''}${Number(goalRate).toFixed(2)} kg / week`} hint="Negative loses weight, positive gains.">

@@ -34,6 +34,9 @@ export function resolveDailyTargets({
     weightKg: 75,
     activityLevel: 'moderate',
     goal: 'maintain',
+    dietaryPattern: 'standard',
+    sweatType: 'normal',
+    allergens: [],
     goalRateKgPerWeek: 0,
   }
 
