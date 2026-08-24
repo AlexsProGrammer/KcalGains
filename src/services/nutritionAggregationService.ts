@@ -1,4 +1,5 @@
 import type { Meal, DailyLog } from '@/types'
+import { createEmptyMicronutrientTotals, mergeMicronutrientTotals, type MicronutrientTotals } from '@/services/micronutrientTargetService'
 
 export type DailyNutrition = {
   date: string
@@ -6,6 +7,7 @@ export type DailyNutrition = {
   proteinConsumed: number
   carbsConsumed: number
   fatConsumed: number
+  microsConsumed: MicronutrientTotals
   targetCalories: number
   targetProtein: number
   targetCarbs: number
@@ -28,12 +30,18 @@ export function aggregateMealsForDate(meals: Meal[], date: string, dailyLog?: Da
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   )
 
+  const microsConsumed = mealsForDate.reduce(
+    (acc, meal) => mergeMicronutrientTotals(acc, meal.totalMicros ?? createEmptyMicronutrientTotals()),
+    createEmptyMicronutrientTotals(),
+  )
+
   return {
     date,
     caloriesConsumed: consumed.calories,
     proteinConsumed: consumed.protein,
     carbsConsumed: consumed.carbs,
     fatConsumed: consumed.fat,
+    microsConsumed,
     targetCalories: dailyLog?.targetCalories ?? 2000,
     targetProtein: dailyLog?.targetProtein ?? 160,
     targetCarbs: dailyLog?.targetCarbs ?? 200,

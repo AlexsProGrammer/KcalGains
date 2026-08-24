@@ -48,6 +48,19 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     totalProtein: foods[index - 1].protein,
     totalCarbs: foods[index - 1].carbs,
     totalFat: foods[index - 1].fat,
+    totalMicros: {
+      sodiumMg: 0,
+      potassiumMg: 0,
+      magnesiumMg: 0,
+      calciumMg: 0,
+      zincMg: 0,
+      ironMg: 0,
+      seleniumMcg: 0,
+      vitaminDMcg: 0,
+      vitaminB6Mg: 0,
+      vitaminB12Mcg: 0,
+      vitaminCMg: 0,
+    },
   }))
 
   await db.foods.bulkAdd(foods)
@@ -143,6 +156,19 @@ export function DatabaseDebugger() {
       totalProtein: food.protein,
       totalCarbs: food.carbs,
       totalFat: food.fat,
+      totalMicros: {
+        sodiumMg: 0,
+        potassiumMg: 0,
+        magnesiumMg: 0,
+        calciumMg: 0,
+        zincMg: 0,
+        ironMg: 0,
+        seleniumMcg: 0,
+        vitaminDMcg: 0,
+        vitaminB6Mg: 0,
+        vitaminB12Mcg: 0,
+        vitaminCMg: 0,
+      },
     }
 
     await db.meals.add(meal)

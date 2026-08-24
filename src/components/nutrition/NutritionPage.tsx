@@ -8,11 +8,15 @@ import { db } from '@/db'
 import { AutoMealPlanner } from '@/components/planner/AutoMealPlanner'
 import { BalancerContainer } from '@/components/balancer/BalancerContainer'
 import { FoodManagement } from '@/components/food/FoodManagement'
+import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
+import { MicronutrientRadar } from '@/components/nutrition/MicronutrientRadar'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
+import { useProfile } from '@/hooks/useProfile'
 import type { Meal } from '@/types'
 
 const tabs = [
   { value: 'log', label: 'Log' },
+  { value: 'micros', label: 'Micros' },
   { value: 'plan', label: 'Plan' },
   { value: 'balance', label: 'Balance' },
   { value: 'library', label: 'Library' },
@@ -23,6 +27,7 @@ export function NutritionPage() {
   const tab = searchParams.get('tab') ?? 'log'
   const today = new Date().toISOString().slice(0, 10)
   const { targets } = useDynamicTargets()
+  const { profile } = useProfile()
 
   const meals = useLiveQuery(() => db.meals.where('date').equals(today).toArray(), [today], []) as Meal[]
 
@@ -91,6 +96,7 @@ export function NutritionPage() {
                     <span>Carbs {meal.totalCarbs}g</span>
                     <span>Fat {meal.totalFat}g</span>
                   </div>
+                  <MealMicronutrientSummary meal={meal} profile={profile} compact />
                 </div>
               ))
             )}
@@ -98,6 +104,7 @@ export function NutritionPage() {
         </Card>
       ) : null}
 
+      {activeTab === 'micros' ? <MicronutrientRadar meals={meals} /> : null}
       {activeTab === 'plan' ? <AutoMealPlanner /> : null}
       {activeTab === 'balance' ? <BalancerContainer /> : null}
       {activeTab === 'library' ? <FoodManagement /> : null}

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MicronutrientSchema } from '@/schemas/food.schema'
 
 const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a date in YYYY-MM-DD format')
 
@@ -20,4 +21,5 @@ export const MealSchema = z.object({
   totalProtein: z.number().nonnegative(),
   totalCarbs: z.number().nonnegative(),
   totalFat: z.number().nonnegative(),
+  totalMicros: MicronutrientSchema.default({}),
 })

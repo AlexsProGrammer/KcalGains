@@ -9,6 +9,7 @@ import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useNutritionTrend } from '@/hooks/useNutritionTrend'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
+import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
 import type { Meal } from '@/types'
 
 const formatDate = (value: Date) => value.toISOString().slice(0, 10)
@@ -260,6 +261,7 @@ export function TodayPage() {
                           <span>C {entry.totalCarbs}g</span>
                           <span>F {entry.totalFat}g</span>
                         </div>
+                        <MealMicronutrientSummary meal={entry} profile={profile} compact />
                       </div>
                     ))}
                   </div>

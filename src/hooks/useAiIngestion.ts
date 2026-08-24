@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { db } from '@/db'
 import { AiMealResponseSchema } from '@/schemas/aiResponse.schema'
 import { parseAndValidateAiResponse, resolveAndLinkFoods, type LinkedAiFood } from '@/services/aiResponseParserService'
+import { calculateMealMicrosFromItems } from '@/services/micronutrientTargetService'
 import type { AiMealResponse, Meal } from '@/types'
 
 export function useAiIngestion() {
@@ -35,15 +36,26 @@ export function useAiIngestion() {
     setIsProcessing(true)
     try {
       const meal = AiMealResponseSchema.parse(parsedMeal)
+      const measuredItems = await Promise.all(linkedFoods.map(async ({ item, foodId }) => ({
+        foodId: foodId!,
+        amountInGrams: item.grams,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        food: foodId ? await db.foods.get(foodId) : null,
+      })))
+
       const mealRecord: Meal = {
         id: crypto.randomUUID(),
         date,
         mealType,
-        items: linkedFoods.map(({ item, foodId }) => ({ foodId: foodId!, amountInGrams: item.grams, calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat })),
+        items: measuredItems.map(({ foodId, amountInGrams, calories, protein, carbs, fat }) => ({ foodId, amountInGrams, calories, protein, carbs, fat })),
         totalCalories: meal.totalCalories,
         totalProtein: meal.totalProtein,
         totalCarbs: meal.totalCarbs,
         totalFat: meal.totalFat,
+        totalMicros: calculateMealMicrosFromItems(measuredItems),
       }
       await db.transaction('rw', [db.foods, db.meals], async () => {
         const newFoods = linkedFoods.flatMap(({ newFood }) => newFood ? [newFood] : [])
