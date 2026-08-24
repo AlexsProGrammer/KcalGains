@@ -17,6 +17,10 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     db.workouts.clear(),
     db.dailyLogs.clear(),
     db.profile.clear(),
+    db.settings.clear(),
+    db.exerciseDefinitions.clear(),
+    db.trainingContext.clear(),
+    db.trainingPlans.clear(),
   ])
 
   const foods: Food[] = Array.from({ length: 10 }, (_, index) => ({
@@ -71,6 +75,15 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
   await db.foods.bulkAdd(foods)
   await db.meals.bulkAdd(meals)
 
+  const settings = { id: 'app-settings', onboardingCompleted: true, onboardingDismissed: false, accent: 'emerald', defaultView: 'graph', locale: 'en', moduleChaining: true, autoWeightFromLogs: true, autoTargetsFromGoal: true, snapshotTargetsToDailyLog: true, density: 'comfortable', reduceMotion: 'system', todayHero: 'ring', trainingModes: [], updatedAt: new Date() }
+  const trainingContext = [{ id: 'training-context-2026-08-21', date: '2026-08-21', sportType: 'strength', intensity: 'moderate', durationMinutes: 60, seasonPhase: 'offseason', createdAt: new Date().toISOString() }]
+  const trainingPlans = [{ id: 'backup-check-plan', title: 'Backup check plan', repeatWeeks: 4, weekStart: '2026-08-17', completedDayIds: [], days: [{ id: 'backup-mon', dayKey: 'monday', label: 'Monday', trainingMode: 'strength', notes: 'Lift', exercises: [] }, { id: 'backup-tue', dayKey: 'tuesday', label: 'Tuesday', trainingMode: 'rest', notes: 'Recovery', exercises: [] }, { id: 'backup-wed', dayKey: 'wednesday', label: 'Wednesday', trainingMode: 'strength', notes: 'Lift', exercises: [] }, { id: 'backup-thu', dayKey: 'thursday', label: 'Thursday', trainingMode: 'rest', notes: 'Recovery', exercises: [] }, { id: 'backup-fri', dayKey: 'friday', label: 'Friday', trainingMode: 'strength', notes: 'Lift', exercises: [] }, { id: 'backup-sat', dayKey: 'saturday', label: 'Saturday', trainingMode: 'cardio', notes: 'Conditioning', exercises: [] }, { id: 'backup-sun', dayKey: 'sunday', label: 'Sunday', trainingMode: 'rest', notes: 'Recovery', exercises: [] }] }]
+
+  await db.settings.put(settings as any)
+  await db.exerciseDefinitions.bulkAdd([{ id: 'exercise-1', name: 'Bench press', category: 'chest', defaultRestSeconds: 90 }])
+  await db.trainingContext.bulkAdd(trainingContext as any)
+  await db.trainingPlans.bulkAdd(trainingPlans as any)
+
   const payload = await exportDatabaseToJson()
   await Promise.all([
     db.foods.clear(),
@@ -78,6 +91,10 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     db.workouts.clear(),
     db.dailyLogs.clear(),
     db.profile.clear(),
+    db.settings.clear(),
+    db.exerciseDefinitions.clear(),
+    db.trainingContext.clear(),
+    db.trainingPlans.clear(),
   ])
 
   const result = await importDatabaseFromJson(new File([JSON.stringify(payload)], 'backup-check.json', { type: 'application/json' }))
@@ -86,8 +103,15 @@ export async function runBackupRoundTripCheck(): Promise<boolean> {
     return false
   }
 
-  const [foodCount, mealCount] = await Promise.all([db.foods.count(), db.meals.count()])
-  return foodCount === 10 && mealCount === 2 && result.counts.foods === 10 && result.counts.meals === 2
+  const [foodCount, mealCount, settingsCount, contextCount, planCount] = await Promise.all([
+    db.foods.count(),
+    db.meals.count(),
+    db.settings.count(),
+    db.trainingContext.count(),
+    db.trainingPlans.count(),
+  ])
+
+  return foodCount === 10 && mealCount === 2 && settingsCount === 1 && contextCount === 1 && planCount === 1 && result.counts.foods === 10 && result.counts.meals === 2 && result.counts.settings === 1 && result.counts.trainingContext === 1 && result.counts.trainingPlans === 1
 }
 
 const emptyCounts = { foods: 0, meals: 0, workouts: 0, dailyLogs: 0, profile: 0 }

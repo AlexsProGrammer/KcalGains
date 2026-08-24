@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import {
   exportDatabaseToJson,
   importDatabaseFromJson,
+  type BackupSelection,
   type ImportDatabaseResult,
   type ImportMode,
   type ImportSummary,
@@ -15,7 +16,7 @@ export function useBackup() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [summary, setSummary] = useState<ImportSummary | null>(null)
 
-  async function exportBackup() {
+  async function exportBackup(selection?: BackupSelection | null) {
     setIsLoading(true)
     setError(null)
     setValidationIssues([])
@@ -23,8 +24,12 @@ export function useBackup() {
     setSummary(null)
 
     try {
-      const payload = await exportDatabaseToJson()
-      setSuccessMessage(`Backup exported with ${payload.foods.length} foods and ${payload.meals.length} meals.`)
+      const payload = await exportDatabaseToJson(selection)
+      const selectedTables = Object.entries(selection ?? {}).filter(([, enabled]) => enabled).map(([name]) => name)
+      const summaryText = selectedTables.length > 0
+        ? `${selectedTables.length} table${selectedTables.length === 1 ? '' : 's'} selected`
+        : 'all tables'
+      setSuccessMessage(`Backup exported (${summaryText}).`)
     } catch {
       setError('The backup could not be exported.')
     } finally {
@@ -32,7 +37,7 @@ export function useBackup() {
     }
   }
 
-  async function importBackup(file: File, mode: ImportMode = 'overwrite'): Promise<ImportDatabaseResult> {
+  async function importBackup(file: File, mode: ImportMode = 'overwrite', selection?: BackupSelection | null): Promise<ImportDatabaseResult> {
     setIsLoading(true)
     setError(null)
     setValidationIssues([])
@@ -40,7 +45,7 @@ export function useBackup() {
     setSummary(null)
 
     try {
-      const result = await importDatabaseFromJson(file, mode)
+      const result = await importDatabaseFromJson(file, mode, selection)
 
       if (result.success) {
         setSummary(result.summary)

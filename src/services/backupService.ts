@@ -5,9 +5,35 @@ import type { z } from 'zod'
 
 const BACKUP_VERSION = 1
 
-type BackupTables = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile' | 'settings' | 'exerciseDefinitions' | 'trainingContext' | 'trainingPlans'>
+export const BACKUP_TABLE_ORDER = [
+  'foods',
+  'meals',
+  'workouts',
+  'dailyLogs',
+  'profile',
+  'settings',
+  'exerciseDefinitions',
+  'trainingContext',
+  'trainingPlans',
+] as const
 
-export type BackupTableName = keyof BackupTables
+export type BackupTableName = (typeof BACKUP_TABLE_ORDER)[number]
+
+type BackupTables = Pick<BackupPayload, BackupTableName>
+
+export type BackupSelection = Partial<Record<BackupTableName, boolean>>
+
+export const DEFAULT_BACKUP_SELECTION: Record<BackupTableName, boolean> = {
+  foods: true,
+  meals: true,
+  workouts: true,
+  dailyLogs: true,
+  profile: true,
+  settings: true,
+  exerciseDefinitions: true,
+  trainingContext: true,
+  trainingPlans: true,
+}
 
 export type BackupTableCounts = { [Key in BackupTableName]: number }
 
@@ -30,7 +56,20 @@ export type ImportDatabaseResult =
       issues?: z.ZodIssue[]
     }
 
-const TABLE_NAMES: BackupTableName[] = ['foods', 'meals', 'workouts', 'dailyLogs', 'profile', 'settings', 'exerciseDefinitions', 'trainingContext', 'trainingPlans']
+const TABLE_NAMES: BackupTableName[] = [...BACKUP_TABLE_ORDER]
+
+export function normalizeBackupSelection(selection?: BackupSelection | null): Record<BackupTableName, boolean> {
+  const base = { ...DEFAULT_BACKUP_SELECTION }
+  if (!selection) return base
+
+  for (const tableName of TABLE_NAMES) {
+    if (Object.prototype.hasOwnProperty.call(selection, tableName)) {
+      base[tableName] = Boolean(selection[tableName])
+    }
+  }
+
+  return base
+}
 
 function downloadBackup(payload: BackupPayload): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -44,35 +83,112 @@ function downloadBackup(payload: BackupPayload): void {
   URL.revokeObjectURL(url)
 }
 
-export async function exportDatabaseToJson(): Promise<BackupPayload> {
-  const [foods, meals, workouts, dailyLogs, profile, settings, exerciseDefinitions, trainingContext, trainingPlans] = await Promise.all([
-    db.foods.toArray(),
-    db.meals.toArray(),
-    db.workouts.toArray(),
-    db.dailyLogs.toArray(),
-    db.profile.toArray(),
-    db.settings.toArray(),
-    db.exerciseDefinitions.toArray(),
-    db.trainingContext.toArray(),
-    db.trainingPlans.toArray(),
-  ])
+function normalizeBackupRecord(record: unknown): unknown {
+  if (record == null || typeof record !== 'object') return record
+
+  const candidate = record as Record<string, unknown>
+
+  if (Array.isArray(candidate.sets) && candidate.exercises == null && candidate.type != null) {
+    return {
+      ...candidate,
+      title: candidate.title ?? 'Workout',
+      durationMinutes: Number.isFinite(Number(candidate.durationMinutes)) ? Number(candidate.durationMinutes) : 0,
+      caloriesBurned: Number.isFinite(Number(candidate.caloriesBurned)) ? Number(candidate.caloriesBurned) : 0,
+      sets: candidate.sets.map((set: unknown) => {
+        if (set == null || typeof set !== 'object') return set
+        const setCandidate = set as Record<string, unknown>
+        return {
+          ...setCandidate,
+          reps: Number.isFinite(Number(setCandidate.reps)) ? Number(setCandidate.reps) : 0,
+          weight: Number.isFinite(Number(setCandidate.weight)) ? Number(setCandidate.weight) : 0,
+          weightKg: Number.isFinite(Number(setCandidate.weightKg)) ? Number(setCandidate.weightKg) : Number.isFinite(Number(setCandidate.weight)) ? Number(setCandidate.weight) : 0,
+          rpe: setCandidate.rpe == null ? undefined : Number(setCandidate.rpe),
+        }
+      }),
+    }
+  }
+
+  if (Array.isArray(candidate.exercises)) {
+    return {
+      ...candidate,
+      startTime: candidate.startTime instanceof Date ? candidate.startTime.toISOString() : candidate.startTime,
+      endTime: candidate.endTime instanceof Date ? candidate.endTime.toISOString() : candidate.endTime,
+      exercises: candidate.exercises.map((exercise: unknown) => {
+        if (exercise == null || typeof exercise !== 'object') return exercise
+        const exerciseCandidate = exercise as Record<string, unknown>
+        return {
+          ...exerciseCandidate,
+          sets: Array.isArray(exerciseCandidate.sets) ? exerciseCandidate.sets.map((set: unknown) => {
+            if (set == null || typeof set !== 'object') return set
+            const setCandidate = set as Record<string, unknown>
+            return {
+              ...setCandidate,
+              weightKg: Number.isFinite(Number(setCandidate.weightKg)) ? Number(setCandidate.weightKg) : 0,
+              reps: Number.isFinite(Number(setCandidate.reps)) ? Number(setCandidate.reps) : 0,
+              rpe: setCandidate.rpe == null ? undefined : Number(setCandidate.rpe),
+            }
+          }) : [],
+        }
+      }),
+    }
+  }
+
+  return record
+}
+
+export async function exportDatabaseToJson(selection?: BackupSelection | null): Promise<BackupPayload> {
+  const shouldInclude = normalizeBackupSelection(selection)
+  const tablePromiseMap: Record<BackupTableName, Promise<unknown[]>> = {
+    foods: db.foods.toArray(),
+    meals: db.meals.toArray(),
+    workouts: db.workouts.toArray(),
+    dailyLogs: db.dailyLogs.toArray(),
+    profile: db.profile.toArray(),
+    settings: db.settings.toArray(),
+    exerciseDefinitions: db.exerciseDefinitions.toArray(),
+    trainingContext: db.trainingContext.toArray(),
+    trainingPlans: db.trainingPlans.toArray(),
+  }
+
+  const resolved = await Promise.all(
+    TABLE_NAMES.map(async (tableName) => [tableName, shouldInclude[tableName] ? await tablePromiseMap[tableName] : []] as const),
+  )
 
   const payload = BackupPayloadSchema.parse({
     version: BACKUP_VERSION,
     exportedAt: new Date(),
-    foods,
-    meals,
-    workouts,
-    dailyLogs,
-    profile,
-    settings,
-    exerciseDefinitions,
-    trainingContext,
-    trainingPlans,
+    foods: (resolved.find(([key]) => key === 'foods')?.[1] ?? []).map(normalizeBackupRecord),
+    meals: (resolved.find(([key]) => key === 'meals')?.[1] ?? []).map(normalizeBackupRecord),
+    workouts: (resolved.find(([key]) => key === 'workouts')?.[1] ?? []).map(normalizeBackupRecord),
+    dailyLogs: (resolved.find(([key]) => key === 'dailyLogs')?.[1] ?? []).map(normalizeBackupRecord),
+    profile: (resolved.find(([key]) => key === 'profile')?.[1] ?? []).map(normalizeBackupRecord),
+    settings: (resolved.find(([key]) => key === 'settings')?.[1] ?? []).map(normalizeBackupRecord),
+    exerciseDefinitions: (resolved.find(([key]) => key === 'exerciseDefinitions')?.[1] ?? []).map(normalizeBackupRecord),
+    trainingContext: (resolved.find(([key]) => key === 'trainingContext')?.[1] ?? []).map(normalizeBackupRecord),
+    trainingPlans: (resolved.find(([key]) => key === 'trainingPlans')?.[1] ?? []).map(normalizeBackupRecord),
   })
 
   downloadBackup(payload)
   return payload
+}
+
+function normalizeImportedBackupJson(input: unknown): unknown {
+  if (!input || typeof input !== 'object') return null
+
+  const payload = input as Record<string, unknown>
+  const nextPayload: Record<string, unknown> = { ...payload }
+
+  for (const tableName of ['foods', 'meals', 'workouts', 'dailyLogs', 'profile', 'settings', 'exerciseDefinitions', 'trainingContext', 'trainingPlans'] as const) {
+    const value = payload[tableName]
+    if (!Array.isArray(value)) {
+      nextPayload[tableName] = []
+      continue
+    }
+
+    nextPayload[tableName] = value.map((entry) => normalizeBackupRecord(entry))
+  }
+
+  return nextPayload
 }
 
 function emptySummary(): ImportSummary {
@@ -109,6 +225,7 @@ function isIncomingNewer(incoming: unknown, existing: unknown): boolean {
 export async function importDatabaseFromJson(
   file: File,
   mode: ImportMode = 'overwrite',
+  selection?: BackupSelection | null,
 ): Promise<ImportDatabaseResult> {
   let parsedJson: unknown
 
@@ -121,26 +238,50 @@ export async function importDatabaseFromJson(
   const validation = BackupPayloadSchema.safeParse(parsedJson)
 
   if (!validation.success) {
-    return {
-      success: false,
-      error: 'The backup does not match the expected KcalGains format.',
-      issues: validation.error.issues,
+    const normalized = normalizeImportedBackupJson(parsedJson)
+    if (!normalized) {
+      return {
+        success: false,
+        error: 'The backup does not match the expected KcalGains format.',
+        issues: validation.error.issues,
+      }
     }
+
+    const retry = BackupPayloadSchema.safeParse(normalized)
+    if (!retry.success) {
+      return {
+        success: false,
+        error: 'The backup does not match the expected KcalGains format.',
+        issues: retry.error.issues,
+      }
+    }
+
+    parsedJson = retry.data
   }
 
-  const payload = validation.data
+  const payload = BackupPayloadSchema.parse(parsedJson)
+  const shouldInclude = normalizeBackupSelection(selection)
   const summary = emptySummary()
   const tables = [db.foods, db.meals, db.workouts, db.dailyLogs, db.profile, db.settings, db.exerciseDefinitions, db.trainingContext, db.trainingPlans]
+  const selectedTables = TABLE_NAMES.filter((name) => shouldInclude[name])
+
+  if (selectedTables.length === 0) {
+    return { success: false, error: 'Select at least one table to import.' }
+  }
 
   try {
     await db.transaction('rw', tables, async () => {
       for (const [index, name] of TABLE_NAMES.entries()) {
+        if (!shouldInclude[name]) continue
+
         const table = tables[index]
-        const incoming = payload[name] as { id: string }[]
+        const incoming = (payload[name] ?? []) as { id: string }[]
 
         if (mode === 'overwrite') {
           await table.clear()
-          await (table as any).bulkAdd(incoming)
+          if (incoming.length > 0) {
+            await (table as any).bulkAdd(incoming)
+          }
           summary[name].added = incoming.length
           continue
         }
@@ -176,15 +317,15 @@ export async function importDatabaseFromJson(
     mode,
     summary,
     counts: {
-      foods: payload.foods.length,
-      meals: payload.meals.length,
-      workouts: payload.workouts.length,
-      dailyLogs: payload.dailyLogs.length,
-      profile: payload.profile.length,
-      settings: payload.settings.length,
-      exerciseDefinitions: payload.exerciseDefinitions.length,
-      trainingContext: payload.trainingContext.length,
-      trainingPlans: payload.trainingPlans.length,
+      foods: shouldInclude.foods ? payload.foods.length : 0,
+      meals: shouldInclude.meals ? payload.meals.length : 0,
+      workouts: shouldInclude.workouts ? payload.workouts.length : 0,
+      dailyLogs: shouldInclude.dailyLogs ? payload.dailyLogs.length : 0,
+      profile: shouldInclude.profile ? payload.profile.length : 0,
+      settings: shouldInclude.settings ? payload.settings.length : 0,
+      exerciseDefinitions: shouldInclude.exerciseDefinitions ? payload.exerciseDefinitions.length : 0,
+      trainingContext: shouldInclude.trainingContext ? payload.trainingContext.length : 0,
+      trainingPlans: shouldInclude.trainingPlans ? payload.trainingPlans.length : 0,
     },
   }
 }

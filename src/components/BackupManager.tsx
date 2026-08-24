@@ -7,22 +7,39 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
 import { copyToClipboard } from '@/services/clipboardService'
 import { extractJsonFromText } from '@/services/aiResponseParserService'
+import { DEFAULT_BACKUP_SELECTION, type BackupSelection, type ImportMode } from '@/services/backupService'
 import { generateBackupImportPrompt } from '@/services/promptSynthesizerService'
-import type { ImportMode } from '@/services/backupService'
+
+const BACKUP_TABLE_LABELS: Record<keyof typeof DEFAULT_BACKUP_SELECTION, string> = {
+  foods: 'Foods',
+  meals: 'Meals',
+  workouts: 'Workouts',
+  dailyLogs: 'Daily logs',
+  profile: 'Profile',
+  settings: 'Settings',
+  exerciseDefinitions: 'Exercise definitions',
+  trainingContext: 'Training context',
+  trainingPlans: 'Training plans',
+}
 
 export function BackupManager() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [mode, setMode] = useState<ImportMode>('merge')
+  const [selection, setSelection] = useState<BackupSelection>({ ...DEFAULT_BACKUP_SELECTION })
   const [sourceText, setSourceText] = useState('')
   const [responseText, setResponseText] = useState('')
   const [copied, setCopied] = useState(false)
   const [pasteError, setPasteError] = useState<string | null>(null)
   const { error, exportBackup, importBackup, isLoading, successMessage, summary, validationIssues } = useBackup()
 
+  function updateSelection(table: keyof typeof DEFAULT_BACKUP_SELECTION, nextValue: boolean) {
+    setSelection((current) => ({ ...current, [table]: nextValue }))
+  }
+
   async function handleFile(file: File | undefined) {
     if (file) {
-      await importBackup(file, mode)
+      await importBackup(file, mode, selection)
     }
   }
 
@@ -43,7 +60,7 @@ export function BackupManager() {
     }
 
     const file = new File([json], 'ai-import.json', { type: 'application/json' })
-    const result = await importBackup(file, mode)
+    const result = await importBackup(file, mode, selection)
     if (result.success) setResponseText('')
   }
 
@@ -68,8 +85,23 @@ export function BackupManager() {
             <option value="overwrite">Overwrite (replace all data)</option>
           </SelectInput>
         </Field>
+        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Backup contents</div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(BACKUP_TABLE_LABELS).map(([table, label]) => (
+              <label key={table} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/60 px-2 py-2 text-sm text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={Boolean(selection[table as keyof typeof DEFAULT_BACKUP_SELECTION])}
+                  onChange={(event) => updateSelection(table as keyof typeof DEFAULT_BACKUP_SELECTION, event.target.checked)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Button type="button" onClick={() => void exportBackup()} disabled={isLoading}>
+          <Button type="button" onClick={() => void exportBackup(selection)} disabled={isLoading}>
             <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export Backup (.json)
           </Button>
