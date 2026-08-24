@@ -15,6 +15,8 @@ import { useSettings } from '@/hooks/useSettings'
 import { useT } from '@/i18n'
 import { db } from '@/db'
 
+const ONBOARDING_STATE_KEY = 'kcalgains.onboardingState'
+
 const navItems = [
   { to: '/today', label: 'Today', icon: Home },
   { to: '/nutrition', label: 'Nutrition', icon: UtensilsCrossed },
@@ -22,6 +24,15 @@ const navItems = [
   { to: '/progress', label: 'Progress', icon: TrendingUp },
   { to: '/more', label: 'More', icon: MoreHorizontal },
 ]
+
+function readPersistedOnboardingState() {
+  if (typeof window === 'undefined') return null
+
+  const localValue = window.localStorage.getItem(ONBOARDING_STATE_KEY)
+  const sessionValue = window.sessionStorage.getItem(ONBOARDING_STATE_KEY)
+
+  return localValue ?? sessionValue ?? null
+}
 
 export function AppShell() {
   const location = useLocation()
@@ -41,6 +52,13 @@ export function AppShell() {
     typeof window !== 'undefined' &&
     (window.localStorage.getItem('kcalgains.forceOnboarding') === 'true' || window.sessionStorage.getItem('kcalgains.forceOnboarding') === 'true')
 
+  const persistedOnboardingState = readPersistedOnboardingState()
+  const onboardingHandled =
+    settings.onboardingCompleted ||
+    settings.onboardingDismissed ||
+    persistedOnboardingState === 'completed' ||
+    persistedOnboardingState === 'dismissed'
+
   useEffect(() => {
     if (forceOnboarding) {
       const timeout = window.setTimeout(() => {
@@ -54,7 +72,11 @@ export function AppShell() {
     return undefined
   }, [forceOnboarding])
 
-  const shouldShowOnboarding = !isLoading && !settings.onboardingCompleted && !location.pathname.startsWith('/onboarding') && (forceOnboarding || !settings.onboardingDismissed)
+  const shouldShowOnboarding =
+    !isLoading &&
+    !location.pathname.startsWith('/onboarding') &&
+    !onboardingHandled &&
+    (forceOnboarding || (!settings.onboardingDismissed && !settings.onboardingCompleted && persistedOnboardingState !== 'dismissed' && persistedOnboardingState !== 'completed'))
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })

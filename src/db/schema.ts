@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import { normalizeFoodMicros } from '@/schemas/food.schema'
 import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
-import type { AppSettings, DailyLog, ExerciseDefinition, Food, Meal, Profile, TrainingDayContext, WeightEntry, Workout } from '@/types'
+import type { AppSettings, DailyLog, ExerciseDefinition, Food, Meal, Profile, TrainingDayContext, TrainingPlan, WeightEntry, Workout } from '@/types'
 
 export class FitnessTrackerDB extends Dexie {
   foods!: Table<Food, string>
@@ -13,6 +13,7 @@ export class FitnessTrackerDB extends Dexie {
   exerciseDefinitions!: Table<ExerciseDefinition, string>
   settings!: Table<AppSettings, string>
   trainingContext!: Table<TrainingDayContext, string>
+  trainingPlans!: Table<TrainingPlan, string>
 
   constructor() {
     super('KcalGains')
@@ -244,6 +245,23 @@ export class FitnessTrackerDB extends Dexie {
       })
       .upgrade(async (transaction) => {
         await transaction.table('trainingContext').clear().catch(() => undefined)
+      })
+
+    this.version(13)
+      .stores({
+        foods: 'id, name, brand, barcode, isCustom, createdAt',
+        meals: 'id, date, mealType, [date+mealType]',
+        workouts: 'id, date, type',
+        dailyLogs: 'id, date',
+        profile: 'id',
+        weightLogs: 'id, date',
+        exerciseDefinitions: 'id, name, category',
+        settings: 'id',
+        trainingContext: 'id, date',
+        trainingPlans: 'id, weekStart, goal, sportType',
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table('trainingPlans').clear().catch(() => undefined)
       })
   }
 }

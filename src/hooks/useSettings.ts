@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { db } from '@/db'
 import { getSettings, updateSettings } from '@/db/settingsRepository'
 import { AppSettingsSchema, DEFAULT_APP_SETTINGS, SETTINGS_SINGLETON_ID } from '@/schemas/settings.schema'
@@ -7,6 +7,12 @@ import type { AppSettings } from '@/types'
 
 export function useSettings() {
   const stored = useLiveQuery(() => db.settings.get(SETTINGS_SINGLETON_ID), [])
+
+  useEffect(() => {
+    if (stored === undefined) {
+      void db.settings.put(DEFAULT_APP_SETTINGS)
+    }
+  }, [stored])
 
   const settings = useMemo(() => {
     const parsed = AppSettingsSchema.safeParse(stored)

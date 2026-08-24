@@ -26,6 +26,43 @@ export function useWorkoutLogger() {
   const [restSeconds, setRestSeconds] = useState(0)
 
   useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== storageKey || !event.newValue) return
+      try {
+        const parsed = WorkoutLogSchema.parse(JSON.parse(event.newValue))
+        setWorkout(parsed)
+      } catch {
+        // ignore corrupt saved state and keep the current value
+      }
+    }
+
+    const handleWorkoutSync = (event: Event) => {
+      const customEvent = event as CustomEvent<WorkoutLog>
+      if (!customEvent.detail) return
+      setWorkout(WorkoutLogSchema.parse(customEvent.detail))
+    }
+
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener('kcalgains-workout-sync', handleWorkoutSync)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('kcalgains-workout-sync', handleWorkoutSync)
+    }
+  }, [])
+
+  function emitWorkout(nextWorkout: WorkoutLog) {
+    const normalized = WorkoutLogSchema.parse(nextWorkout)
+    setWorkout(normalized)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(storageKey, JSON.stringify(normalized))
+      window.dispatchEvent(new CustomEvent<WorkoutLog>('kcalgains-workout-sync', { detail: normalized }))
+    }
+    return normalized
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
     localStorage.setItem(storageKey, JSON.stringify(workout))
   }, [workout])
 
@@ -36,7 +73,41 @@ export function useWorkoutLogger() {
   }, [restSeconds])
 
   function updateWorkout(updates: Partial<WorkoutLog>) {
-    setWorkout((current) => WorkoutLogSchema.parse({ ...current, ...updates }))
+    setWorkout((current) => {
+      const next = WorkoutLogSchema.parse({ ...current, ...updates })
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(storageKey, JSON.stringify(next))
+        window.dispatchEvent(new CustomEvent<WorkoutLog>('kcalgains-workout-sync', { detail: next }))
+      }
+      return next
+    })
+  }
+
+  function appendExercises(exercises: LoggedExercise[]): WorkoutLog {
+    let nextWorkout: WorkoutLog | null = null
+    setWorkout((current) => {
+      const merged = [...current.exercises]
+      for (const exercise of exercises) {
+        const index = merged.findIndex((item) => item.exerciseId === exercise.exerciseId)
+        if (index >= 0) {
+          merged[index] = {
+            ...merged[index],
+            notes: exercise.notes ?? merged[index].notes,
+            sets: [...merged[index].sets, ...exercise.sets],
+          }
+        } else {
+          merged.push(exercise)
+        }
+      }
+
+      nextWorkout = WorkoutLogSchema.parse({ ...current, exercises: merged })
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(storageKey, JSON.stringify(nextWorkout))
+        window.dispatchEvent(new CustomEvent<WorkoutLog>('kcalgains-workout-sync', { detail: nextWorkout }))
+      }
+      return nextWorkout
+    })
+    return nextWorkout ?? workout
   }
 
   function addExercise(exerciseId: string, exerciseName: string): void {
@@ -71,14 +142,17 @@ export function useWorkoutLogger() {
     if (!set.isCompleted) setRestSeconds(restDuration)
   }
 
-  async function finishWorkout(): Promise<WorkoutLog> {
-    const completed = WorkoutLogSchema.parse({ ...workout, endTime: new Date() })
+  async function finishWorkout(targetWorkout: WorkoutLog = workout): Promise<WorkoutLog> {
+    const completed = WorkoutLogSchema.parse({ ...targetWorkout, endTime: new Date() })
     await saveWorkoutLog(completed)
-    localStorage.removeItem(storageKey)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(storageKey)
+      window.dispatchEvent(new CustomEvent('kcalgains-workout-sync', { detail: newWorkout() }))
+    }
     setWorkout(newWorkout())
     setRestSeconds(0)
     return completed
   }
 
-  return { addExercise, addSet, finishWorkout, isResting: restSeconds > 0, removeExercise, removeSet, restSeconds, setRestSeconds, toggleSetCompleted, updateSet, updateWorkout, workout }
+  return { addExercise, addSet, appendExercises, finishWorkout, isResting: restSeconds > 0, removeExercise, removeSet, restSeconds, setRestSeconds, toggleSetCompleted, updateSet, updateWorkout, workout }
 }

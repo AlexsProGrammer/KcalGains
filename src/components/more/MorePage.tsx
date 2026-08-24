@@ -76,6 +76,8 @@ function DangerZone() {
       window.sessionStorage.clear()
       window.localStorage.setItem('kcalgains.forceOnboarding', 'true')
       window.sessionStorage.setItem('kcalgains.forceOnboarding', 'true')
+      window.localStorage.setItem('kcalgains.onboardingState', 'pending')
+      window.sessionStorage.setItem('kcalgains.onboardingState', 'pending')
 
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations()

@@ -1,0 +1,86 @@
+{
+  "lose-fat+gym+3d": {
+    "label": "Upper/Lower fat-loss",
+    "days": [
+      { "offset": 0, "focus": "Lower body + conditioning", "type": "training", "durationMinutes": 60 },
+      { "offset": 1, "focus": "Recovery walk + mobility", "type": "rest", "durationMinutes": 30 },
+      { "offset": 2, "focus": "Upper body strength", "type": "training", "durationMinutes": 60 },
+      { "offset": 3, "focus": "Rest + recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Lower body + interval work", "type": "training", "durationMinutes": 65 },
+      { "offset": 5, "focus": "Recovery day", "type": "rest", "durationMinutes": 0 },
+      { "offset": 6, "focus": "Full-body conditioning", "type": "training", "durationMinutes": 45 }
+    ]
+  },
+  "lose-fat+gym+4d": {
+    "label": "Upper/Lower 4-day split",
+    "days": [
+      { "offset": 0, "focus": "Upper body strength", "type": "training", "durationMinutes": 65 },
+      { "offset": 1, "focus": "Recovery + walk", "type": "rest", "durationMinutes": 30 },
+      { "offset": 2, "focus": "Lower body strength", "type": "training", "durationMinutes": 65 },
+      { "offset": 3, "focus": "Rest + mobility", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Upper body hypertrophy", "type": "training", "durationMinutes": 60 },
+      { "offset": 5, "focus": "Recovery day", "type": "rest", "durationMinutes": 0 },
+      { "offset": 6, "focus": "Lower body conditioning", "type": "training", "durationMinutes": 55 }
+    ]
+  },
+  "gain-muscle+gym+4d": {
+    "label": "Push/Pull 4-day split",
+    "days": [
+      { "offset": 0, "focus": "Push strength", "type": "training", "durationMinutes": 75 },
+      { "offset": 1, "focus": "Recovery + mobility", "type": "rest", "durationMinutes": 0 },
+      { "offset": 2, "focus": "Pull strength", "type": "training", "durationMinutes": 75 },
+      { "offset": 3, "focus": "Rest day", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Leg strength", "type": "training", "durationMinutes": 80 },
+      { "offset": 5, "focus": "Recovery + light cardio", "type": "rest", "durationMinutes": 30 },
+      { "offset": 6, "focus": "Upper hypertrophy", "type": "training", "durationMinutes": 65 }
+    ]
+  },
+  "gain-muscle+gym+5d": {
+    "label": "PPL 5-day split",
+    "days": [
+      { "offset": 0, "focus": "Push day", "type": "training", "durationMinutes": 75 },
+      { "offset": 1, "focus": "Pull day", "type": "training", "durationMinutes": 75 },
+      { "offset": 2, "focus": "Leg day", "type": "training", "durationMinutes": 80 },
+      { "offset": 3, "focus": "Recovery + mobility", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Push hypertrophy", "type": "training", "durationMinutes": 70 },
+      { "offset": 5, "focus": "Pull hypertrophy", "type": "training", "durationMinutes": 70 },
+      { "offset": 6, "focus": "Rest + recovery", "type": "rest", "durationMinutes": 0 }
+    ]
+  },
+  "maintain+gym+3d": {
+    "label": "Maintenance strength",
+    "days": [
+      { "offset": 0, "focus": "Full-body strength", "type": "training", "durationMinutes": 60 },
+      { "offset": 1, "focus": "Recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 2, "focus": "Lower body strength", "type": "training", "durationMinutes": 60 },
+      { "offset": 3, "focus": "Rest day", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Upper body strength", "type": "training", "durationMinutes": 60 },
+      { "offset": 5, "focus": "Recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 6, "focus": "Conditioning block", "type": "training", "durationMinutes": 40 }
+    ]
+  },
+  "athletic+mma+3d": {
+    "label": "MMA skill + conditioning",
+    "days": [
+      { "offset": 0, "focus": "Technical striking + conditioning", "type": "training", "durationMinutes": 90 },
+      { "offset": 1, "focus": "Recovery + mobility", "type": "rest", "durationMinutes": 0 },
+      { "offset": 2, "focus": "Strength + grappling", "type": "training", "durationMinutes": 75 },
+      { "offset": 3, "focus": "Recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Fight simulation + conditioning", "type": "training", "durationMinutes": 85 },
+      { "offset": 5, "focus": "Rest day", "type": "rest", "durationMinutes": 0 },
+      { "offset": 6, "focus": "Low-intensity mobility", "type": "training", "durationMinutes": 35 }
+    ]
+  },
+  "maintain+cardio+4d": {
+    "label": "Cardio base",
+    "days": [
+      { "offset": 0, "focus": "Zone 2 ride", "type": "training", "durationMinutes": 45 },
+      { "offset": 1, "focus": "Recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 2, "focus": "Tempo interval run", "type": "training", "durationMinutes": 40 },
+      { "offset": 3, "focus": "Rest + mobility", "type": "rest", "durationMinutes": 0 },
+      { "offset": 4, "focus": "Strength circuit + cardio", "type": "training", "durationMinutes": 50 },
+      { "offset": 5, "focus": "Recovery", "type": "rest", "durationMinutes": 0 },
+      { "offset": 6, "focus": "Long easy cardio", "type": "training", "durationMinutes": 60 }
+    ]
+  }
+}

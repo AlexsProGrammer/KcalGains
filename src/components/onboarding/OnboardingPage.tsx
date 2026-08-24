@@ -32,6 +32,8 @@ function toNumberOrUndefined(value: string): number | undefined {
   return value.trim() === '' || Number.isNaN(parsed) ? undefined : parsed
 }
 
+const ONBOARDING_STATE_KEY = 'kcalgains.onboardingState'
+
 export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
   const navigate = useNavigate()
   const { profile, isLoading, saveProfile } = useProfile()
@@ -79,6 +81,14 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
     setGoalRate(GOAL_DEFAULT_RATES[nextGoal].toString())
   }
 
+  function persistOnboardingDecision(state: 'completed' | 'dismissed') {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(ONBOARDING_STATE_KEY, state)
+    window.sessionStorage.setItem(ONBOARDING_STATE_KEY, state)
+    window.localStorage.removeItem('kcalgains.forceOnboarding')
+    window.sessionStorage.removeItem('kcalgains.forceOnboarding')
+  }
+
   async function handleComplete() {
     setError(null)
     setIsSubmitting(true)
@@ -96,6 +106,7 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
       await setSetting('accent', accent)
       await setSetting('onboardingCompleted', true)
       await setSetting('onboardingDismissed', false)
+      persistOnboardingDecision('completed')
       navigate('/today', { replace: true })
     } catch {
       setError('Your profile could not be saved. Please check the values and try again.')
@@ -105,7 +116,9 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
   }
 
   async function handleSkip() {
+    await setSetting('onboardingCompleted', true)
     await setSetting('onboardingDismissed', true)
+    persistOnboardingDecision('dismissed')
     navigate('/today', { replace: true })
   }
 

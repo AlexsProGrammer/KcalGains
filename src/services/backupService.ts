@@ -5,7 +5,7 @@ import type { z } from 'zod'
 
 const BACKUP_VERSION = 1
 
-type BackupTables = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile'>
+type BackupTables = Pick<BackupPayload, 'foods' | 'meals' | 'workouts' | 'dailyLogs' | 'profile' | 'settings' | 'exerciseDefinitions' | 'trainingContext' | 'trainingPlans'>
 
 export type BackupTableName = keyof BackupTables
 
@@ -30,7 +30,7 @@ export type ImportDatabaseResult =
       issues?: z.ZodIssue[]
     }
 
-const TABLE_NAMES: BackupTableName[] = ['foods', 'meals', 'workouts', 'dailyLogs', 'profile']
+const TABLE_NAMES: BackupTableName[] = ['foods', 'meals', 'workouts', 'dailyLogs', 'profile', 'settings', 'exerciseDefinitions', 'trainingContext', 'trainingPlans']
 
 function downloadBackup(payload: BackupPayload): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -45,12 +45,16 @@ function downloadBackup(payload: BackupPayload): void {
 }
 
 export async function exportDatabaseToJson(): Promise<BackupPayload> {
-  const [foods, meals, workouts, dailyLogs, profile] = await Promise.all([
+  const [foods, meals, workouts, dailyLogs, profile, settings, exerciseDefinitions, trainingContext, trainingPlans] = await Promise.all([
     db.foods.toArray(),
     db.meals.toArray(),
     db.workouts.toArray(),
     db.dailyLogs.toArray(),
     db.profile.toArray(),
+    db.settings.toArray(),
+    db.exerciseDefinitions.toArray(),
+    db.trainingContext.toArray(),
+    db.trainingPlans.toArray(),
   ])
 
   const payload = BackupPayloadSchema.parse({
@@ -61,6 +65,10 @@ export async function exportDatabaseToJson(): Promise<BackupPayload> {
     workouts,
     dailyLogs,
     profile,
+    settings,
+    exerciseDefinitions,
+    trainingContext,
+    trainingPlans,
   })
 
   downloadBackup(payload)
@@ -74,6 +82,10 @@ function emptySummary(): ImportSummary {
     workouts: { added: 0, updated: 0, skipped: 0 },
     dailyLogs: { added: 0, updated: 0, skipped: 0 },
     profile: { added: 0, updated: 0, skipped: 0 },
+    settings: { added: 0, updated: 0, skipped: 0 },
+    exerciseDefinitions: { added: 0, updated: 0, skipped: 0 },
+    trainingContext: { added: 0, updated: 0, skipped: 0 },
+    trainingPlans: { added: 0, updated: 0, skipped: 0 },
   }
 }
 
@@ -118,7 +130,7 @@ export async function importDatabaseFromJson(
 
   const payload = validation.data
   const summary = emptySummary()
-  const tables = [db.foods, db.meals, db.workouts, db.dailyLogs, db.profile]
+  const tables = [db.foods, db.meals, db.workouts, db.dailyLogs, db.profile, db.settings, db.exerciseDefinitions, db.trainingContext, db.trainingPlans]
 
   try {
     await db.transaction('rw', tables, async () => {
@@ -169,6 +181,10 @@ export async function importDatabaseFromJson(
       workouts: payload.workouts.length,
       dailyLogs: payload.dailyLogs.length,
       profile: payload.profile.length,
+      settings: payload.settings.length,
+      exerciseDefinitions: payload.exerciseDefinitions.length,
+      trainingContext: payload.trainingContext.length,
+      trainingPlans: payload.trainingPlans.length,
     },
   }
 }

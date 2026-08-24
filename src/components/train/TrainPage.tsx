@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Clock3, Dumbbell, Flame, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { DailyModeSelector } from '@/components/train/DailyModeSelector'
+import { TrainingPlanGenerator } from '@/components/train/TrainingPlanGenerator'
 import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { db } from '@/db'
 import type { WorkoutLog } from '@/types'
@@ -42,6 +43,7 @@ export function TrainPage() {
       </div>
 
       <DailyModeSelector />
+      <TrainingPlanGenerator />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
