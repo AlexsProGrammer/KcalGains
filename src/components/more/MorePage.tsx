@@ -1,5 +1,6 @@
 import { AlertTriangle, Database, Dumbbell, FileLock2, Palette, ShieldCheck, Sparkles, Target, Wand2, Wrench } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { Github } from 'lucide-react'
 import { BackupManager } from '@/components/BackupManager'
 import { StorageStatus } from '@/components/StorageStatus'
 import { AiBridgeContainer } from '@/components/ai-bridge/AiBridgeContainer'
@@ -41,6 +42,23 @@ function AboutCard() {
           {t.more.aboutBody}
         </p>
         <div className="rounded-xl border border-line bg-surface-1 p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-ink-low">{t.more.author}</span>
+            <strong className="text-ink-hi">AlexsdeProgrammer</strong>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-ink-low">{t.more.github}</span>
+            <div className="flex items-center gap-4">
+              <a
+              href="https://github.com/AlexsProgrammer/KcalGains"
+              target="_blank"
+              rel="noreferrer"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:bg-white/10"
+            >
+              <Github size={20} />
+              </a>
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-ink-low">{t.more.appVersion}</span>
             <strong className="text-ink-hi">{APP_VERSION}</strong>
@@ -198,4 +216,4 @@ export function MorePage() {
   )
 }
 
-const APP_VERSION = '0.6.11'
+const APP_VERSION = '0.7.3'

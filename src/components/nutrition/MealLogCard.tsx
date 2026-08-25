@@ -18,7 +18,6 @@ type MealLogCardProps = {
 export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUseInBalancer }: MealLogCardProps) {
   const { t } = useT()
   const [itemsOpen, setItemsOpen] = useState(false)
-  const [microsOpen, setMicrosOpen] = useState(false)
 
   const foodIds = useMemo(() => [...new Set(meal.items.map((item) => item.foodId))], [meal.items])
   const foods = useLiveQuery(() => {
@@ -79,49 +78,41 @@ export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUse
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setItemsOpen((value) => !value)}
-        aria-expanded={itemsOpen}
-        className="mt-3 flex w-full items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low"
-      >
-        <span>{t.common.items}</span>
-        <span className="text-base leading-none text-ink-mid">{itemsOpen ? '−' : '+'}</span>
-      </button>
+      <div className="mt-3 rounded-lg border border-line bg-surface-1">
+        <button
+          type="button"
+          onClick={() => setItemsOpen((value) => !value)}
+          aria-expanded={itemsOpen}
+          className="flex w-full items-center justify-between px-3 py-2 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low"
+        >
+          <span>{t.common.items}</span>
+          <span className="text-base leading-none text-ink-mid">{itemsOpen ? '−' : '+'}</span>
+        </button>
 
-      {itemsOpen ? (
-        <div className="mt-3 space-y-2 rounded-lg border border-line bg-surface-1 p-3">
-          {meal.items.map((item, index) => {
-            const food = foodMap.get(item.foodId)
-            return (
-              <div key={`${item.foodId}-${index}`} className="rounded-md border border-line bg-surface-0 p-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-ink-hi">{food?.name ?? item.foodId}</span>
-                  <span className="num text-[11px] text-ink-mid">{Number(item.amountInGrams).toFixed(2)}g</span>
+        {itemsOpen ? (
+          <div className="space-y-2 border-t border-line p-3">
+            {meal.items.map((item, index) => {
+              const food = foodMap.get(item.foodId)
+              return (
+                <div key={`${item.foodId}-${index}`} className="rounded-md border border-line bg-surface-0 p-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-ink-hi">{food?.name ?? item.foodId}</span>
+                    <span className="num text-[11px] text-ink-mid">{Number(item.amountInGrams).toFixed(2)}g</span>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-[11px] text-ink-mid sm:grid-cols-4">
+                    <span>kcal {Number(item.calories).toFixed(2)}</span>
+                    <span>P {Number(item.protein).toFixed(2)}</span>
+                    <span>C {Number(item.carbs).toFixed(2)}</span>
+                    <span>F {Number(item.fat).toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="mt-2 grid gap-1 text-[11px] text-ink-mid sm:grid-cols-4">
-                  <span>kcal {Number(item.calories).toFixed(2)}</span>
-                  <span>P {Number(item.protein).toFixed(2)}</span>
-                  <span>C {Number(item.carbs).toFixed(2)}</span>
-                  <span>F {Number(item.fat).toFixed(2)}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      ) : null}
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
 
-      <button
-        type="button"
-        onClick={() => setMicrosOpen((value) => !value)}
-        aria-expanded={microsOpen}
-        className="mt-3 flex w-full items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low"
-      >
-        <span>Micros</span>
-        <span className="text-base leading-none text-ink-mid">{microsOpen ? '−' : '+'}</span>
-      </button>
-
-      {microsOpen ? <MealMicronutrientSummary meal={meal} profile={profile} compact /> : null}
+      <MealMicronutrientSummary meal={meal} profile={profile} compact />
     </div>
   )
 }

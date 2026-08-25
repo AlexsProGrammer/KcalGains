@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Home, UtensilsCrossed, Dumbbell, TrendingUp, MoreHorizontal, Plus } from 'lucide-react'
+import { Home, UtensilsCrossed, Dumbbell, TrendingUp, MoreHorizontal, Plus, Github } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '@/components/ui/button'
@@ -129,9 +129,22 @@ export function AppShell() {
                   <h2 className="text-lg font-semibold text-ink-hi">{currentTitle}</h2>
                 </div>
 
-                <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-center shadow-sm">
-                  <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">{t.common.today}</div>
-                  <div className="mt-1 text-sm font-medium text-ink-hi">{trainingModeLabel}</div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
+                    <a
+                    href="https://github.com/AlexsProgrammer/KcalGains"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:bg-white/10"
+                  >
+                    <Github size={20} />
+                    </a>
+                  </div>
+
+                  <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-center shadow-sm">
+                    <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">{t.common.today}</div>
+                    <div className="mt-1 text-sm font-medium text-ink-hi">{trainingModeLabel}</div>
+                  </div>
                 </div>
               </div>
             </header>
