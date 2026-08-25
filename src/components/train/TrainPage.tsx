@@ -42,9 +42,6 @@ export function TrainPage() {
         </div>
       </div>
 
-      <DailyModeSelector />
-      <TrainingPlanGenerator />
-
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <Card className="min-w-0">
           <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Sessions" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
@@ -59,6 +56,9 @@ export function TrainPage() {
           <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.totalSets}</CardContent>
         </Card>
       </div>
+
+      <DailyModeSelector />
+      <TrainingPlanGenerator />
 
       <WorkoutLoggerCard />
 

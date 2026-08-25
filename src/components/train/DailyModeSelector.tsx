@@ -30,7 +30,7 @@ const defaultContext = (mode: string): TrainingDayContext => ({
 export function DailyModeSelector() {
   const { settings } = useSettings()
   const existing = useLiveQuery(() => db.trainingContext.where('date').equals(TODAY).first(), [TODAY])
-  const [selected, setSelected] = useState<string>('strength')
+  const [selected, setSelected] = useState<string>('rest')
 
   const modes = useMemo(() => {
     const configured = settings.trainingModes ?? []
@@ -38,7 +38,7 @@ export function DailyModeSelector() {
   }, [settings.trainingModes])
 
   useEffect(() => {
-    const sportType = existing?.sportType ?? 'strength'
+    const sportType = existing?.sportType ?? 'rest'
     setSelected(sportType)
   }, [existing])
 

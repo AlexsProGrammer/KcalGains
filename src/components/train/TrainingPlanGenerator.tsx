@@ -102,7 +102,7 @@ function createDefaultPlan(kind: '3x' | '5x'): TrainingPlan {
     thursday: kind === '3x' ? 'rest' : 'strength',
     friday: kind === '3x' ? 'strength' : 'hypertrophy',
     saturday: kind === '3x' ? 'rest' : 'cardio',
-    sunday: kind === '3x' ? 'rest' : 'rest',
+    sunday: 'rest',
   }
 
   return TrainingPlanSchema.parse({
@@ -120,6 +120,30 @@ function createDefaultPlan(kind: '3x' | '5x'): TrainingPlan {
       exercises: [],
     })),
   })
+}
+
+function getDefaultPlanTitles(): string[] {
+  return ['3x / week strength', '5x / week strength']
+}
+
+function findDuplicateDefaultPlanIds(plans: TrainingPlan[]) {
+  const existingByTitle = new Map<string, string>()
+  const duplicates: string[] = []
+
+  for (const plan of plans) {
+    const key = plan.title.trim()
+    if (!getDefaultPlanTitles().includes(key)) continue
+
+    const previousId = existingByTitle.get(key)
+    if (previousId) {
+      duplicates.push(plan.id)
+      continue
+    }
+
+    existingByTitle.set(key, plan.id)
+  }
+
+  return duplicates
 }
 
 function normalizeTrainingPlan(plan: Partial<TrainingPlan> | null | undefined): TrainingPlan {
@@ -208,13 +232,18 @@ export function TrainingPlanGenerator() {
   const normalizedPlans = useMemo(() => (plans ?? []).map((plan) => normalizeTrainingPlan(plan as Partial<TrainingPlan>)), [plans])
 
   useEffect(() => {
+    const duplicateIds = findDuplicateDefaultPlanIds(normalizedPlans)
+    if (duplicateIds.length > 0) {
+      void db.trainingPlans.bulkDelete(duplicateIds)
+      return
+    }
+
     if (!draftPlan && normalizedPlans[0]) {
       setDraftPlan(normalizedPlans[0])
     }
 
     if (normalizedPlans.length === 0) {
-      if (defaultSeedRef.current) return
-      defaultSeedRef.current = true
+      defaultSeedRef.current = false
 
       let cancelled = false
       void db.trainingPlans.count().then(async (count) => {
@@ -229,6 +258,10 @@ export function TrainingPlanGenerator() {
       return () => {
         cancelled = true
       }
+    }
+
+    if (draftPlan && selectedPlanId && draftPlan.id === selectedPlanId && !normalizedPlans.some((plan) => plan.id === selectedPlanId)) {
+      return
     }
 
     if (!selectedPlanId || !normalizedPlans.some((plan) => plan.id === selectedPlanId)) {
@@ -280,6 +313,10 @@ export function TrainingPlanGenerator() {
   }
 
   async function addNewPlan() {
+    if (draftPlan && selectedPlanId === draftPlan.id) {
+      await savePlan(draftPlan)
+    }
+
     const next = createEmptyPlan(`Plan ${normalizedPlans.length + 1}`)
     setSelectedPlanId(next.id)
     setDraftPlan(next)
@@ -338,6 +375,8 @@ export function TrainingPlanGenerator() {
 
   async function duplicatePlan() {
     if (!draftPlan) return
+    await savePlan(draftPlan)
+
     const duplicate = normalizeTrainingPlan({
       ...draftPlan,
       id: crypto.randomUUID(),

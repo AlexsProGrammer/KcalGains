@@ -43,9 +43,9 @@ export function AppShell() {
   const today = new Date().toISOString().slice(0, 10)
   const todayTrainingContext = useLiveQuery(() => db.trainingContext.where('date').equals(today).first(), [today], null)
   const trainingModeLabel = useMemo(() => {
-    if (!todayTrainingContext) return 'No training set'
-    const preset = settings.trainingModes.find((mode) => mode.sportType === todayTrainingContext.sportType)
-    return preset?.label ?? todayTrainingContext.sportType
+    const sportType = todayTrainingContext?.sportType ?? 'rest'
+    const preset = settings.trainingModes.find((mode) => mode.sportType === sportType)
+    return preset?.label ?? (sportType === 'rest' ? 'Rest day' : sportType)
   }, [settings.trainingModes, todayTrainingContext])
 
   const forceOnboarding =

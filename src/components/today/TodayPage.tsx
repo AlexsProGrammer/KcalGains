@@ -14,7 +14,17 @@ import { MealLogCard } from '@/components/nutrition/MealLogCard'
 import { WeightQuickAddModal } from '@/components/analytics/WeightQuickAddModal'
 import type { Meal } from '@/types'
 
-const formatDate = (value: Date) => value.toISOString().slice(0, 10)
+const formatDate = (value: Date) => {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const parseDateKey = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, (month ?? 1) - 1, day ?? 1)
+}
 
 const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'] as const
 
@@ -37,6 +47,7 @@ export function TodayPage() {
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()))
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [quickAddOpen, setQuickAddOpen] = useState(searchParams.get('weight') === 'quick-add')
+  const todayKey = formatDate(new Date())
 
   useEffect(() => {
     setQuickAddOpen(searchParams.get('weight') === 'quick-add')
@@ -46,7 +57,7 @@ export function TodayPage() {
   const { targets, source } = useDynamicTargets()
   const { trend } = useNutritionTrend(7)
 
-  const selected = useMemo(() => new Date(`${selectedDate}T12:00:00`), [selectedDate])
+  const selected = useMemo(() => parseDateKey(selectedDate), [selectedDate])
 
   const meals = useLiveQuery(() => db.meals.where('date').equals(selectedDate).toArray(), [selectedDate], []) as Meal[]
   const workoutCount = useLiveQuery(() => db.workouts.where('date').equals(selectedDate).count(), [selectedDate], 0)
@@ -88,9 +99,14 @@ export function TodayPage() {
   }, [profile.heightCm, profile.weightKg])
 
   const goToDay = (offset: number) => {
-    const date = getDayStart(selected)
-    date.setDate(date.getDate() + offset)
-    setSelectedDate(formatDate(date))
+    const nextDate = getDayStart(selected)
+    const candidate = new Date(nextDate)
+    candidate.setDate(candidate.getDate() + offset)
+    const nextKey = formatDate(candidate)
+
+    if (nextKey > todayKey) return
+
+    setSelectedDate(nextKey)
   }
 
   const closeQuickAdd = () => {
@@ -245,10 +261,10 @@ export function TodayPage() {
           <Button variant="ghost" size="icon" onClick={() => goToDay(-1)} aria-label="Previous day">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setSelectedDate(formatDate(new Date()))} aria-label="Today">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedDate(todayKey)} aria-label="Today">
             <Activity className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => goToDay(1)} aria-label="Next day">
+          <Button variant="ghost" size="icon" onClick={() => goToDay(1)} aria-label="Next day" disabled={selectedDate >= todayKey}>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

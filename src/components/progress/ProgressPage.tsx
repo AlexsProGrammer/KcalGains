@@ -50,7 +50,7 @@ export function ProgressPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <MacroTrendChart days={chartDays} />
-        <MealBreakdownChart />
+        <MealBreakdownChart days={chartDays} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

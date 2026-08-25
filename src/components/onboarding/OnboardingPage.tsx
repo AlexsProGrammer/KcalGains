@@ -111,11 +111,11 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
       completedDayIds: [],
       days: [
         { id: 'starter-mon', dayKey: 'monday', label: 'Monday', trainingMode: 'strength', notes: 'Main lift day', exercises: [] },
-        { id: 'starter-tue', dayKey: 'tuesday', label: 'Tuesday', trainingMode: goal === 'lose-fat' ? 'cardio' : 'rest', notes: goal === 'lose-fat' ? 'Conditioning' : 'Recovery', exercises: [] },
+        { id: 'starter-tue', dayKey: 'tuesday', label: 'Tuesday', trainingMode: 'rest', notes: 'Recovery', exercises: [] },
         { id: 'starter-wed', dayKey: 'wednesday', label: 'Wednesday', trainingMode: 'strength', notes: 'Secondary lift day', exercises: [] },
         { id: 'starter-thu', dayKey: 'thursday', label: 'Thursday', trainingMode: 'rest', notes: 'Recovery', exercises: [] },
         { id: 'starter-fri', dayKey: 'friday', label: 'Friday', trainingMode: 'strength', notes: 'Upper-body emphasis', exercises: [] },
-        { id: 'starter-sat', dayKey: 'saturday', label: 'Saturday', trainingMode: goal === 'gain-muscle' ? 'hypertrophy' : 'cardio', notes: goal === 'gain-muscle' ? 'Volume work' : 'Easy cardio', exercises: [] },
+        { id: 'starter-sat', dayKey: 'saturday', label: 'Saturday', trainingMode: goal === 'gain-muscle' ? 'hypertrophy' : 'rest', notes: goal === 'gain-muscle' ? 'Volume work' : 'Recovery', exercises: [] },
         { id: 'starter-sun', dayKey: 'sunday', label: 'Sunday', trainingMode: 'rest', notes: 'Full recovery', exercises: [] },
       ],
     })
