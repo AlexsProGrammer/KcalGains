@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getStorageEstimate, requestStoragePersistence } from '@/db/persistence'
 
 export type StoragePersistenceState = {
@@ -7,15 +7,34 @@ export type StoragePersistenceState = {
   quotaTotalBytes: number | null
 }
 
-export function useStoragePersistence(): StoragePersistenceState {
+export function useStoragePersistence(): StoragePersistenceState & { refresh: () => Promise<void>; requestPermission: () => Promise<boolean> } {
   const [state, setState] = useState<StoragePersistenceState>({
     isPersisted: null,
     quotaUsageBytes: null,
     quotaTotalBytes: null,
   })
 
+  const refresh = useCallback(async () => {
+    const [isPersisted, estimate] = await Promise.all([
+      requestStoragePersistence(),
+      getStorageEstimate(),
+    ])
+
+    setState({
+      isPersisted,
+      quotaUsageBytes: estimate?.usageBytes ?? null,
+      quotaTotalBytes: estimate?.quotaBytes ?? null,
+    })
+  }, [])
+
+  const requestPermission = useCallback(async () => {
+    const next = await requestStoragePersistence()
+    await refresh()
+    return next
+  }, [refresh])
+
   useEffect(() => {
-    let isActive = true
+    let active = true
 
     async function initializePersistence() {
       const [isPersisted, estimate] = await Promise.all([
@@ -23,21 +42,21 @@ export function useStoragePersistence(): StoragePersistenceState {
         getStorageEstimate(),
       ])
 
-      if (isActive) {
-        setState({
-          isPersisted,
-          quotaUsageBytes: estimate?.usageBytes ?? null,
-          quotaTotalBytes: estimate?.quotaBytes ?? null,
-        })
-      }
+      if (!active) return
+
+      setState({
+        isPersisted,
+        quotaUsageBytes: estimate?.usageBytes ?? null,
+        quotaTotalBytes: estimate?.quotaBytes ?? null,
+      })
     }
 
     void initializePersistence()
 
     return () => {
-      isActive = false
+      active = false
     }
   }, [])
 
-  return state
+  return { ...state, refresh, requestPermission }
 }

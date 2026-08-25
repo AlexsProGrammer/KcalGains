@@ -89,11 +89,13 @@ export function resolveMicronutrientTargets(
   const sex = profile?.sex ?? 'male'
   const base = sex === 'female' ? DEFAULT_FEMALE_TARGETS : DEFAULT_MALE_TARGETS
   const age = profile?.birthYear ? Math.max(18, new Date().getFullYear() - profile.birthYear) : 35
+  const overrides = profile?.micronutrientTargets ?? {}
 
   const adjusted = {
     ...base,
-    sodiumMg: base.sodiumMg + (offsets?.sodiumMg ?? 0),
-    potassiumMg: base.potassiumMg + (offsets?.potassiumMg ?? 0),
+    ...overrides,
+    sodiumMg: (overrides.sodiumMg ?? base.sodiumMg) + (offsets?.sodiumMg ?? 0),
+    potassiumMg: (overrides.potassiumMg ?? base.potassiumMg) + (offsets?.potassiumMg ?? 0),
   }
 
   if (age >= 65) {

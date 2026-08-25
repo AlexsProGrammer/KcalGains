@@ -43,11 +43,15 @@ export async function initializeSearchIndex(): Promise<void> {
     }
   })
   db.foods.hook('updating', (changes, primaryKey, food) => {
-    searchIndex.discard(String(primaryKey))
+    if (searchIndex.has(String(primaryKey))) {
+      searchIndex.discard(String(primaryKey))
+    }
     searchIndex.add(toSearchDocument({ ...food, ...changes } as Food))
   })
   db.foods.hook('deleting', (primaryKey) => {
-    searchIndex.discard(String(primaryKey))
+    if (searchIndex.has(String(primaryKey))) {
+      searchIndex.discard(String(primaryKey))
+    }
   })
 
   isInitialized = true

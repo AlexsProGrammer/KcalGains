@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarRange, ChartColumn, Dumbbell, Plus, Trash2, UtensilsCrossed } from 'lucide-react'
+import { CalendarRange, ChartColumn, Dumbbell, Plus, Star, Trash2, UtensilsCrossed } from 'lucide-react'
 import { BarcodeNutritionTab } from '@/components/nutrition/BarcodeNutritionTab'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -16,16 +16,81 @@ import { MealQuickEditorModal } from '@/components/nutrition/MealQuickEditorModa
 import { MicronutrientRadar } from '@/components/nutrition/MicronutrientRadar'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useProfile } from '@/hooks/useProfile'
+import { addFavoriteMeal, readFavoriteMeals, removeFavoriteMeal } from '@/services/favoritesService'
 import type { Meal } from '@/types'
 
 const tabs = [
   { value: 'log', label: 'Log' },
+  { value: 'favorites', label: 'Favorites' },
   { value: 'barcode', label: 'Barcode' },
   { value: 'micros', label: 'Micros' },
   { value: 'plan', label: 'Plan' },
   { value: 'balance', label: 'Balance' },
   { value: 'library', label: 'Library' },
 ]
+
+function FavoritesTab() {
+  const navigate = useNavigate()
+  const [favorites, setFavorites] = useState(() => readFavoriteMeals())
+
+  useEffect(() => {
+    setFavorites(readFavoriteMeals())
+  }, [])
+
+  function addToLog(favoriteMeal: (typeof favorites)[number]) {
+    const savedMeal: Meal = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString().slice(0, 10),
+      mealType: favoriteMeal.mealType,
+      items: favoriteMeal.items,
+      totalCalories: favoriteMeal.totalCalories,
+      totalProtein: favoriteMeal.totalProtein,
+      totalCarbs: favoriteMeal.totalCarbs,
+      totalFat: favoriteMeal.totalFat,
+      totalMicros: favoriteMeal.totalMicros,
+    }
+
+    void db.meals.add(savedMeal)
+    setFavorites(readFavoriteMeals())
+  }
+
+  function useInBalancer(favoriteMeal: (typeof favorites)[number]) {
+    window.sessionStorage.setItem('kcalgains.balancerTemplate', JSON.stringify({
+      targetMealType: favoriteMeal.mealType,
+      items: favoriteMeal.items,
+    }))
+    navigate('/nutrition?tab=balance', { replace: true })
+  }
+
+  return (
+    <Card>
+      <CardHeader icon={<Star />} title="Favorite meals" />
+      <CardContent className="space-y-3">
+        {favorites.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
+            Save a meal from the log, planner, or balancer to create a quick favorite list.
+          </div>
+        ) : null}
+
+        {favorites.map((favorite) => (
+          <div key={favorite.id} className="rounded-xl border border-line bg-surface-0 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium capitalize text-ink-hi">{favorite.label}</div>
+                <div className="mt-1 text-[11px] text-ink-mid">{favorite.mealType} • {favorite.totalCalories} kcal</div>
+              </div>
+              <button type="button" className="text-xs text-ink-mid hover:text-danger" onClick={() => { removeFavoriteMeal(favorite.id); setFavorites(readFavoriteMeals()) }}>Remove</button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" size="sm" onClick={() => useInBalancer(favorite)}>Use in balancer</Button>
+              <Button type="button" size="sm" variant="secondary" onClick={() => addToLog(favorite)}>Add to log</Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
 
 export function NutritionPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -48,6 +113,8 @@ export function NutritionPage() {
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   ), [meals])
+
+  const formatMacro = (value: number) => Number(value).toFixed(2)
 
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'log'
 
@@ -75,6 +142,19 @@ export function NutritionPage() {
     setSuccessMessage('Meal removed from today\'s log.')
   }
 
+  function handleFavoriteMeal(meal: Meal) {
+    addFavoriteMeal(meal, `${meal.mealType} meal`)
+    setSuccessMessage('Meal saved to favorites.')
+  }
+
+  function handleUseInBalancer(meal: Meal) {
+    window.sessionStorage.setItem('kcalgains.balancerTemplate', JSON.stringify({
+      targetMealType: meal.mealType,
+      items: meal.items,
+    }))
+    setSearchParams({ tab: 'balance' }, { replace: true })
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -91,28 +171,28 @@ export function NutritionPage() {
         <Card className="min-w-0">
           <CardHeader icon={<UtensilsCrossed className="h-3.5 w-3.5" />} title="Calories" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
-            {totals.calories}
+            {formatMacro(totals.calories)}
             <span className="ml-1 text-[11px] text-ink-mid">/ {targets.calories}</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
           <CardHeader icon={<ChartColumn className="h-3.5 w-3.5" />} title="Protein" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
-            {totals.protein}
+            {formatMacro(totals.protein)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
           <CardHeader icon={<CalendarRange className="h-3.5 w-3.5" />} title="Carbs" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
-            {totals.carbs}
+            {formatMacro(totals.carbs)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
           <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Fat" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
-            {totals.fat}
+            {formatMacro(totals.fat)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
           </CardContent>
         </Card>
@@ -143,6 +223,8 @@ export function NutritionPage() {
                   profile={profile}
                   onEdit={openEditMeal}
                   onDelete={handleDeleteMeal}
+                  onFavorite={handleFavoriteMeal}
+                  onUseInBalancer={handleUseInBalancer}
                 />
               ))
             )}
@@ -150,6 +232,7 @@ export function NutritionPage() {
         </Card>
       ) : null}
 
+      {activeTab === 'favorites' ? <FavoritesTab /> : null}
       {activeTab === 'barcode' ? <BarcodeNutritionTab /> : null}
       {activeTab === 'micros' ? <MicronutrientRadar meals={meals} /> : null}
       {activeTab === 'plan' ? <AutoMealPlanner /> : null}

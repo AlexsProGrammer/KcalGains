@@ -13,6 +13,7 @@ export type PlannedMeal = {
   result: BalancerResult
   targets: MealTargets
   score: number
+  locked?: boolean
 }
 
 export type PlanDayResult = {
@@ -105,6 +106,40 @@ function balanceCandidate(foods: Food[], targets: MealTargets, maxBudget?: numbe
   return autoBalanceMeal(input, catalog)
 }
 
+export const PLANNER_STORAGE_KEY = 'kcalgains.planner.plan'
+
+export function readPersistedPlannerPlan(): PlannedMeal[] {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const raw = window.localStorage.getItem(PLANNER_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as PlannedMeal[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function writePersistedPlannerPlan(plan: PlannedMeal[]) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(PLANNER_STORAGE_KEY, JSON.stringify(plan))
+}
+
+export function mergePlannedMeals(current: PlannedMeal[], incoming: PlannedMeal[]): PlannedMeal[] {
+  const lockedByMealType = new Map(current.filter((entry) => entry.locked).map((entry) => [entry.mealType, entry]))
+  const merged = incoming.map((entry) => lockedByMealType.get(entry.mealType) ?? entry)
+
+  for (const entry of current) {
+    if (!entry.locked) continue
+    if (!merged.some((item) => item.mealType === entry.mealType)) {
+      merged.push(entry)
+    }
+  }
+
+  return merged
+}
+
 export function suggestMeal(
   foods: Food[],
   dailyTargets: MealTargets,
@@ -127,7 +162,7 @@ export function suggestMeal(
 
     const score = macroDeviationMagnitude(result)
     if (!best || score < best.score) {
-      best = { mealType, foods: candidate, result, targets, score }
+      best = { mealType, foods: candidate, result, targets, score, locked: false }
     }
   }
 
@@ -146,7 +181,7 @@ export function planDay(
 
   for (const mealType of mealTypes) {
     const planned = suggestMeal(foods, dailyTargets, mealType, random, maxBudget)
-    if (planned) meals.push(planned)
+    if (planned) meals.push({ ...planned, locked: false })
     else unplanned.push(mealType)
   }
 

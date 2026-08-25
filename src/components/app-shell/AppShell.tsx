@@ -12,6 +12,7 @@ import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ReloadPrompt } from '@/components/pwa/ReloadPrompt'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useSettings } from '@/hooks/useSettings'
+import { useStoragePersistence } from '@/hooks/useStoragePersistence'
 import { useT } from '@/i18n'
 import { db } from '@/db'
 
@@ -38,6 +39,7 @@ export function AppShell() {
   const location = useLocation()
   const [quickActionOpen, setQuickActionOpen] = useState(false)
   const { settings, isLoading } = useSettings()
+  const { isPersisted } = useStoragePersistence()
   const { t } = useT()
   const reduceMotion = useReducedMotion()
   const today = new Date().toISOString().slice(0, 10)
@@ -135,6 +137,12 @@ export function AppShell() {
             </header>
 
             <main className="mx-auto min-w-0 max-w-7xl px-3 pb-28 pt-3 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4">
+              {isPersisted === false ? (
+                <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  Browser storage is not persistent yet. Your local data may not survive browser restarts until storage persistence is enabled.
+                </div>
+              ) : null}
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={location.pathname}

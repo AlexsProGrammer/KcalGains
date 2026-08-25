@@ -13,6 +13,20 @@ export const DietaryPatternSchema = z.enum(['standard', 'ketogenic', 'diabetic_f
 
 export const SweatTypeSchema = z.enum(['low', 'normal', 'heavy_salty'])
 
+export const MicronutrientTargetSchema = z.object({
+  sodiumMg: z.number().nonnegative().default(2000),
+  potassiumMg: z.number().nonnegative().default(3500),
+  magnesiumMg: z.number().nonnegative().default(350),
+  calciumMg: z.number().nonnegative().default(1000),
+  zincMg: z.number().nonnegative().default(11),
+  ironMg: z.number().nonnegative().default(10),
+  seleniumMcg: z.number().nonnegative().default(55),
+  vitaminDMcg: z.number().nonnegative().default(20),
+  vitaminB6Mg: z.number().nonnegative().default(1.3),
+  vitaminB12Mcg: z.number().nonnegative().default(2.4),
+  vitaminCMg: z.number().nonnegative().default(90),
+}).partial().default({})
+
 export const ProfileSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).optional(),
@@ -32,6 +46,7 @@ export const ProfileSchema = z.object({
   dietaryPattern: DietaryPatternSchema.default('standard'),
   sweatType: SweatTypeSchema.default('normal'),
   budgetPerDay: z.number().nonnegative().optional(),
+  micronutrientTargets: MicronutrientTargetSchema.optional(),
   /** Signed weekly body-weight change target; negative for fat loss. */
   goalRateKgPerWeek: z.number().min(-1.5).max(1.5).default(0),
 })

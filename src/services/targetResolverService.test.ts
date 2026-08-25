@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { ProfileSchema } from '@/schemas/profile.schema'
 import { DEFAULT_APP_SETTINGS } from '@/schemas/settings.schema'
 import { resolveDailyTargets } from '@/services/targetResolverService'
 
-const profile = {
+const profile = ProfileSchema.parse({
   id: 'p1',
   heightCm: 175,
   weightKg: 75,
@@ -14,7 +15,7 @@ const profile = {
   targetCalories: 2000,
   targetMacros: { protein: 150, carbs: 200, fat: 65 },
   goalRateKgPerWeek: 0,
-}
+})
 
 describe('resolveDailyTargets', () => {
   it('keeps the goal-based baseline when settings are enabled', () => {
@@ -40,8 +41,8 @@ describe('resolveDailyTargets', () => {
 })
 
 describe('DEFAULT_APP_SETTINGS', () => {
-  it('uses list mode by default for micronutrients', () => {
-    expect(DEFAULT_APP_SETTINGS.micronutrientView).toBe('list')
+  it('uses radar mode by default for micronutrients', () => {
+    expect(DEFAULT_APP_SETTINGS.micronutrientView).toBe('radar')
   })
 
   it('keeps a valid training mode preset list', () => {

@@ -8,6 +8,7 @@ import { FoodSearchResults } from '@/components/food/FoodSearchResults'
 import { Alert } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { deleteFood } from '@/db/foodRepository'
 import { useFoodSearch } from '@/hooks/useFoodSearch'
 import type { Food } from '@/types'
 
@@ -35,6 +36,12 @@ export function FoodManagement() {
     setMessage(`${food.name} was added to the local library.`)
   }
 
+  async function handleDeleteFood(food: Food) {
+    await deleteFood(food.id)
+    setSelectedFood(null)
+    setMessage(`${food.name} was deleted from the local library.`)
+  }
+
   return (
     <>
       <Card>
@@ -49,7 +56,7 @@ export function FoodManagement() {
           />
           <div className="mt-4">
             {search.isSearching ? <p className="py-4 text-sm text-slate-500">Searching local foods...</p> : null}
-            {!search.isSearching && query.trim() ? <FoodSearchResults foods={localFoods ?? []} emptyMessage="No local food matched. Try Open Food Facts." onSelect={setSelectedFood} /> : null}
+            {!search.isSearching && query.trim() ? <FoodSearchResults foods={localFoods ?? []} emptyMessage="No local food matched. Try Open Food Facts." onSelect={setSelectedFood} onDelete={handleDeleteFood} /> : null}
           </div>
           {query.trim() ? <p className="mt-3 text-xs text-slate-500">{hiddenCount} foods hidden by your allergy/profile constraints.</p> : null}
           {search.remoteError ? <Alert className="mt-4" variant="warning">{search.remoteError}</Alert> : null}
@@ -60,7 +67,7 @@ export function FoodManagement() {
           </div>
         </CardContent>
       </Card>
-      <FoodDetailModal food={selectedFood} onClose={() => setSelectedFood(null)} onSaved={(food) => { setSelectedFood(food); setMessage(`${food.name} was updated.`) }} />
+      <FoodDetailModal food={selectedFood} onClose={() => setSelectedFood(null)} onSaved={(food) => { setSelectedFood(food); setMessage(`${food.name} was updated.`) }} onDelete={(food) => { void handleDeleteFood(food) }} />
       <BarcodeScannerModal open={isScannerOpen} onClose={() => setIsScannerOpen(false)} onFoodResolved={(food) => { setIsScannerOpen(false); setSelectedFood(food); setMessage(`${food.name} was resolved and cached.`) }} />
     </>
   )

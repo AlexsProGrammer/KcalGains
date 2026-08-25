@@ -129,7 +129,7 @@ export const AppSettingsSchema = z.object({
   locale: LocaleSchema.default('en'),
   density: DensitySchema.default('comfortable'),
   reduceMotion: ReduceMotionSchema.default('system'),
-  micronutrientView: MicronutrientViewSchema.default('list'),
+  micronutrientView: MicronutrientViewSchema.default('radar'),
   onboardingCompleted: z.boolean().default(false),
   onboardingDismissed: z.boolean().default(false),
   trainingModes: z.array(TrainingModePresetSchema).default(DEFAULT_TRAINING_MODES),

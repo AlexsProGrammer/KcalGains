@@ -1,4 +1,5 @@
 import { HardDrive, ShieldCheck, ShieldOff } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useStoragePersistence } from '@/hooks/useStoragePersistence'
 
@@ -11,7 +12,7 @@ function formatMegabytes(bytes: number | null): string {
 }
 
 export function StorageStatus() {
-  const { isPersisted, quotaUsageBytes, quotaTotalBytes } = useStoragePersistence()
+  const { isPersisted, quotaUsageBytes, quotaTotalBytes, requestPermission } = useStoragePersistence()
   const StatusIcon = isPersisted ? ShieldCheck : ShieldOff
   const statusLabel = isPersisted === null ? 'Checking' : isPersisted ? 'Persistent storage granted' : 'Persistent storage unavailable'
 
@@ -26,6 +27,11 @@ export function StorageStatus() {
           </span>
         </div>
         <p className="mt-2">Usage: {formatMegabytes(quotaUsageBytes)} / {formatMegabytes(quotaTotalBytes)}</p>
+        {isPersisted === false ? (
+          <div className="mt-3">
+            <Button type="button" size="sm" onClick={() => void requestPermission()}>Allow persistent storage</Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

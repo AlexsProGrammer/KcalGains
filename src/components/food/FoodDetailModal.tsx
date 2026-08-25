@@ -8,9 +8,10 @@ type FoodDetailModalProps = {
   food: Food | null
   onClose: () => void
   onSaved: (food: Food) => void
+  onDelete?: (food: Food) => void
 }
 
-export function FoodDetailModal({ food, onClose, onSaved }: FoodDetailModalProps) {
+export function FoodDetailModal({ food, onClose, onSaved, onDelete }: FoodDetailModalProps) {
   const [grams, setGrams] = useState(100)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -42,7 +43,25 @@ export function FoodDetailModal({ food, onClose, onSaved }: FoodDetailModalProps
             </div>
           ) : null}
           <label className="mt-5 block text-sm text-slate-300">Amount: {grams}g<input type="range" min="1" max="500" value={grams} onChange={(event) => setGrams(Number(event.target.value))} className="mt-2 w-full accent-emerald-400" /></label>
-          <div className="mt-5 flex gap-2"><Button type="button" onClick={() => setIsEditing(true)}>Edit</Button><Button type="button" variant="ghost" onClick={onClose}>Close</Button></div>
+          <div className="mt-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Button type="button" onClick={() => setIsEditing(true)}>Edit</Button>
+              <Button type="button" variant="ghost" onClick={onClose}>Close</Button>
+            </div>
+            {onDelete ? (
+              <button
+                type="button"
+                className="ml-auto text-sm font-medium text-red-500 underline decoration-red-500/70 underline-offset-4 transition-colors hover:text-red-400"
+                onClick={() => {
+                  if (window.confirm(`Delete ${food.name} from the database? This cannot be undone.`)) {
+                    onDelete(food)
+                  }
+                }}
+              >
+                Delete from DB
+              </button>
+            ) : null}
+          </div>
         </>}
       </div>
     </div>

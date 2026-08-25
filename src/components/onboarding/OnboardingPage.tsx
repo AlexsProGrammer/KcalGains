@@ -11,7 +11,7 @@ import { useSettings } from '@/hooks/useSettings'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
 import { TrainingPlanSchema } from '@/schemas/trainingPlan.schema'
 import { ACCENT_OPTIONS } from '@/theme/accents'
-import type { AccentName, ActivityLevel, BiologicalSex, FitnessGoal, TrainingPlan } from '@/types'
+import type { AccentName, ActivityLevel, AllergenTag, BiologicalSex, DietaryPattern, FitnessGoal, SweatType, TrainingPlan } from '@/types'
 
 const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
   { value: 'sedentary', label: 'Sedentary (desk job)' },
@@ -27,6 +27,29 @@ const GOAL_OPTIONS: { value: FitnessGoal; label: string }[] = [
   { value: 'gain-muscle', label: 'Gain muscle' },
   { value: 'recomp', label: 'Recomposition' },
   { value: 'athletic', label: 'More athletic' },
+]
+
+const ALLERGEN_OPTIONS: { value: AllergenTag; label: string }[] = [
+  { value: 'gluten', label: 'Gluten' },
+  { value: 'lactose', label: 'Lactose' },
+  { value: 'nuts', label: 'Nuts' },
+  { value: 'soy', label: 'Soy' },
+  { value: 'eggs', label: 'Eggs' },
+  { value: 'fish', label: 'Fish' },
+  { value: 'fructose', label: 'Fructose' },
+]
+
+const DIETARY_OPTIONS: { value: DietaryPattern; label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'ketogenic', label: 'Ketogenic' },
+  { value: 'diabetic_friendly', label: 'Diabetic-friendly' },
+  { value: 'low_fodmap', label: 'Low-FODMAP' },
+]
+
+const SWEAT_OPTIONS: { value: SweatType; label: string }[] = [
+  { value: 'low', label: 'Low sweat / low sodium loss' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'heavy_salty', label: 'Heavy sweater / salty sweat' },
 ]
 
 function toNumberOrUndefined(value: string): number | undefined {
@@ -49,6 +72,9 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate')
   const [goal, setGoal] = useState<FitnessGoal>('maintain')
   const [goalRate, setGoalRate] = useState('0')
+  const [dietaryPattern, setDietaryPattern] = useState<DietaryPattern>('standard')
+  const [sweatType, setSweatType] = useState<SweatType>('normal')
+  const [allergens, setAllergens] = useState<AllergenTag[]>([])
   const [accent, setAccent] = useState<AccentName>(settings.accent)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -62,10 +88,13 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
     setActivityLevel(profile.activityLevel ?? 'moderate')
     setGoal(profile.goal ?? 'maintain')
     setGoalRate(profile.goalRateKgPerWeek?.toString() ?? '0')
+    setDietaryPattern(profile.dietaryPattern ?? 'standard')
+    setSweatType(profile.sweatType ?? 'normal')
+    setAllergens(profile.allergens ?? [])
     setAccent(settings.accent)
   }, [isLoading, profile, settings.accent])
 
-  const totalSteps = 6
+  const totalSteps = 7
   const percent = ((step + 1) / totalSteps) * 100
 
   const canContinue = useMemo(() => {
@@ -93,6 +122,12 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
 
     persist(window.localStorage)
     persist(window.sessionStorage)
+  }
+
+  function toggleAllergen(allergen: AllergenTag) {
+    setAllergens((current) => current.includes(allergen)
+      ? current.filter((item) => item !== allergen)
+      : [...current, allergen])
   }
 
   async function createStarterTrainingPlan(): Promise<TrainingPlan> {
@@ -151,6 +186,9 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
         sex: sex === '' ? undefined : sex,
         activityLevel,
         goal,
+        dietaryPattern,
+        sweatType,
+        allergens,
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
       await createStarterTrainingPlan()
@@ -262,6 +300,42 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
               className="mt-1 w-full accent-emerald-500"
             />
           </Field>
+        </div>
+      ),
+    },
+    {
+      title: 'Health & nutrition',
+      subtitle: 'Set your basic dietary constraints and potential allergens before you begin tracking.',
+      content: (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Diet pattern">
+              <SelectInput value={dietaryPattern} onChange={(event) => setDietaryPattern(event.target.value as DietaryPattern)}>
+                {DIETARY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </SelectInput>
+            </Field>
+            <Field label="Sweat type">
+              <SelectInput value={sweatType} onChange={(event) => setSweatType(event.target.value as SweatType)}>
+                {SWEAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </SelectInput>
+            </Field>
+          </div>
+
+          <div className="rounded-md border border-line bg-surface-0 p-3">
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">Allergens</div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {ALLERGEN_OPTIONS.map((option) => (
+                <label key={option.value} className="flex items-center gap-2 rounded-md border border-line bg-surface-1 px-2 py-2 text-sm text-ink-hi">
+                  <input type="checkbox" checked={allergens.includes(option.value)} onChange={() => toggleAllergen(option.value)} className="h-4 w-4 accent-emerald-500" />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
       ),
     },

@@ -6,9 +6,10 @@ type FoodItemCardProps = {
   food: Food
   onSelect: (food: Food) => void
   onCache?: (food: Food) => void
+  onDelete?: (food: Food) => void
 }
 
-export function FoodItemCard({ food, onSelect, onCache }: FoodItemCardProps) {
+export function FoodItemCard({ food, onSelect, onCache, onDelete }: FoodItemCardProps) {
   const currency = food.currency ?? 'EUR'
   const allergenSummary = food.allergenTags && food.allergenTags.length > 0 ? food.allergenTags.join(', ') : null
 
@@ -39,6 +40,7 @@ export function FoodItemCard({ food, onSelect, onCache }: FoodItemCardProps) {
         <span>C {food.carbs}g</span>
         <span>F {food.fat}g</span>
         {onCache ? <Button type="button" size="sm" variant="secondary" onClick={() => onCache(food)}>Save locally</Button> : null}
+        {onDelete && food.isCustom ? <Button type="button" size="sm" variant="danger" onClick={() => onDelete(food)}>Delete</Button> : null}
       </div>
     </article>
   )

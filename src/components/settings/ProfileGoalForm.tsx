@@ -8,6 +8,7 @@ import { Field, SelectInput, TextInput } from '@/components/ui/field'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
+import { resolveMicronutrientTargets } from '@/services/micronutrientTargetService'
 import type { ActivityLevel, BiologicalSex, DietaryPattern, FitnessGoal, SweatType } from '@/types'
 
 const GOAL_OPTIONS: { value: FitnessGoal; label: string }[] = [
@@ -39,6 +40,20 @@ const SWEAT_OPTIONS: { value: SweatType; label: string }[] = [
   { value: 'heavy_salty', label: 'Heavy sweater / salty sweat' },
 ]
 
+const MICRONUTRIENT_FIELDS = [
+  { key: 'sodiumMg', label: 'Sodium (mg)' },
+  { key: 'potassiumMg', label: 'Potassium (mg)' },
+  { key: 'magnesiumMg', label: 'Magnesium (mg)' },
+  { key: 'calciumMg', label: 'Calcium (mg)' },
+  { key: 'zincMg', label: 'Zinc (mg)' },
+  { key: 'ironMg', label: 'Iron (mg)' },
+  { key: 'seleniumMcg', label: 'Selenium (mcg)' },
+  { key: 'vitaminDMcg', label: 'Vitamin D (mcg)' },
+  { key: 'vitaminB6Mg', label: 'Vitamin B6 (mg)' },
+  { key: 'vitaminB12Mcg', label: 'Vitamin B12 (mcg)' },
+  { key: 'vitaminCMg', label: 'Vitamin C (mg)' },
+] as const
+
 function toNumberOrUndefined(value: string): number | undefined {
   const parsed = Number(value)
   return value.trim() === '' || Number.isNaN(parsed) ? undefined : parsed
@@ -58,6 +73,7 @@ export function ProfileGoalForm() {
   const [dietaryPattern, setDietaryPattern] = useState<DietaryPattern>('standard')
   const [sweatType, setSweatType] = useState<SweatType>('normal')
   const [budgetPerDay, setBudgetPerDay] = useState('')
+  const [micronutrientTargets, setMicronutrientTargets] = useState<Record<string, number>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,6 +89,11 @@ export function ProfileGoalForm() {
     setDietaryPattern(profile.dietaryPattern ?? 'standard')
     setSweatType(profile.sweatType ?? 'normal')
     setBudgetPerDay(profile.budgetPerDay?.toString() ?? '')
+    setMicronutrientTargets(
+      Object.fromEntries(
+        MICRONUTRIENT_FIELDS.map((field) => [field.key, resolveMicronutrientTargets(profile)[field.key] ?? 0]),
+      ),
+    )
   }, [isLoading, profile])
 
   function selectGoal(nextGoal: FitnessGoal) {
@@ -96,6 +117,9 @@ export function ProfileGoalForm() {
         dietaryPattern,
         sweatType,
         budgetPerDay: toNumberOrUndefined(budgetPerDay),
+        micronutrientTargets: Object.fromEntries(
+          MICRONUTRIENT_FIELDS.map((field) => [field.key, Number(micronutrientTargets[field.key] ?? resolveMicronutrientTargets(profile)[field.key] ?? 0)]),
+        ),
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
       setMessage('Profile saved. Connected modules will pick up the new goal and health constraints.')
@@ -162,6 +186,23 @@ export function ProfileGoalForm() {
           <Field label="Daily budget (€)" hint="Optional: used by future budget-aware meal planning.">
             <TextInput type="number" min="0" step="1" value={budgetPerDay} onChange={(event) => setBudgetPerDay(event.target.value)} placeholder="15" />
           </Field>
+
+          <div className="rounded-xl border border-line bg-surface-1 p-3">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-low">Micronutrient targets</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {MICRONUTRIENT_FIELDS.map((field) => (
+                <Field key={field.key} label={field.label}>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    step={field.key.includes('Mcg') || field.key.includes('vitamin') ? '0.1' : '1'}
+                    value={micronutrientTargets[field.key] ?? resolveMicronutrientTargets(profile)[field.key] ?? 0}
+                    onChange={(event) => setMicronutrientTargets((current) => ({ ...current, [field.key]: Number(event.target.value || 0) }))}
+                  />
+                </Field>
+              ))}
+            </div>
+          </div>
 
           <Field label={`Target rate: ${Number(goalRate) > 0 ? '+' : ''}${Number(goalRate).toFixed(2)} kg / week`} hint="Negative loses weight, positive gains.">
             <input

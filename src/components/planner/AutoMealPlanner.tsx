@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarRange, ChefHat, Plus, RefreshCw } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { CalendarRange, ChefHat, Lock, Plus, RefreshCw, Star, Unlock, WandSparkles } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -9,9 +10,10 @@ import { db } from '@/db'
 import { commitBalancedMealToLog } from '@/hooks/useMealLogger'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useProfile } from '@/hooks/useProfile'
+import { addFavoriteMeal } from '@/services/favoritesService'
 import { filterFoodsByProfile } from '@/services/foodFilterService'
-import { calculateMealMicrosFromItems, createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, resolveMicronutrientTargets } from '@/services/micronutrientTargetService'
-import { planDay, suggestMeal, type MealType, type PlannedMeal } from '@/services/mealPlannerService'
+import { calculateMealMicrosFromItems, getMicronutrientProgress, MICRONUTRIENT_KEYS, resolveMicronutrientTargets } from '@/services/micronutrientTargetService'
+import { mergePlannedMeals, planDay, readPersistedPlannerPlan, suggestMeal, writePersistedPlannerPlan, type MealType, type PlannedMeal } from '@/services/mealPlannerService'
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -23,16 +25,21 @@ const PANTRY_FILTERS = [
 type PantryFilter = (typeof PANTRY_FILTERS)[number]['value']
 
 export function AutoMealPlanner() {
+  const navigate = useNavigate()
   const { profile } = useProfile()
   const allFoods = useLiveQuery(() => db.foods.toArray(), [], [])
   const targets = useDynamicTargets()
   const [pantryFilter, setPantryFilter] = useState<PantryFilter>('all')
   const [mealType, setMealType] = useState<MealType>('lunch')
-  const [plan, setPlan] = useState<PlannedMeal[]>([])
+  const [plan, setPlan] = useState<PlannedMeal[]>(() => readPersistedPlannerPlan())
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({})
   const [budgetEnabled, setBudgetEnabled] = useState(true)
+
+  useEffect(() => {
+    writePersistedPlannerPlan(plan)
+  }, [plan])
 
   const foods = useMemo(() => {
     const pool = (pantryFilter === 'custom' ? allFoods.filter((food) => food.isCustom) : allFoods)
@@ -68,12 +75,69 @@ export function AutoMealPlanner() {
 
   function handleSuggest() {
     const suggestion = suggestMeal(foods, dailyTargets, mealType, Math.random, effectiveBudget)
-    reset(suggestion ? [suggestion] : [], 'Not enough foods to build a meal. Add more to your library.')
+    if (!suggestion) {
+      reset([], 'Not enough foods to build a meal. Add more to your library.')
+      return
+    }
+
+    const merged = mergePlannedMeals(plan, [{ ...suggestion, locked: false }])
+    reset(merged, 'Not enough foods to build a meal. Add more to your library.')
   }
 
   function handlePlanDay() {
     const result = planDay(foods, dailyTargets, ['breakfast', 'lunch', 'dinner', 'snack'], Math.random, effectiveBudget)
-    reset(result.meals, 'Not enough foods to plan a day. Add more to your library.')
+    const merged = mergePlannedMeals(plan, result.meals)
+    reset(merged, 'Not enough foods to plan a day. Add more to your library.')
+  }
+
+  function toggleMealLock(mealTypeKey: MealType) {
+    setPlan((current) => current.map((entry) => entry.mealType === mealTypeKey ? { ...entry, locked: !entry.locked } : entry))
+  }
+
+  function favouriteMeal(planned: PlannedMeal) {
+    const payload = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString().slice(0, 10),
+      mealType: planned.mealType,
+      items: planned.result.solution.filter((item) => item.grams > 0).map((item) => ({
+        foodId: item.foodId,
+        amountInGrams: item.grams,
+        calories: item.computedCalories,
+        protein: item.computedProtein,
+        carbs: item.computedCarbs,
+        fat: item.computedFat,
+      })),
+      totalCalories: planned.result.totalMacros.calories,
+      totalProtein: planned.result.totalMacros.protein,
+      totalCarbs: planned.result.totalMacros.carbs,
+      totalFat: planned.result.totalMacros.fat,
+      totalMicros: calculateMealMicrosFromItems(
+        planned.result.solution.filter((item) => item.grams > 0).map((item) => ({
+          amountInGrams: item.grams,
+          food: allFoods.find((food) => food.id === item.foodId),
+        })),
+      ),
+    }
+
+    addFavoriteMeal(payload as never, `${planned.mealType} meal`)
+    setMessage(`Saved ${planned.mealType} to favorites.`)
+  }
+
+  function loadMealIntoBalancer(planned: PlannedMeal) {
+    const template = {
+      targetMealType: planned.mealType,
+      items: planned.result.solution.filter((item) => item.grams > 0).map((item) => ({
+        foodId: item.foodId,
+        amountInGrams: item.grams,
+        calories: item.computedCalories,
+        protein: item.computedProtein,
+        carbs: item.computedCarbs,
+        fat: item.computedFat,
+      })),
+    }
+
+    window.sessionStorage.setItem('kcalgains.balancerTemplate', JSON.stringify(template))
+    navigate('/nutrition?tab=balance', { replace: true })
   }
 
   async function logPlannedMeal(planned: PlannedMeal) {
@@ -176,9 +240,19 @@ export function AutoMealPlanner() {
             <div key={planned.mealType} className="rounded-md border border-slate-800 bg-slate-950 p-3">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold capitalize text-slate-100">{planned.mealType}</h3>
-                <span className="text-xs text-slate-500">
-                  {Math.round(planned.result.totalMacros.calories)} / {planned.targets.calories} kcal
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleMealLock(planned.mealType)}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-300"
+                  >
+                    {planned.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                    {planned.locked ? 'Locked' : 'Lock'}
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    {Math.round(planned.result.totalMacros.calories)} / {planned.targets.calories} kcal
+                  </span>
+                </div>
               </div>
 
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
@@ -225,10 +299,20 @@ export function AutoMealPlanner() {
                 ) : null}
               </div>
 
-              <Button type="button" size="sm" variant="secondary" className="mt-3" onClick={() => void logPlannedMeal(planned)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Log this meal
-              </Button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="secondary" onClick={() => void logPlannedMeal(planned)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Log this meal
+                </Button>
+                <Button type="button" size="sm" variant="secondary" onClick={() => favouriteMeal(planned)}>
+                  <Star className="mr-2 h-4 w-4" />
+                  Favorite
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => loadMealIntoBalancer(planned)}>
+                  <WandSparkles className="mr-2 h-4 w-4" />
+                  Load to balancer
+                </Button>
+              </div>
             </div>
           )
         })}

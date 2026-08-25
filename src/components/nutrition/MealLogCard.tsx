@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Pencil, Trash2 } from 'lucide-react'
+import { ArrowRight, Pencil, Star, Trash2 } from 'lucide-react'
 import { db } from '@/db'
 import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
 import type { Food, Meal, Profile } from '@/types'
@@ -10,9 +10,11 @@ type MealLogCardProps = {
   profile?: Profile | null
   onEdit?: (meal: Meal) => void
   onDelete?: (mealId: string) => void
+  onFavorite?: (meal: Meal) => void
+  onUseInBalancer?: (meal: Meal) => void
 }
 
-export function MealLogCard({ meal, profile, onEdit, onDelete }: MealLogCardProps) {
+export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUseInBalancer }: MealLogCardProps) {
   const [itemsOpen, setItemsOpen] = useState(false)
 
   const foodIds = useMemo(() => [...new Set(meal.items.map((item) => item.foodId))], [meal.items])
@@ -31,7 +33,17 @@ export function MealLogCard({ meal, profile, onEdit, onDelete }: MealLogCardProp
           <p className="mt-1 text-[11px] text-ink-mid">{meal.items.length} item{meal.items.length === 1 ? '' : 's'}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="num text-xs text-ink-mid">{meal.totalCalories} kcal</span>
+          <span className="num text-xs text-ink-mid">{Number(meal.totalCalories).toFixed(2)} kcal</span>
+          {onFavorite ? (
+            <button type="button" aria-label={`Save ${meal.mealType} meal to favorites`} onClick={() => onFavorite(meal)} className="rounded-md border border-line p-1.5 text-ink-mid transition hover:border-accent/40 hover:text-accent-text" title="Save to favorites">
+              <Star className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+          {onUseInBalancer ? (
+            <button type="button" aria-label={`Use ${meal.mealType} meal in balancer`} onClick={() => onUseInBalancer(meal)} className="rounded-md border border-line p-1.5 text-ink-mid transition hover:border-accent/40 hover:text-accent-text" title="Use in balancer">
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
           {onEdit ? (
             <button type="button" aria-label={`Edit ${meal.mealType} meal`} onClick={() => onEdit(meal)} className="rounded-md border border-line p-1.5 text-ink-mid transition hover:border-accent/40 hover:text-accent-text" title="Edit meal">
               <Pencil className="h-3.5 w-3.5" />
@@ -48,15 +60,15 @@ export function MealLogCard({ meal, profile, onEdit, onDelete }: MealLogCardProp
       <div className="mt-3 grid gap-2 text-[11px] text-ink-mid sm:grid-cols-4">
         <div>
           <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Protein</span>
-          <span className="num">{meal.totalProtein} g</span>
+          <span className="num">{Number(meal.totalProtein).toFixed(2)} g</span>
         </div>
         <div>
           <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Carbs</span>
-          <span className="num">{meal.totalCarbs} g</span>
+          <span className="num">{Number(meal.totalCarbs).toFixed(2)} g</span>
         </div>
         <div>
           <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Fat</span>
-          <span className="num">{meal.totalFat} g</span>
+          <span className="num">{Number(meal.totalFat).toFixed(2)} g</span>
         </div>
         <div>
           <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Items</span>
@@ -82,13 +94,13 @@ export function MealLogCard({ meal, profile, onEdit, onDelete }: MealLogCardProp
               <div key={`${item.foodId}-${index}`} className="rounded-md border border-line bg-surface-0 p-2">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-medium text-ink-hi">{food?.name ?? item.foodId}</span>
-                  <span className="num text-[11px] text-ink-mid">{item.amountInGrams}g</span>
+                  <span className="num text-[11px] text-ink-mid">{Number(item.amountInGrams).toFixed(2)}g</span>
                 </div>
                 <div className="mt-2 grid gap-1 text-[11px] text-ink-mid sm:grid-cols-4">
-                  <span>kcal {item.calories}</span>
-                  <span>P {item.protein}</span>
-                  <span>C {item.carbs}</span>
-                  <span>F {item.fat}</span>
+                  <span>kcal {Number(item.calories).toFixed(2)}</span>
+                  <span>P {Number(item.protein).toFixed(2)}</span>
+                  <span>C {Number(item.carbs).toFixed(2)}</span>
+                  <span>F {Number(item.fat).toFixed(2)}</span>
                 </div>
               </div>
             )
