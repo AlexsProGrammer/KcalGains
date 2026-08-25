@@ -1,10 +1,14 @@
 # KcalGains
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://kcalgains.pro-grammer.de/)
+
 KcalGains is a local-first fitness and nutrition workspace for tracking meals, workouts, weight, and progress without needing a backend, account, or subscription.
 
 It is designed to work as a Progressive Web App (PWA), so it can be installed on Android, iPhone, iPad, or desktop and used like a native app while keeping all data stored locally in the browser.
 
-## Index
+![App Screenshot](./KcalGains.png)
+
+## Index **([Demo](https://kcalgains.pro-grammer.de/))**
 
 - [Core features](#core-features)
 - [App install guide](#app-install-guide)
