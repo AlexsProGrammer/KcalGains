@@ -54,7 +54,7 @@ export function TodayPage() {
   }, [searchParams])
   const { settings } = useSettings()
   const { profile } = useProfile()
-  const { targets, source } = useDynamicTargets()
+  const { targets, source } = useDynamicTargets(selectedDate)
   const { trend } = useNutritionTrend(7)
 
   const selected = useMemo(() => parseDateKey(selectedDate), [selectedDate])

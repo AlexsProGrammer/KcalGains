@@ -8,6 +8,7 @@ export const TodayHeroSchema = z.enum(['ring', 'weight', 'stats', 'streak'])
 export const LocaleSchema = z.enum(['en', 'de'])
 export const DensitySchema = z.enum(['comfortable', 'compact'])
 export const ReduceMotionSchema = z.enum(['system', 'on', 'off'])
+export const MicronutrientViewSchema = z.enum(['radar', 'list'])
 
 export const TrainingModePresetSchema = z.object({
   id: z.string().min(1),
@@ -128,6 +129,7 @@ export const AppSettingsSchema = z.object({
   locale: LocaleSchema.default('en'),
   density: DensitySchema.default('comfortable'),
   reduceMotion: ReduceMotionSchema.default('system'),
+  micronutrientView: MicronutrientViewSchema.default('list'),
   onboardingCompleted: z.boolean().default(false),
   onboardingDismissed: z.boolean().default(false),
   trainingModes: z.array(TrainingModePresetSchema).default(DEFAULT_TRAINING_MODES),

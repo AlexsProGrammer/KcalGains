@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, Droplets, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { useSettings } from '@/hooks/useSettings'
 import { createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, mergeMicronutrientTotals, resolveMicronutrientTargets, type MicronutrientKey } from '@/services/micronutrientTargetService'
 import type { Meal, Profile } from '@/types'
 
@@ -38,6 +39,7 @@ type MicronutrientRadarProps = {
 }
 
 export function MicronutrientRadar({ meals }: MicronutrientRadarProps) {
+  const { settings } = useSettings()
   const profile = useLiveQuery(async () => {
     const stored = await db.profile.toCollection().first()
     return stored ?? null
@@ -59,6 +61,28 @@ export function MicronutrientRadar({ meals }: MicronutrientRadarProps) {
   })).sort((left, right) => right.percent - left.percent)
 
   const averageProgress = notable.length > 0 ? notable.reduce((sum, item) => sum + item.percent, 0) / notable.length : 0
+
+  if (settings.micronutrientView === 'list') {
+    return (
+      <Card>
+        <CardHeader icon={<Droplets />} title="Micronutrient overview" />
+        <CardContent className="space-y-3">
+          {notable.map((item) => (
+            <div key={item.key} className="rounded-xl border border-line bg-surface-0 p-3">
+              <div className="mb-1 flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium text-ink-hi">{item.label}</span>
+                <span className="num text-ink-mid">{item.value.toFixed(1)} / {item.target.toFixed(1)} {item.unit}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-ink-low">
+                <span>{Math.min(100, item.percent).toFixed(0)}% of target</span>
+                <span>{item.percent >= 100 ? 'On target' : 'Below target'}</span>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>

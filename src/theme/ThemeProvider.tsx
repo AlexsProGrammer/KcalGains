@@ -13,9 +13,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.dataset.density = settings.density
     root.dataset.reduceMotion = settings.reduceMotion
     root.lang = settings.locale
+    root.classList.toggle('density-compact', settings.density === 'compact')
+    root.classList.toggle('density-comfortable', settings.density === 'comfortable')
 
     try {
       window.localStorage.setItem('kcalgains.accent', accent)
+      window.localStorage.setItem('kcalgains.density', settings.density)
+      window.localStorage.setItem('kcalgains.reduceMotion', settings.reduceMotion)
+      window.localStorage.setItem('kcalgains.todayHero', settings.todayHero)
     } catch {
       // storage may be unavailable in private mode; keep the runtime value only.
     }
@@ -24,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (themeMeta) {
       themeMeta.setAttribute('content', '#0a0b0d')
     }
-  }, [settings.accent, settings.density, settings.locale, settings.reduceMotion])
+  }, [settings.accent, settings.density, settings.locale, settings.reduceMotion, settings.todayHero])
 
   useEffect(() => {
     const root = document.documentElement

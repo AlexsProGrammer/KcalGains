@@ -6,19 +6,25 @@ import type { DynamicMacroTargets } from '@/services/dynamicTargetService'
 
 const fallbackSettings = DEFAULT_APP_SETTINGS
 
-export function useDynamicTargets(): DynamicMacroTargets & {
+function toDateKey(value?: string) {
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  return new Date().toISOString().slice(0, 10)
+}
+
+export function useDynamicTargets(dateOverride?: string): DynamicMacroTargets & {
   targets: DynamicMacroTargets
   isWorkoutDay: boolean
   source: 'goal' | 'manual'
   reason?: string
 } {
+  const dateKey = toDateKey(dateOverride)
+
   const state = useLiveQuery(async () => {
-    const today = new Date().toISOString().slice(0, 10)
     const profile = await db.profile.toCollection().first()
     const settings = await db.settings.get('app-settings') ?? fallbackSettings
     const workouts = await db.workouts.toArray()
-    const trainingContext = await db.trainingContext.where('date').equals(today).first()
-    const isWorkoutDay = workouts.some((workout) => 'date' in workout && workout.date === today) || Boolean(trainingContext && trainingContext.sportType !== 'rest')
+    const trainingContext = await db.trainingContext.where('date').equals(dateKey).first()
+    const isWorkoutDay = workouts.some((workout) => 'date' in workout && workout.date === dateKey) || Boolean(trainingContext && trainingContext.sportType !== 'rest')
     const resolved = resolveDailyTargets({ profile, settings, recentWeightKg: profile?.weightKg, isWorkoutDay, trainingContext })
 
     return {
@@ -32,7 +38,7 @@ export function useDynamicTargets(): DynamicMacroTargets & {
       source: resolved.source,
       reason: resolved.reason,
     }
-  }, [db.trainingContext, db.settings, db.profile, db.workouts], {
+  }, [dateKey, db.trainingContext, db.settings, db.profile, db.workouts], {
     targets: {
       calories: 2000,
       protein: 150,

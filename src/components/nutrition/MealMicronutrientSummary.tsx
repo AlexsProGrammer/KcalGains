@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSettings } from '@/hooks/useSettings'
 import { createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, resolveMicronutrientTargets, type MicronutrientKey } from '@/services/micronutrientTargetService'
 import type { Meal, Profile } from '@/types'
 
@@ -37,6 +38,7 @@ type MealMicronutrientSummaryProps = {
 }
 
 export function MealMicronutrientSummary({ meal, profile, compact = false }: MealMicronutrientSummaryProps) {
+  const { settings } = useSettings()
   const [isOpen, setIsOpen] = useState(false)
   const totals = meal.totalMicros ?? createEmptyMicronutrientTotals()
   const targets = resolveMicronutrientTargets(profile)
@@ -57,6 +59,30 @@ export function MealMicronutrientSummary({ meal, profile, compact = false }: Mea
 
   if (items.length === 0) {
     return null
+  }
+
+  if (settings.micronutrientView === 'radar') {
+    return (
+      <div className="mt-3 rounded-xl border border-line bg-surface-1 p-3">
+        <div className="mb-2 flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.12em] text-slate-200">
+          <span>Micronutrients</span>
+          <span className="text-slate-300">{items.length} tracked</span>
+        </div>
+        <div className="space-y-2">
+          {items.map((item) => (
+            <div key={item.key} className="space-y-1">
+              <div className="flex items-center justify-between gap-2 text-[10px] text-ink-mid">
+                <span>{item.label}</span>
+                <span className="num">{item.value.toFixed(0)}/{item.target.toFixed(0)} {item.unit}</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+                <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-cyan-300" style={{ width: `${Math.min(100, item.percent)}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (

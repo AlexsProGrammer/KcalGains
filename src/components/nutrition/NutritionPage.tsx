@@ -31,7 +31,7 @@ export function NutritionPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') ?? 'log'
   const today = new Date().toISOString().slice(0, 10)
-  const { targets } = useDynamicTargets()
+  const { targets } = useDynamicTargets(today)
   const { profile } = useProfile()
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [mealEditorOpen, setMealEditorOpen] = useState(false)
