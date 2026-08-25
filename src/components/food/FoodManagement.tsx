@@ -63,7 +63,7 @@ export function FoodManagement() {
           {search.remoteResults.length > 0 ? <div className="mt-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Open Food Facts results</p><FoodSearchResults foods={search.remoteResults} onSelect={setSelectedFood} onCache={(food) => void cacheRemoteFood(food)} /></div> : null}
           {message ? <Alert className="mt-4" variant="success">{message}</Alert> : null}
           <div className="mt-5 border-t border-slate-800 pt-4">
-            {!isCreating ? <button type="button" className="text-sm font-semibold text-emerald-400 hover:text-emerald-300" onClick={() => setIsCreating(true)}>+ Add custom food</button> : <CustomFoodForm onSaved={(food) => { setIsCreating(false); setSelectedFood(food); setMessage(`${food.name} was added to the local library.`) }} onCancel={() => setIsCreating(false)} />}
+            {!isCreating ? <button type="button" className="text-sm font-semibold text-accent-text hover:text-accent" onClick={() => setIsCreating(true)}>+ Add custom food</button> : <CustomFoodForm onSaved={(food) => { setIsCreating(false); setSelectedFood(food); setMessage(`${food.name} was added to the local library.`) }} onCancel={() => setIsCreating(false)} />}
           </div>
         </CardContent>
       </Card>

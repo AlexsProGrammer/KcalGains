@@ -27,7 +27,7 @@ export function WeightTrendChart({ days = 30 }: WeightTrendChartProps) {
           }
         />
         <CardContent>
-          <div className="h-56">{visibleData.length > 0 ? <ResponsiveContainer width="100%" height="100%"><LineChart data={visibleData}><XAxis dataKey="date" tick={{ fontSize: 10 }} /><YAxis domain={['auto', 'auto']} tick={{ fontSize: 10 }} /><Tooltip /><Line type="monotone" dataKey="weightKg" stroke="#94a3b8" strokeWidth={1} dot={{ r: 2, fill: '#94a3b8' }} name="Raw weight" /><Line type="monotone" dataKey="smoothedWeightKg" stroke="#34d399" strokeWidth={3} dot={false} name="EMA trend" /></LineChart></ResponsiveContainer> : <p className="py-16 text-center text-sm text-slate-600">Add weight entries to see the EMA trend.</p>}</div>
+          <div className="h-56">{visibleData.length > 0 ? <ResponsiveContainer width="100%" height="100%"><LineChart data={visibleData}><XAxis dataKey="date" tick={{ fontSize: 10 }} /><YAxis domain={['auto', 'auto']} tick={{ fontSize: 10 }} /><Tooltip /><Line type="monotone" dataKey="weightKg" stroke="#94a3b8" strokeWidth={1} dot={{ r: 2, fill: '#94a3b8' }} name="Raw weight" /><Line type="monotone" dataKey="smoothedWeightKg" stroke="rgb(var(--accent-400))" strokeWidth={3} dot={false} name="EMA trend" /></LineChart></ResponsiveContainer> : <p className="py-16 text-center text-sm text-slate-600">Add weight entries to see the EMA trend.</p>}</div>
         </CardContent>
       </Card>
       <WeightQuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />

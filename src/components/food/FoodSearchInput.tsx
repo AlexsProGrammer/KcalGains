@@ -27,7 +27,7 @@ export function FoodSearchInput({ query, onQueryChange, onRemoteSearch, onScan, 
           {query ? <button type="button" onClick={() => onQueryChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200" aria-label="Clear food search"><X className="h-4 w-4" aria-hidden="true" /></button> : null}
         </div>
         <span className="hidden items-center gap-1 text-xs text-slate-500 sm:flex" title={isOnline ? 'Online' : 'Offline'}>
-          {isOnline ? <Wifi className="h-4 w-4 text-emerald-400" aria-hidden="true" /> : <WifiOff className="h-4 w-4 text-amber-400" aria-hidden="true" />}
+          {isOnline ? <Wifi className="h-4 w-4 text-accent-text" aria-hidden="true" /> : <WifiOff className="h-4 w-4 text-warning" aria-hidden="true" />}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

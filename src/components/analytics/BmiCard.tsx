@@ -14,7 +14,7 @@ export function BmiCard() {
             <p className="text-3xl font-bold text-slate-100">{metrics.bmi.toFixed(1)}</p>
             <p className="text-sm text-slate-400">BMI · {metrics.bmiLabel}</p>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-300">
+          <span className="rounded-full bg-accent/10 px-2 py-1 text-xs font-medium text-accent-text">
             {metrics.recommendedIntake.toFixed(0)} kcal/day
           </span>
         </div>
@@ -39,7 +39,7 @@ export function BmiCard() {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <Activity className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+          <Activity className="h-3.5 w-3.5 text-accent-text" aria-hidden="true" />
           Goal: {metrics.profile.goal} · {metrics.profile.activityLevel}
         </div>
       </CardContent>

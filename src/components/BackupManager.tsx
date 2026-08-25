@@ -121,7 +121,7 @@ export function BackupManager() {
           />
         </div>
         <div
-          className={`mt-4 rounded-md border border-dashed px-4 py-5 text-center text-sm transition-colors ${isDragging ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200' : 'border-slate-700 text-slate-500'}`}
+          className={`mt-4 rounded-md border border-dashed px-4 py-5 text-center text-sm transition-colors ${isDragging ? 'border-accent/40 bg-accent/10 text-accent-text' : 'border-slate-700 text-slate-500'}`}
           onDragEnter={(event) => {
             event.preventDefault()
             setIsDragging(true)
@@ -133,9 +133,9 @@ export function BackupManager() {
           Drop a `.json` backup here
         </div>
 
-        <div className="mt-5 rounded-md border border-emerald-400/20 bg-emerald-400/5 p-4">
+        <div className="mt-5 rounded-md border border-accent/30 bg-accent/5 p-4">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-            <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+            <Sparkles className="h-4 w-4 text-accent-text" aria-hidden="true" />
             Import from tracked notes with AI
           </h3>
           <p className="mt-1 text-xs text-slate-400">

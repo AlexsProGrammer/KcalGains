@@ -225,7 +225,7 @@ export function TodayPage() {
                 <span className="text-3xl font-semibold text-ink-hi num">{totals.calories}</span>
                 <span className="text-sm text-ink-mid">/ {targets.calories}</span>
               </div>
-              <p className={`mt-2 text-sm ${caloriesRemaining >= 0 ? 'text-emerald-300' : 'text-amber-300'}`}>
+              <p className={`mt-2 text-sm ${caloriesRemaining >= 0 ? 'text-accent-text' : 'text-warning'}`}>
                 {caloriesRemaining >= 0 ? `${caloriesRemaining} remaining` : `${Math.abs(caloriesRemaining)} over`}
               </p>
             </div>
@@ -255,7 +255,7 @@ export function TodayPage() {
 
   return (
     <div className="space-y-4">
-      {successMessage ? <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{successMessage}</div> : null}
+      {successMessage ? <div className="rounded-xl border border-success/40 bg-success/10 px-3 py-2 text-sm text-ink-hi">{successMessage}</div> : null}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => goToDay(-1)} aria-label="Previous day">

@@ -212,7 +212,7 @@ export function ProfileGoalForm() {
               step="0.05"
               value={goalRate}
               onChange={(event) => setGoalRate(event.target.value)}
-              className="mt-1 w-full accent-emerald-500"
+              className="mt-1 w-full accent-accent"
             />
           </Field>
 

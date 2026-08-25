@@ -500,7 +500,7 @@ export function TrainingPlanGenerator() {
             <Button
               type="button"
               variant={isEditing ? 'tonal' : 'secondary'}
-              className={isEditing ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400 shadow-sm shadow-emerald-500/20' : ''}
+              className={isEditing ? 'border-accent/40 bg-accent/10 text-accent-text shadow-sm shadow-accent/20' : ''}
               onClick={() => setIsEditing((value) => !value)}
               aria-pressed={isEditing}
             >
@@ -569,7 +569,7 @@ export function TrainingPlanGenerator() {
                         >
                           Today
                         </button>
-                        <button type="button" onClick={() => void toggleDayCompletion(day.id)} className={`flex h-7 w-7 items-center justify-center rounded-full border ${isComplete ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400' : 'border-line text-ink-low'}`} aria-label={isComplete ? `Mark ${day.label} as incomplete` : `Mark ${day.label} as complete`}>
+                        <button type="button" onClick={() => void toggleDayCompletion(day.id)} className={`flex h-7 w-7 items-center justify-center rounded-full border ${isComplete ? 'border-success/50 bg-success/10 text-success' : 'border-line text-ink-low'}`} aria-label={isComplete ? `Mark ${day.label} as incomplete` : `Mark ${day.label} as complete`}>
                           <Check className="h-4 w-4" />
                         </button>
                       </div>
@@ -707,7 +707,7 @@ export function TrainingPlanGenerator() {
           </div>
         )}
 
-        {message ? <Alert variant="success">{message}</Alert> : null}
+        {message ? <Alert variant="info">{message}</Alert> : null}
       </CardContent>
     </Card>
   )
