@@ -7,6 +7,7 @@ import { DailyModeSelector } from '@/components/train/DailyModeSelector'
 import { TrainingPlanGenerator } from '@/components/train/TrainingPlanGenerator'
 import { WorkoutLoggerCard } from '@/components/workout/WorkoutLoggerCard'
 import { db } from '@/db'
+import { useT } from '@/i18n'
 import { WorkoutSchema } from '@/schemas/workout.schema'
 import type { Workout } from '@/types'
 
@@ -39,6 +40,7 @@ function formatDisplayDate(value: string) {
 }
 
 export function TrainPage() {
+  const { t } = useT()
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<{ date: string; type: Workout['type']; durationMinutes: string } | null>(null)
   const recentWorkouts = useLiveQuery(async () => {
@@ -75,22 +77,22 @@ export function TrainPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Train</p>
-          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Active session and recent volume</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.nav.train}</p>
+          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">{t.train.pageTitle}</h2>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <Card className="min-w-0">
-          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Sessions" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title={t.train.sessions} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.sessions}</CardContent>
         </Card>
         <Card className="min-w-0">
-          <CardHeader icon={<Flame className="h-3.5 w-3.5" />} title="Volume" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<Flame className="h-3.5 w-3.5" />} title={t.train.volume} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.totalVolume}</CardContent>
         </Card>
         <Card className="min-w-0">
-          <CardHeader icon={<Clock3 className="h-3.5 w-3.5" />} title="Sets" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<Clock3 className="h-3.5 w-3.5" />} title={t.train.sets} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-lg font-semibold text-ink-hi num">{summary.totalSets}</CardContent>
         </Card>
       </div>
@@ -101,11 +103,11 @@ export function TrainPage() {
       <WorkoutLoggerCard />
 
       <Card>
-        <CardHeader icon={<TrendingUp />} title="Recent workouts" />
+        <CardHeader icon={<TrendingUp />} title={t.train.recentWorkouts} />
         <CardContent className="space-y-3">
           {recentWorkouts.length === 0 ? (
             <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-              No finished sessions yet. Complete your first workout to build a history.
+              {t.train.noWorkouts}
             </div>
           ) : (
             recentWorkouts.map((workout) => {
@@ -122,14 +124,14 @@ export function TrainPage() {
                       <p className="text-sm font-medium text-ink-hi">{workout.title}</p>
                       <p className="text-[11px] text-ink-mid">{formatDisplayDate(workout.date)}</p>
                     </div>
-                    <span className="num rounded-full bg-accent/10 px-2 py-1 text-xs text-accent-text">{sets} sets</span>
+                    <span className="num rounded-full bg-accent/10 px-2 py-1 text-xs text-accent-text">{sets} {t.train.sets}</span>
                   </div>
 
                   {isEditing ? (
                     <div className="mt-3 space-y-3 rounded-lg border border-line bg-surface-1 p-3">
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="text-[10px] uppercase tracking-[0.12em] text-ink-low">
-                          Date
+                          {t.common.date}
                           <input
                             type="date"
                             value={editDraft?.date ?? workout.date}
@@ -138,19 +140,19 @@ export function TrainPage() {
                           />
                         </label>
                         <label className="text-[10px] uppercase tracking-[0.12em] text-ink-low">
-                          Type
+                          {t.common.type}
                           <select
                             value={editDraft?.type ?? workout.type}
                             onChange={(event) => setEditDraft((current) => current ? { ...current, type: event.target.value as Workout['type'] } : current)}
                             className="mt-1 min-h-9 w-full rounded-md border border-line bg-surface-0 px-2 text-sm text-ink-hi"
                           >
-                            <option value="strength">strength</option>
-                            <option value="cardio">cardio</option>
-                            <option value="other">other</option>
+                            <option value="strength">{t.train.strength}</option>
+                            <option value="cardio">{t.train.cardio}</option>
+                            <option value="other">{t.train.other}</option>
                           </select>
                         </label>
                         <label className="text-[10px] uppercase tracking-[0.12em] text-ink-low">
-                          Duration
+                          {t.common.duration}
                           <input
                             type="number"
                             min="0"
@@ -166,7 +168,7 @@ export function TrainPage() {
                         <Button type="button" variant="secondary" size="sm" onClick={() => {
                           setEditingWorkoutId(null)
                           setEditDraft(null)
-                        }}>Cancel</Button>
+                        }}>{t.common.cancel}</Button>
                         <Button type="button" size="sm" onClick={async () => {
                           if (!editDraft) return
                           const next = WorkoutSchema.parse({
@@ -178,7 +180,7 @@ export function TrainPage() {
                           await db.workouts.put(next)
                           setEditingWorkoutId(null)
                           setEditDraft(null)
-                        }}>Save</Button>
+                        }}>{t.common.save}</Button>
                       </div>
                     </div>
                   ) : (
@@ -196,8 +198,8 @@ export function TrainPage() {
                             type: workout.type,
                             durationMinutes: String(workout.durationMinutes ?? ''),
                           })
-                        }}>Edit</Button>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => void db.workouts.delete(workout.id)}>Delete</Button>
+                        }}>{t.train.edit}</Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => void db.workouts.delete(workout.id)}>{t.train.delete}</Button>
                       </div>
                     </div>
                   )}

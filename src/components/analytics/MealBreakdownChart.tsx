@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { useT } from '@/i18n'
 import type { Meal } from '@/types'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
@@ -28,6 +29,7 @@ function getRangeDates(days: number | 'all', meals: Meal[]) {
 }
 
 export function MealBreakdownChart({ days = 30 }: { days?: number | 'all' }) {
+  const { t } = useT()
   const meals = useLiveQuery(() => db.meals.toArray(), [], []) as Meal[]
 
   const periodDates = useMemo(() => getRangeDates(days, meals), [days, meals])
@@ -73,14 +75,14 @@ export function MealBreakdownChart({ days = 30 }: { days?: number | 'all' }) {
   ].filter((item) => item.value > 0)
 
   const COLORS = ['#06b6d4', '#ec4899', '#f97316']
-  const label = days === 'all' ? 'All time' : `${days}d`
+  const label = days === 'all' ? t.progress.allTime : `${days}d`
 
   return (
     <Card>
-      <CardHeader title={`Average macro breakdown (${label})`} />
+      <CardHeader title={t.progress.avgMacroBreakdown.replace('{days}', label)} />
       <CardContent>
         {breakdownData.length === 0 ? (
-          <div className="py-16 text-center text-sm text-slate-500">Log meals to see the average macro breakdown for this period.</div>
+          <div className="py-16 text-center text-sm text-slate-500">{t.progress.macroBreakdownEmpty}</div>
         ) : (
           <div className="flex flex-col items-center gap-4">
             <div className="h-48 w-full">
@@ -96,22 +98,22 @@ export function MealBreakdownChart({ days = 30 }: { days?: number | 'all' }) {
 
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="rounded-md bg-slate-900 p-3">
-                <p className="text-xs text-slate-400">Protein</p>
+                <p className="text-xs text-slate-400">{t.progress.protein}</p>
                 <p className="text-lg font-semibold text-cyan-400">{macroAverage.protein.toFixed(1)}g</p>
               </div>
               <div className="rounded-md bg-slate-900 p-3">
-                <p className="text-xs text-slate-400">Carbs</p>
+                <p className="text-xs text-slate-400">{t.progress.carbs}</p>
                 <p className="text-lg font-semibold text-pink-400">{macroAverage.carbs.toFixed(1)}g</p>
               </div>
               <div className="rounded-md bg-slate-900 p-3">
-                <p className="text-xs text-slate-400">Fat</p>
+                <p className="text-xs text-slate-400">{t.progress.fat}</p>
                 <p className="text-lg font-semibold text-orange-400">{macroAverage.fat.toFixed(1)}g</p>
               </div>
             </div>
 
             <div className="w-full text-center">
-              <p className="text-sm font-semibold text-slate-100">Avg total: {macroAverage.calories.toFixed(0)} kcal/day</p>
-              <p className="text-xs text-slate-400">Across {macroAverage.totalDays} days</p>
+              <p className="text-sm font-semibold text-slate-100">{t.progress.avgTotal.replace('{calories}', macroAverage.calories.toFixed(0))}</p>
+              <p className="text-xs text-slate-400">{t.progress.acrossDays.replace('{days}', String(macroAverage.totalDays))}</p>
             </div>
           </div>
         )}

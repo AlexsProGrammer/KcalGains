@@ -5,17 +5,28 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import { type TrainingDayContext } from '@/types'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 type QuickMode = Extract<TrainingDayContext['sportType'], 'strength' | 'mma' | 'cardio' | 'rest'>
 
 const defaultBuiltinModes = [
-  { key: 'strength', label: 'Gym', icon: Dumbbell },
-  { key: 'mma', label: 'MMA', icon: Trophy },
-  { key: 'cardio', label: 'Cardio', icon: HeartPulse },
-  { key: 'rest', label: 'Rest', icon: MoonStar },
+  { key: 'strength', icon: Dumbbell },
+  { key: 'mma', icon: Trophy },
+  { key: 'cardio', icon: HeartPulse },
+  { key: 'rest', icon: MoonStar },
 ] as const
+
+function builtinLabel(t: ReturnType<typeof useT>['t'], key: string): string {
+  const map: Record<string, string> = {
+    strength: t.more.sportStrength,
+    mma: t.more.sportMma,
+    cardio: t.more.sportCardio,
+    rest: t.more.sportRest,
+  }
+  return map[key] ?? key
+}
 
 const defaultContext = (mode: string): TrainingDayContext => ({
   id: `training-context-${TODAY}`,
@@ -28,6 +39,7 @@ const defaultContext = (mode: string): TrainingDayContext => ({
 })
 
 export function DailyModeSelector() {
+  const { t } = useT()
   const { settings } = useSettings()
   const existing = useLiveQuery(() => db.trainingContext.where('date').equals(TODAY).first(), [TODAY])
   const [selected, setSelected] = useState<string>('rest')
@@ -56,7 +68,7 @@ export function DailyModeSelector() {
 
   return (
     <Card>
-      <CardHeader icon={<Dumbbell />} title="Today’s training mode" />
+      <CardHeader icon={<Dumbbell />} title={t.train.todayMode} />
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {modes.length > 0 ? modes.map(({ key, label, icon: Icon }) => (
@@ -70,7 +82,7 @@ export function DailyModeSelector() {
               <Icon className="mr-2 h-4 w-4" />
               {label}
             </Button>
-          )) : defaultBuiltinModes.map(({ key, label, icon: Icon }) => (
+          )) : defaultBuiltinModes.map(({ key, icon: Icon }) => (
             <Button
               key={key}
               type="button"
@@ -79,15 +91,15 @@ export function DailyModeSelector() {
               onClick={() => void applyMode(key)}
             >
               <Icon className="mr-2 h-4 w-4" />
-              {label}
+              {builtinLabel(t, key)}
             </Button>
           ))}
         </div>
 
         <div className="rounded-xl border border-line bg-surface-0 p-3 text-sm text-ink-mid">
-          <div className="font-medium text-ink-hi">{current.sportType === 'rest' ? 'Rest day' : `Today: ${current.sportType}`}</div>
+          <div className="font-medium text-ink-hi">{current.sportType === 'rest' ? t.train.restDay : `${t.train.todayPrefix} ${current.sportType}`}</div>
           <div className="mt-1 text-xs text-ink-mid">
-            {current.durationMinutes} min · {current.intensity} intensity · {current.seasonPhase}
+            {t.train.modeMinutes.replace('{minutes}', String(current.durationMinutes)).replace('{intensity}', current.intensity).replace('{phase}', current.seasonPhase)}
           </div>
         </div>
       </CardContent>

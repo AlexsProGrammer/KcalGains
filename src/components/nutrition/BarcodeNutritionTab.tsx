@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
 import { createFood } from '@/db/foodRepository'
+import { useT } from '@/i18n'
 import { resolveBarcode } from '@/services/barcodeScannerService'
 import { MICRONUTRIENT_KEYS, resolveMicronutrientTargets } from '@/services/micronutrientTargetService'
 import type { Food } from '@/types'
 
 export function BarcodeNutritionTab() {
+  const { t } = useT()
   const [barcodeInput, setBarcodeInput] = useState('')
   const [resolvedFood, setResolvedFood] = useState<Food | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -33,13 +35,13 @@ export function BarcodeNutritionTab() {
     try {
       const food = await resolveBarcode(barcode)
       if (!food) {
-        setError('No match was found for this barcode.')
+        setError(t.barcode.noMatch)
         return
       }
       setResolvedFood(food)
       setIsEditing(false)
     } catch {
-      setError('This barcode could not be looked up.')
+      setError(t.barcode.lookupError)
     } finally {
       setIsLookingUp(false)
     }
@@ -49,7 +51,7 @@ export function BarcodeNutritionTab() {
     if (!resolvedFood) return
     const existing = resolvedFood.barcode ? await db.foods.where('barcode').equals(resolvedFood.barcode).first() : null
     if (existing) {
-      setStatus(`${resolvedFood.name} is already in the library.`)
+      setStatus(t.barcode.alreadyExists.replace('{name}', resolvedFood.name))
       return
     }
 
@@ -60,9 +62,9 @@ export function BarcodeNutritionTab() {
         source: resolvedFood.source ?? 'barcode',
         barcode: resolvedFood.barcode ?? 'manual',
       })
-      setStatus(`${resolvedFood.name} was added to the local library.`)
+      setStatus(t.barcode.added.replace('{name}', resolvedFood.name))
     } catch {
-      setError('The product could not be saved to the local library.')
+      setError(t.barcode.addError)
     }
   }
 
@@ -75,22 +77,22 @@ export function BarcodeNutritionTab() {
 
   return (
     <Card>
-      <CardHeader icon={<ScanLine />} title="Barcode nutrition" />
+      <CardHeader icon={<ScanLine />} title={t.barcode.title} />
       <CardContent className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={barcodeInput}
             onChange={(event) => setBarcodeInput(event.target.value)}
-            placeholder="Enter barcode"
+            placeholder={t.barcode.placeholder}
             className="min-h-10 flex-1 rounded-md border border-line bg-surface-0 px-3 text-sm text-ink-hi"
           />
           <Button type="button" onClick={() => void handleLookup(barcodeInput)} disabled={!barcodeInput.trim() || isLookingUp}>
             <Camera className="mr-2 h-4 w-4" />
-            {isLookingUp ? 'Looking up...' : 'Lookup'}
+            {isLookingUp ? t.common.lookingUp : t.barcode.lookUp}
           </Button>
           <Button type="button" variant="secondary" onClick={() => setScannerOpen(true)}>
             <Sparkles className="mr-2 h-4 w-4" />
-            Scan
+            {t.barcode.scan}
           </Button>
         </div>
 
@@ -102,13 +104,13 @@ export function BarcodeNutritionTab() {
             <div className="rounded-xl border border-line bg-surface-0 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-ink-low">Product</p>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.barcode.product}</p>
                   <h3 className="mt-1 text-lg font-semibold text-ink-hi">{resolvedFood.name}</h3>
                   {resolvedFood.brand ? <p className="text-sm text-ink-mid">{resolvedFood.brand}</p> : null}
                 </div>
                 <Button type="button" variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
                   <PencilLine className="mr-2 h-4 w-4" />
-                  Edit
+                  {t.barcode.edit}
                 </Button>
               </div>
 
@@ -122,7 +124,7 @@ export function BarcodeNutritionTab() {
               </div>
 
               <div className="mt-4 rounded-lg border border-line bg-surface-1 p-3">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-ink-low">Micronutrients</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.barcode.micronutrients}</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {MICRONUTRIENT_KEYS.map((key) => (
                     <div key={key} className="rounded-md border border-line bg-surface-0 p-2">
@@ -137,7 +139,7 @@ export function BarcodeNutritionTab() {
             <div className="flex justify-end">
               <Button type="button" onClick={() => void handleAddToLibrary()}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add to library
+                {t.barcode.addToLibrary}
               </Button>
             </div>
           </div>
@@ -157,7 +159,7 @@ export function BarcodeNutritionTab() {
 
         {!resolvedFood ? (
           <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-            Scan a product to inspect the nutrition values, micros, and ingredients metadata.
+            {t.barcode.scanPrompt}
           </div>
         ) : null}
       </CardContent>
@@ -168,7 +170,7 @@ export function BarcodeNutritionTab() {
         onFoodResolved={(food) => {
           setResolvedFood(food)
           setScannerOpen(false)
-          setStatus(`${food.name} was resolved.`)
+          setStatus(t.barcode.resolved.replace('{name}', food.name))
         }}
       />
     </Card>

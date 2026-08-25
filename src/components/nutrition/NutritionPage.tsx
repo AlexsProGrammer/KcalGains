@@ -16,20 +16,12 @@ import { MealQuickEditorModal } from '@/components/nutrition/MealQuickEditorModa
 import { MicronutrientRadar } from '@/components/nutrition/MicronutrientRadar'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useProfile } from '@/hooks/useProfile'
+import { useT } from '@/i18n'
 import { addFavoriteMeal, readFavoriteMeals, removeFavoriteMeal } from '@/services/favoritesService'
 import type { Meal } from '@/types'
 
-const tabs = [
-  { value: 'log', label: 'Log' },
-  { value: 'favorites', label: 'Favorites' },
-  { value: 'barcode', label: 'Barcode' },
-  { value: 'micros', label: 'Micros' },
-  { value: 'plan', label: 'Plan' },
-  { value: 'balance', label: 'Balance' },
-  { value: 'library', label: 'Library' },
-]
-
 function FavoritesTab() {
+  const { t } = useT()
   const navigate = useNavigate()
   const [favorites, setFavorites] = useState(() => readFavoriteMeals())
 
@@ -64,11 +56,11 @@ function FavoritesTab() {
 
   return (
     <Card>
-      <CardHeader icon={<Star />} title="Favorite meals" />
+      <CardHeader icon={<Star />} title={t.nutrition.favoriteMeals} />
       <CardContent className="space-y-3">
         {favorites.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-            Save a meal from the log, planner, or balancer to create a quick favorite list.
+            {t.nutrition.noFavorites}
           </div>
         ) : null}
 
@@ -79,11 +71,11 @@ function FavoritesTab() {
                 <div className="text-sm font-medium capitalize text-ink-hi">{favorite.label}</div>
                 <div className="mt-1 text-[11px] text-ink-mid">{favorite.mealType} • {favorite.totalCalories} kcal</div>
               </div>
-              <button type="button" className="text-xs text-ink-mid hover:text-danger" onClick={() => { removeFavoriteMeal(favorite.id); setFavorites(readFavoriteMeals()) }}>Remove</button>
+              <button type="button" className="text-xs text-ink-mid hover:text-danger" onClick={() => { removeFavoriteMeal(favorite.id); setFavorites(readFavoriteMeals()) }}>{t.nutrition.remove}</button>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button type="button" size="sm" onClick={() => useInBalancer(favorite)}>Use in balancer</Button>
-              <Button type="button" size="sm" variant="secondary" onClick={() => addToLog(favorite)}>Add to log</Button>
+              <Button type="button" size="sm" onClick={() => useInBalancer(favorite)}>{t.nutrition.useInBalancer}</Button>
+              <Button type="button" size="sm" variant="secondary" onClick={() => addToLog(favorite)}>{t.nutrition.addToLog}</Button>
             </div>
           </div>
         ))}
@@ -93,6 +85,7 @@ function FavoritesTab() {
 }
 
 export function NutritionPage() {
+  const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') ?? 'log'
   const today = new Date().toISOString().slice(0, 10)
@@ -114,6 +107,16 @@ export function NutritionPage() {
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   ), [meals])
 
+  const tabs = [
+    { value: 'log', label: t.nutrition.log },
+    { value: 'favorites', label: t.nutrition.favorites },
+    { value: 'barcode', label: t.nutrition.barcode },
+    { value: 'micros', label: t.nutrition.micros },
+    { value: 'plan', label: t.nutrition.plan },
+    { value: 'balance', label: t.nutrition.balance },
+    { value: 'library', label: t.nutrition.library },
+  ]
+
   const formatMacro = (value: number) => Number(value).toFixed(2)
 
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'log'
@@ -124,7 +127,7 @@ export function NutritionPage() {
 
   async function updateMeal(meal: Meal, patch: Partial<Meal>) {
     await db.meals.put({ ...meal, ...patch })
-    setSuccessMessage('Meal updated.')
+    setSuccessMessage(t.nutrition.mealUpdated)
   }
 
   function openAddMeal() {
@@ -139,12 +142,12 @@ export function NutritionPage() {
 
   async function handleDeleteMeal(mealId: string) {
     await db.meals.delete(mealId)
-    setSuccessMessage('Meal removed from today\'s log.')
+    setSuccessMessage(t.nutrition.mealRemoved)
   }
 
   function handleFavoriteMeal(meal: Meal) {
     addFavoriteMeal(meal, `${meal.mealType} meal`)
-    setSuccessMessage('Meal saved to favorites.')
+    setSuccessMessage(t.nutrition.savedFavorite)
   }
 
   function handleUseInBalancer(meal: Meal) {
@@ -159,8 +162,8 @@ export function NutritionPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Nutrition</p>
-          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Daily energy and macro tracking</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.nav.nutrition}</p>
+          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">{t.nutrition.pageTitle}</h2>
         </div>
         <SegmentedControl value={activeTab} onValueChange={handleTabChange} items={tabs} />
       </div>
@@ -169,28 +172,28 @@ export function NutritionPage() {
 
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
         <Card className="min-w-0">
-          <CardHeader icon={<UtensilsCrossed className="h-3.5 w-3.5" />} title="Calories" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<UtensilsCrossed className="h-3.5 w-3.5" />} title={t.common.calories} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
             {formatMacro(totals.calories)}
             <span className="ml-1 text-[11px] text-ink-mid">/ {targets.calories}</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
-          <CardHeader icon={<ChartColumn className="h-3.5 w-3.5" />} title="Protein" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<ChartColumn className="h-3.5 w-3.5" />} title={t.common.protein} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
             {formatMacro(totals.protein)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
-          <CardHeader icon={<CalendarRange className="h-3.5 w-3.5" />} title="Carbs" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<CalendarRange className="h-3.5 w-3.5" />} title={t.common.carbs} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
             {formatMacro(totals.carbs)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
           </CardContent>
         </Card>
         <Card className="min-w-0">
-          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title="Fat" className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
+          <CardHeader icon={<Dumbbell className="h-3.5 w-3.5" />} title={t.common.fat} className="gap-1.5 px-3 pt-3 text-[9px] uppercase tracking-[0.12em] text-ink-low" />
           <CardContent className="px-3 pb-3 pt-1 text-base font-semibold text-ink-hi num sm:text-lg">
             {formatMacro(totals.fat)}
             <span className="ml-1 text-[11px] text-ink-mid">g</span>
@@ -202,18 +205,18 @@ export function NutritionPage() {
         <Card>
           <CardHeader
             icon={<UtensilsCrossed />}
-            title="Today log"
+            title={t.nutrition.todayLog}
             actions={
               <Button type="button" size="sm" variant="secondary" onClick={openAddMeal}>
                 <Plus className="h-4 w-4" />
-                Add meal
+                {t.nutrition.addMeal}
               </Button>
             }
           />
           <CardContent className="space-y-3">
             {meals.length === 0 ? (
               <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-                No meals logged yet today. Use the Plan or Library tabs to add food.
+                {t.nutrition.noMeals}
               </div>
             ) : (
               meals.map((meal) => (

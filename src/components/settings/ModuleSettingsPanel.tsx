@@ -3,46 +3,48 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
 import { Toggle } from '@/components/ui/toggle'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import type { ViewMode } from '@/types'
 
 export function ModuleSettingsPanel() {
   const { settings, setSetting } = useSettings()
+  const { t } = useT()
 
   return (
     <Card>
-      <CardHeader icon={<SlidersHorizontal />} title="Module behaviour" />
+      <CardHeader icon={<SlidersHorizontal />} title={t.more.moduleTitle} />
       <CardContent className="space-y-3">
         <Toggle
           checked={settings.moduleChaining}
           onChange={(checked) => void setSetting('moduleChaining', checked)}
-          label="Connect modules"
-          description="Let BMI, weight logs, balancer and AI bridge share data. Turn off to run every module standalone."
+          label={t.more.connectModules}
+          description={t.more.connectModulesDesc}
         />
         <Toggle
           checked={settings.autoWeightFromLogs}
           onChange={(checked) => void setSetting('autoWeightFromLogs', checked)}
-          label="Use latest logged weight"
+          label={t.more.useLatestWeight}
           disabled={!settings.moduleChaining}
-          description="BMI and energy needs follow your weight table instead of the fixed profile weight."
+          description={t.more.useLatestWeightDesc}
         />
         <Toggle
           checked={settings.autoTargetsFromGoal}
           onChange={(checked) => void setSetting('autoTargetsFromGoal', checked)}
-          label="Derive targets from goal"
+          label={t.more.deriveTargets}
           disabled={!settings.moduleChaining}
-          description="Calorie and macro targets are calculated from your goal instead of entered manually."
+          description={t.more.deriveTargetsDesc}
         />
         <Toggle
           checked={settings.snapshotTargetsToDailyLog}
           onChange={(checked) => void setSetting('snapshotTargetsToDailyLog', checked)}
-          label="Snapshot daily targets"
+          label={t.more.snapshotTargets}
           disabled={!settings.moduleChaining}
-          description="Stores the resolved targets per day so history stays accurate after a goal change."
+          description={t.more.snapshotTargetsDesc}
         />
-        <Field label="Default view for lists and charts">
+        <Field label={t.more.defaultView}>
           <SelectInput value={settings.defaultView} onChange={(event) => void setSetting('defaultView', event.target.value as ViewMode)}>
-            <option value="graph">Graph (read-only)</option>
-            <option value="list">List (editable)</option>
+            <option value="graph">{t.more.viewGraph}</option>
+            <option value="list">{t.more.viewList}</option>
           </SelectInput>
         </Field>
       </CardContent>

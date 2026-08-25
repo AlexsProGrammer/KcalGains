@@ -5,32 +5,43 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
 import { useProfile } from '@/hooks/useProfile'
+import { useT } from '@/i18n'
 import type { AllergenTag, DietaryPattern, SweatType } from '@/types'
 
-const ALLERGEN_OPTIONS: { value: AllergenTag; label: string }[] = [
-  { value: 'gluten', label: 'Gluten' },
-  { value: 'lactose', label: 'Lactose' },
-  { value: 'nuts', label: 'Nuts' },
-  { value: 'soy', label: 'Soy' },
-  { value: 'eggs', label: 'Eggs' },
-  { value: 'fish', label: 'Fish' },
-  { value: 'fructose', label: 'Fructose' },
-]
+function dietLabel(t: ReturnType<typeof useT>['t'], value: DietaryPattern): string {
+  const map: Record<DietaryPattern, string> = {
+    standard: t.more.dietStandard,
+    ketogenic: t.more.dietKetogenic,
+    diabetic_friendly: t.more.dietDiabetic,
+    low_fodmap: t.more.dietLowFodmap,
+  }
+  return map[value]
+}
 
-const DIETARY_OPTIONS: { value: DietaryPattern; label: string }[] = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'ketogenic', label: 'Ketogenic' },
-  { value: 'diabetic_friendly', label: 'Diabetic-friendly' },
-  { value: 'low_fodmap', label: 'Low-FODMAP' },
-]
+function sweatLabel(t: ReturnType<typeof useT>['t'], value: SweatType): string {
+  const map: Record<SweatType, string> = {
+    low: t.more.sweatLow,
+    normal: t.more.sweatNormal,
+    heavy_salty: t.more.sweatHeavy,
+  }
+  return map[value]
+}
 
-const SWEAT_OPTIONS: { value: SweatType; label: string }[] = [
-  { value: 'low', label: 'Low sweat / low sodium loss' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'heavy_salty', label: 'Heavy sweater / salty sweat' },
-]
+function allergenTagLabel(t: ReturnType<typeof useT>['t'], value: AllergenTag): string {
+  const map: Record<AllergenTag, string> = {
+    gluten: t.more.allergenGluten,
+    lactose: t.more.allergenLactose,
+    nuts: t.more.allergenNuts,
+    soy: t.more.allergenSoy,
+    eggs: t.more.allergenEggs,
+    fish: t.more.allergenFish,
+    fructose: t.more.allergenFructose,
+  }
+  return map[value]
+}
 
 export function AllergyConstraintsForm() {
+  const { t } = useT()
   const { profile, isLoading, saveProfile } = useProfile()
   const [allergens, setAllergens] = useState<AllergenTag[]>([])
   const [dietaryPattern, setDietaryPattern] = useState<DietaryPattern>('standard')
@@ -58,47 +69,47 @@ export function AllergyConstraintsForm() {
 
     try {
       await saveProfile({ allergens, dietaryPattern, sweatType })
-      setMessage('Health constraints saved. Search and planner results will respect them.')
+      setMessage(t.more.healthSaved)
     } catch {
-      setError('The health constraints could not be saved.')
+      setError(t.more.healthError)
     }
   }
 
   return (
     <Card>
-      <CardHeader icon={<ShieldAlert />} title="Health constraints" />
+      <CardHeader icon={<ShieldAlert />} title={t.more.healthConstraints} />
       <CardContent>
         <form className="space-y-4" onSubmit={(event) => void submit(event)}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Diet pattern">
+            <Field label={t.more.dietPattern}>
               <SelectInput value={dietaryPattern} onChange={(event) => setDietaryPattern(event.target.value as DietaryPattern)}>
-                {DIETARY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['standard', 'ketogenic', 'diabetic_friendly', 'low_fodmap'] as DietaryPattern[]).map((option) => (
+                  <option key={option} value={option}>{dietLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Sweat type">
+            <Field label={t.more.sweatType}>
               <SelectInput value={sweatType} onChange={(event) => setSweatType(event.target.value as SweatType)}>
-                {SWEAT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['low', 'normal', 'heavy_salty'] as SweatType[]).map((option) => (
+                  <option key={option} value={option}>{sweatLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
           </div>
 
           <div className="rounded-md border border-line bg-surface-0 p-3">
-            <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">Allergens</div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">{t.more.allergens}</div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {ALLERGEN_OPTIONS.map((option) => (
-                <label key={option.value} className="flex items-center gap-2 rounded-md border border-line bg-surface-1 px-2 py-2 text-sm text-ink-hi">
-                  <input type="checkbox" checked={allergens.includes(option.value)} onChange={() => toggleAllergen(option.value)} className="h-4 w-4 accent-emerald-500" />
-                  <span>{option.label}</span>
+              {(['gluten', 'lactose', 'nuts', 'soy', 'eggs', 'fish', 'fructose'] as AllergenTag[]).map((option) => (
+                <label key={option} className="flex items-center gap-2 rounded-md border border-line bg-surface-1 px-2 py-2 text-sm text-ink-hi">
+                  <input type="checkbox" checked={allergens.includes(option)} onChange={() => toggleAllergen(option)} className="h-4 w-4 accent-emerald-500" />
+                  <span>{allergenTagLabel(t, option)}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <Button type="submit">Save health rules</Button>
+          <Button type="submit">{t.more.saveHealthRules}</Button>
           {message ? <Alert variant="success">{message}</Alert> : null}
           {error ? <Alert variant="error">{error}</Alert> : null}
         </form>

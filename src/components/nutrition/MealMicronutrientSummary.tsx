@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import { createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, resolveMicronutrientTargets, type MicronutrientKey } from '@/services/micronutrientTargetService'
 import type { Meal, Profile } from '@/types'
 
@@ -39,6 +40,7 @@ type MealMicronutrientSummaryProps = {
 
 export function MealMicronutrientSummary({ meal, profile, compact = false }: MealMicronutrientSummaryProps) {
   const { settings } = useSettings()
+  const { t } = useT()
   const [isOpen, setIsOpen] = useState(false)
   const totals = meal.totalMicros ?? createEmptyMicronutrientTotals()
   const targets = resolveMicronutrientTargets(profile)
@@ -65,8 +67,8 @@ export function MealMicronutrientSummary({ meal, profile, compact = false }: Mea
     return (
       <div className="mt-3 rounded-xl border border-line bg-surface-1 p-3">
         <div className="mb-2 flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.12em] text-slate-200">
-          <span>Micronutrients</span>
-          <span className="text-slate-300">{items.length} tracked</span>
+          <span>{t.nutrition.micros}</span>
+          <span className="text-slate-300">{items.length} {t.common.tracked}</span>
         </div>
         <div className="space-y-2">
           {items.map((item) => (
@@ -93,9 +95,9 @@ export function MealMicronutrientSummary({ meal, profile, compact = false }: Mea
         aria-expanded={isOpen}
         className="flex w-full items-center justify-between text-left text-[10px] font-medium uppercase tracking-[0.12em] text-slate-200"
       >
-        <span>Micronutrients</span>
+        <span>{t.nutrition.micros}</span>
         <span className="flex items-center gap-2 text-slate-300">
-          <span>{items.length} tracked</span>
+          <span>{items.length} {t.common.tracked}</span>
           <span className="text-base leading-none">{isOpen ? '−' : '+'}</span>
         </span>
       </button>

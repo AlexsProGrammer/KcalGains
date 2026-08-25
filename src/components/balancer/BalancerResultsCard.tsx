@@ -1,6 +1,7 @@
 import { Save } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/i18n'
 import { createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, resolveMicronutrientTargets, type MicronutrientKey } from '@/services/micronutrientTargetService'
 import type { Food } from '@/types'
 import type { BalancerResult } from '@/types/balancer.types'
@@ -22,6 +23,7 @@ const micronutrientLabels: Record<MicronutrientKey, string> = {
 }
 
 export function BalancerResultsCard({ result, names, foods, targets, onLog, onFavorite }: Props) {
+  const { t } = useT()
   const [showMicros, setShowMicros] = useState(false)
   const [logAnyway, setLogAnyway] = useState(false)
 

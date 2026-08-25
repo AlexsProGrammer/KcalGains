@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowRight, Pencil, Star, Trash2 } from 'lucide-react'
 import { db } from '@/db'
 import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
+import { useT } from '@/i18n'
 import type { Food, Meal, Profile } from '@/types'
 
 type MealLogCardProps = {
@@ -15,7 +16,9 @@ type MealLogCardProps = {
 }
 
 export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUseInBalancer }: MealLogCardProps) {
+  const { t } = useT()
   const [itemsOpen, setItemsOpen] = useState(false)
+  const [microsOpen, setMicrosOpen] = useState(false)
 
   const foodIds = useMemo(() => [...new Set(meal.items.map((item) => item.foodId))], [meal.items])
   const foods = useLiveQuery(() => {
@@ -30,7 +33,7 @@ export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUse
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-medium capitalize text-ink-hi">{meal.mealType}</p>
-          <p className="mt-1 text-[11px] text-ink-mid">{meal.items.length} item{meal.items.length === 1 ? '' : 's'}</p>
+          <p className="mt-1 text-[11px] text-ink-mid">{meal.items.length} {meal.items.length === 1 ? t.common.meal : t.common.items.toLowerCase()}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="num text-xs text-ink-mid">{Number(meal.totalCalories).toFixed(2)} kcal</span>
@@ -59,19 +62,19 @@ export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUse
 
       <div className="mt-3 grid gap-2 text-[11px] text-ink-mid sm:grid-cols-4">
         <div>
-          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Protein</span>
+          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.common.protein}</span>
           <span className="num">{Number(meal.totalProtein).toFixed(2)} g</span>
         </div>
         <div>
-          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Carbs</span>
+          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.common.carbs}</span>
           <span className="num">{Number(meal.totalCarbs).toFixed(2)} g</span>
         </div>
         <div>
-          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Fat</span>
+          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.common.fat}</span>
           <span className="num">{Number(meal.totalFat).toFixed(2)} g</span>
         </div>
         <div>
-          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">Items</span>
+          <span className="block text-[10px] uppercase tracking-[0.12em] text-ink-low">{t.common.items}</span>
           <span className="num">{meal.items.length}</span>
         </div>
       </div>
@@ -82,7 +85,7 @@ export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUse
         aria-expanded={itemsOpen}
         className="mt-3 flex w-full items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low"
       >
-        <span>Items</span>
+        <span>{t.common.items}</span>
         <span className="text-base leading-none text-ink-mid">{itemsOpen ? '−' : '+'}</span>
       </button>
 
@@ -108,7 +111,17 @@ export function MealLogCard({ meal, profile, onEdit, onDelete, onFavorite, onUse
         </div>
       ) : null}
 
-      <MealMicronutrientSummary meal={meal} profile={profile} compact />
+      <button
+        type="button"
+        onClick={() => setMicrosOpen((value) => !value)}
+        aria-expanded={microsOpen}
+        className="mt-3 flex w-full items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low"
+      >
+        <span>Micros</span>
+        <span className="text-base leading-none text-ink-mid">{microsOpen ? '−' : '+'}</span>
+      </button>
+
+      {microsOpen ? <MealMicronutrientSummary meal={meal} profile={profile} compact /> : null}
     </div>
   )
 }

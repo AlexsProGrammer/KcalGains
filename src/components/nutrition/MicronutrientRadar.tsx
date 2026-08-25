@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, Droplets, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { useT } from '@/i18n'
 import { useSettings } from '@/hooks/useSettings'
 import { createEmptyMicronutrientTotals, getMicronutrientProgress, MICRONUTRIENT_KEYS, mergeMicronutrientTotals, resolveMicronutrientTargets, type MicronutrientKey } from '@/services/micronutrientTargetService'
 import type { Meal, Profile } from '@/types'
@@ -39,6 +40,7 @@ type MicronutrientRadarProps = {
 }
 
 export function MicronutrientRadar({ meals }: MicronutrientRadarProps) {
+  const { t } = useT()
   const { settings } = useSettings()
   const profile = useLiveQuery(async () => {
     const stored = await db.profile.toCollection().first()
@@ -90,12 +92,12 @@ export function MicronutrientRadar({ meals }: MicronutrientRadarProps) {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface-0 p-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-low">Daily target match</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-low">{t.nutrition.dailyTargetMatch}</p>
             <p className="mt-1 text-xl font-semibold text-ink-hi">{averageProgress.toFixed(0)}%</p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-line bg-surface-1 px-2 py-1 text-xs text-ink-mid">
             {averageProgress >= 80 ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> : <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />}
-            {averageProgress >= 80 ? 'Strong coverage' : 'Needs a few gaps'}
+            {averageProgress >= 80 ? 'Strong coverage' : t.nutrition.needsFewGaps}
           </div>
         </div>
 

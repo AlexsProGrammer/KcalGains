@@ -5,10 +5,23 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import { ACCENT_OPTIONS } from '@/theme/accents'
 import type { AccentName, Density, Locale, MicronutrientView, ReduceMotion, TodayHero } from '@/types'
 
+const ACCENT_LABELS: Record<AccentName, keyof ReturnType<typeof useT>['t']['more']> = {
+  emerald: 'accentEmerald',
+  lime: 'accentLime',
+  teal: 'accentTeal',
+  cyan: 'accentCyan',
+  violet: 'accentViolet',
+  amber: 'accentAmber',
+  rose: 'accentRose',
+  blue: 'accentBlue',
+}
+
 export function AppearanceSettings() {
+  const { t } = useT()
   const { settings, setSetting } = useSettings()
   const [draft, setDraft] = useState(settings)
 
@@ -33,10 +46,10 @@ export function AppearanceSettings() {
 
   return (
     <Card>
-      <CardHeader icon={<Palette />} title="Appearance" />
+      <CardHeader icon={<Palette />} title={t.more.appearanceTitle} />
       <CardContent className="space-y-4">
         <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">Accent</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-ink-low">{t.more.accent}</p>
           <div className="grid grid-cols-4 gap-2">
             {ACCENT_OPTIONS.map((option) => {
               const active = draft.accent === option.value
@@ -49,53 +62,53 @@ export function AppearanceSettings() {
                   onClick={() => updateDraft('accent', option.value as AccentName)}
                 >
                   <span className="h-4 w-4 rounded-full border border-white/20" style={{ backgroundColor: option.swatch }} />
-                  <span className="text-[11px]">{option.label}</span>
+                  <span className="text-[11px]">{t.more[ACCENT_LABELS[option.value as AccentName]]}</span>
                 </Button>
               )
             })}
           </div>
         </div>
 
-        <Field label="Language">
+        <Field label={t.more.language}>
           <SelectInput value={draft.locale} onChange={(event) => updateDraft('locale', event.target.value as Locale)}>
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
+            <option value="en">{t.more.english}</option>
+            <option value="de">{t.more.deutsch}</option>
           </SelectInput>
         </Field>
 
-        <Field label="Density">
+        <Field label={t.more.density}>
           <SelectInput value={draft.density} onChange={(event) => updateDraft('density', event.target.value as Density)}>
-            <option value="comfortable">Comfortable</option>
-            <option value="compact">Compact</option>
+            <option value="comfortable">{t.more.comfortable}</option>
+            <option value="compact">{t.more.compact}</option>
           </SelectInput>
         </Field>
 
-        <Field label="Motion">
+        <Field label={t.more.motion}>
           <SelectInput value={draft.reduceMotion} onChange={(event) => updateDraft('reduceMotion', event.target.value as ReduceMotion)}>
-            <option value="system">System</option>
-            <option value="on">Always reduce</option>
-            <option value="off">Allow motion</option>
+            <option value="system">{t.more.motionSystem}</option>
+            <option value="on">{t.more.reduceAlways}</option>
+            <option value="off">{t.more.allowMotion}</option>
           </SelectInput>
         </Field>
 
-        <Field label="Today hero">
+        <Field label={t.more.todayHero}>
           <SelectInput value={draft.todayHero} onChange={(event) => updateDraft('todayHero', event.target.value as TodayHero)}>
-            <option value="ring">Calorie ring</option>
-            <option value="weight">Weight / BMI</option>
-            <option value="stats">Stat grid</option>
-            <option value="streak">Streak</option>
+            <option value="ring">{t.more.heroRing}</option>
+            <option value="weight">{t.more.heroWeight}</option>
+            <option value="stats">{t.more.heroStats}</option>
+            <option value="streak">{t.more.heroStreak}</option>
           </SelectInput>
         </Field>
 
-        <Field label="Micronutrient view">
+        <Field label={t.more.microView}>
           <SelectInput value={draft.micronutrientView} onChange={(event) => updateDraft('micronutrientView', event.target.value as MicronutrientView)}>
-            <option value="radar">Radar</option>
-            <option value="list">List</option>
+            <option value="radar">{t.more.viewRadar}</option>
+            <option value="list">{t.more.viewList}</option>
           </SelectInput>
         </Field>
 
         <div className="flex justify-end pt-2">
-          <Button type="button" onClick={() => void saveChanges()}>Save changes</Button>
+          <Button type="button" onClick={() => void saveChanges()}>{t.more.saveChanges}</Button>
         </div>
       </CardContent>
     </Card>

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { createFood, updateFood } from '@/db/foodRepository'
+import { useT } from '@/i18n'
 import { normalizeFoodMicros, type AllergenTag } from '@/schemas/food.schema'
 import type { Food } from '@/types'
 
@@ -72,6 +73,7 @@ function valuesFromFood(food?: Food): FormValues {
 }
 
 export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFormProps) {
+  const { t } = useT()
   const [values, setValues] = useState(() => valuesFromFood(initialFood))
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(Boolean(initialFood?.micros && Object.keys(initialFood.micros).length > 0))
   const [error, setError] = useState<string | null>(null)
@@ -101,7 +103,7 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
     const numericValues = ['calories', 'protein', 'carbs', 'fat', 'fiber', 'servingSize'].map((field) => Number(values[field as keyof FormValues]))
 
     if (!values.name.trim() || numericValues.some((value) => !Number.isFinite(value) || value < 0) || Number(values.servingSize) <= 0) {
-      setError('Enter a name and valid non-negative nutrition values. Serving size must be greater than zero.')
+      setError(t.food.invalidValues)
       return
     }
 
@@ -161,21 +163,21 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
         micros: foodData.micros ?? initialFood?.micros,
       })
     } catch {
-      setError('The food could not be saved locally.')
+      setError(t.food.saveError)
     }
   }
 
   const fields: Array<[keyof FormValues, string, string]> = [
-    ['name', 'Name', 'text'], ['brand', 'Brand (optional)', 'text'], ['servingSize', 'Serving size (g)', 'number'],
-    ['calories', 'Calories / 100g', 'number'], ['protein', 'Protein (g)', 'number'], ['carbs', 'Carbs (g)', 'number'],
-    ['fat', 'Fat (g)', 'number'], ['fiber', 'Fiber (g)', 'number'],
+    ['name', t.food.name, 'text'], ['brand', t.food.brand, 'text'], ['servingSize', t.food.servingSize, 'number'],
+    ['calories', t.food.calories100g, 'number'], ['protein', t.food.protein100g, 'number'], ['carbs', t.food.carbs100g, 'number'],
+    ['fat', t.food.fat100g, 'number'], ['fiber', t.food.fiber, 'number'],
   ]
 
   const metadataFields: Array<[keyof Pick<FormValues, 'price' | 'costPer100g' | 'currency' | 'notes'>, string, string]> = [
-    ['price', 'Price', 'number'],
-    ['costPer100g', 'Cost / 100g', 'number'],
-    ['currency', 'Currency', 'text'],
-    ['notes', 'Notes', 'text'],
+    ['price', t.common.price, 'number'],
+    ['costPer100g', t.common.costPer100g, 'number'],
+    ['currency', t.food.currency, 'text'],
+    ['notes', t.food.notes, 'text'],
   ]
 
   const micronutrientFields: Array<[keyof Pick<FormValues, 'sodiumMg' | 'potassiumMg' | 'magnesiumMg' | 'calciumMg' | 'zincMg' | 'ironMg' | 'seleniumMcg' | 'vitaminDMcg' | 'vitaminB6Mg' | 'vitaminB12Mcg' | 'vitaminCMg'>, string]> = [
@@ -212,7 +214,7 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
           ))}
         </div>
         <div>
-          <span className="mb-2 block text-xs font-medium text-slate-400">Allergens</span>
+          <span className="mb-2 block text-xs font-medium text-slate-400">{t.food.allergens}</span>
           <div className="flex flex-wrap gap-2">
             {allergenOptions.map((tag) => (
               <button key={tag} type="button" onClick={() => toggleAllergen(tag)} className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${values.allergenTags.includes(tag) ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300' : 'border-slate-700 bg-slate-900 text-slate-300'}`}>
@@ -224,7 +226,7 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
       </div>
       <div className="rounded-md border border-slate-700 bg-slate-950/40 p-2">
         <button type="button" onClick={() => setIsAdvancedOpen((current) => !current)} className="flex w-full items-center justify-between text-left text-sm font-medium text-slate-200">
-          <span>Advanced nutrients</span>
+          <span>{t.food.advancedNutrients}</span>
           <span>{isAdvancedOpen ? '−' : '+'}</span>
         </button>
         {isAdvancedOpen ? (
@@ -238,11 +240,11 @@ export function CustomFoodForm({ initialFood, onSaved, onCancel }: CustomFoodFor
           </div>
         ) : null}
       </div>
-      <p className={`text-xs ${discrepancy > 20 ? 'text-amber-300' : 'text-slate-500'}`}>Macro calorie estimate: {macroCalories.toFixed(0)} kcal, discrepancy {discrepancy.toFixed(0)} kcal</p>
+      <p className={`text-xs ${discrepancy > 20 ? 'text-amber-300' : 'text-slate-500'}`}>{t.food.macroEstimate.replace('{calories}', macroCalories.toFixed(0)).replace('{discrepancy}', discrepancy.toFixed(0))}</p>
       {error ? <Alert variant="error">{error}</Alert> : null}
       <div className="flex gap-2">
-        <Button type="submit">{initialFood ? 'Save changes' : 'Add to local library'}</Button>
-        {onCancel ? <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button> : null}
+        <Button type="submit">{initialFood ? t.food.saveChanges : t.food.addToLocalLibrary}</Button>
+        {onCancel ? <Button type="button" variant="ghost" onClick={onCancel}>{t.common.cancel}</Button> : null}
       </div>
     </form>
   )

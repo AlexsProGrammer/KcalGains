@@ -12,6 +12,7 @@ import { WeightHistoryList } from '@/components/history/WeightHistoryList'
 import { WorkoutHistoryList } from '@/components/history/WorkoutHistoryList'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { SegmentedControl } from '@/components/ui/segmented'
+import { useT } from '@/i18n'
 import type { ViewMode } from '@/types'
 
 const ranges = [
@@ -22,6 +23,7 @@ const ranges = [
 ] as const
 
 export function ProgressPage() {
+  const { t } = useT()
   const [range, setRange] = useState<'7' | '30' | '90' | 'all'>('30')
   const [viewMode, setViewMode] = useState<ViewMode>('graph')
 
@@ -34,8 +36,8 @@ export function ProgressPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Progress</p>
-          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Performance trends and history</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.nav.progress}</p>
+          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">{t.progress.pageTitle}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SegmentedControl value={range} onValueChange={(next) => setRange(next as '7' | '30' | '90' | 'all')} items={ranges.map((item) => ({ value: item.value, label: item.label }))} />
@@ -55,10 +57,10 @@ export function ProgressPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader icon={<BarChart3 />} title="Volume trend" />
+          <CardHeader icon={<BarChart3 />} title={t.progress.volumeTrend} />
           <CardContent>
             <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-line bg-surface-0 text-sm text-ink-mid">
-              Volume chart ready for the next analytics pass.
+              {t.progress.volumePlaceholder}
             </div>
           </CardContent>
         </Card>

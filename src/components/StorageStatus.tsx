@@ -1,6 +1,7 @@
 import { HardDrive, ShieldCheck, ShieldOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { useT } from '@/i18n'
 import { useStoragePersistence } from '@/hooks/useStoragePersistence'
 
 function formatMegabytes(bytes: number | null): string {
@@ -12,13 +13,14 @@ function formatMegabytes(bytes: number | null): string {
 }
 
 export function StorageStatus() {
+  const { t } = useT()
   const { isPersisted, quotaUsageBytes, quotaTotalBytes, requestPermission } = useStoragePersistence()
   const StatusIcon = isPersisted ? ShieldCheck : ShieldOff
-  const statusLabel = isPersisted === null ? 'Checking' : isPersisted ? 'Persistent storage granted' : 'Persistent storage unavailable'
+  const statusLabel = isPersisted === null ? t.more.storageChecking : isPersisted ? t.more.storageGranted : t.more.storageUnavailable
 
   return (
     <Card>
-      <CardHeader icon={<HardDrive />} title="Browser storage" />
+      <CardHeader icon={<HardDrive />} title={t.more.browserStorage} />
       <CardContent>
         <div className="flex items-center gap-2 font-medium text-slate-200">
           <StatusIcon className={isPersisted ? 'h-4 w-4 text-emerald-400' : 'h-4 w-4 text-amber-400'} aria-hidden="true" />
@@ -26,10 +28,10 @@ export function StorageStatus() {
             {statusLabel}
           </span>
         </div>
-        <p className="mt-2">Usage: {formatMegabytes(quotaUsageBytes)} / {formatMegabytes(quotaTotalBytes)}</p>
+        <p className="mt-2">{t.more.storageUsage.replace('{used}', formatMegabytes(quotaUsageBytes)).replace('{total}', formatMegabytes(quotaTotalBytes))}</p>
         {isPersisted === false ? (
           <div className="mt-3">
-            <Button type="button" size="sm" onClick={() => void requestPermission()}>Allow persistent storage</Button>
+            <Button type="button" size="sm" onClick={() => void requestPermission()}>{t.more.allowPersistent}</Button>
           </div>
         ) : null}
       </CardContent>

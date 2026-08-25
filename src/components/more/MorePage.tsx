@@ -14,42 +14,44 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
 import { clearOnboardingState } from '@/db/settingsRepository'
+import { useT } from '@/i18n'
 import { clsx } from 'clsx'
 
-const developerNavItem = { to: '/more/developer', label: 'Developer', icon: Wrench } as const
+const developerNavItem = { to: '/more/developer', label: 'developer', icon: Wrench } as const
 
 const navItems = [
-  { to: '/more/profile', label: 'Profile', icon: Target },
-  { to: '/more/training', label: 'Training', icon: Dumbbell },
-  { to: '/more/appearance', label: 'Appearance', icon: Palette },
-  { to: '/more/modules', label: 'Modules', icon: ShieldCheck },
-  { to: '/more/data', label: 'Data', icon: FileLock2 },
-  { to: '/more/ai', label: 'AI', icon: Sparkles },
-  { to: '/more/about', label: 'About', icon: Wand2 },
-  { to: '/more/danger', label: 'Danger', icon: AlertTriangle },
+  { to: '/more/profile', label: 'profile', icon: Target },
+  { to: '/more/training', label: 'training', icon: Dumbbell },
+  { to: '/more/appearance', label: 'appearance', icon: Palette },
+  { to: '/more/modules', label: 'modules', icon: ShieldCheck },
+  { to: '/more/data', label: 'data', icon: FileLock2 },
+  { to: '/more/ai', label: 'ai', icon: Sparkles },
+  { to: '/more/about', label: 'about', icon: Wand2 },
+  { to: '/more/danger', label: 'danger', icon: AlertTriangle },
   developerNavItem,
 ] as const
 
 function AboutCard() {
+  const { t } = useT()
   return (
     <Card>
-      <CardHeader icon={<Wand2 />} title="About KcalGains" />
+      <CardHeader icon={<Wand2 />} title={t.more.aboutTitle} />
       <CardContent className="space-y-4 text-sm text-ink-mid">
         <p>
-          A local-first fitness and nutrition workspace built for daily tracking, macro planning, and offline reliability.
+          {t.more.aboutBody}
         </p>
         <div className="rounded-xl border border-line bg-surface-1 p-4">
           <div className="flex items-center justify-between">
-            <span className="text-ink-low">App version</span>
+            <span className="text-ink-low">{t.more.appVersion}</span>
             <strong className="text-ink-hi">{APP_VERSION}</strong>
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-ink-low">Storage</span>
+            <span className="text-ink-low">{t.more.storageTech}</span>
             <strong className="text-ink-hi">IndexedDB</strong>
           </div>
         </div>
         <Button type="button" variant="secondary" onClick={() => window.location.assign('/today')}>
-          Back to today
+          {t.more.backToToday}
         </Button>
       </CardContent>
     </Card>
@@ -66,8 +68,9 @@ function DeveloperPanel() {
 }
 
 function DangerZone() {
+  const { t } = useT()
   const handleReset = async () => {
-    const confirmed = window.confirm('This permanently deletes all local app data, including IndexedDB records and browser storage. Continue?')
+    const confirmed = window.confirm(t.more.resetConfirm)
     if (!confirmed) return
 
     try {
@@ -103,24 +106,24 @@ function DangerZone() {
       window.location.reload()
     } catch (error) {
       console.error('Reset failed', error)
-      window.alert('The reset could not complete. Please try again or clear site data in the browser settings.')
+      window.alert(t.more.resetFailed)
     }
   }
 
   return (
     <Card className="border-danger/30 bg-danger/5">
-      <CardHeader icon={<AlertTriangle className="text-danger" />} title="Danger zone" />
+      <CardHeader icon={<AlertTriangle className="text-danger" />} title={t.more.dangerZone} />
       <CardContent className="space-y-4 text-sm text-ink-mid">
         <p>
-          This removes all local nutrition, workout, profile, settings, and cache data for this website. The app will reload afterward.
+          {t.more.dangerDesc}
         </p>
         <div className="rounded-xl border border-danger/30 bg-surface-1 p-4 text-ink-hi">
-          <div className="font-medium text-danger">Reset all app data</div>
-          <p className="mt-2 text-sm text-ink-mid">This cannot be undone.</p>
+          <div className="font-medium text-danger">{t.more.resetAllData}</div>
+          <p className="mt-2 text-sm text-ink-mid">{t.more.cannotUndo}</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Button type="button" variant="danger" onClick={() => void handleReset()}>
-            Delete all local data and reset the app
+            {t.more.deleteAllReset}
           </Button>
         </div>
       </CardContent>
@@ -129,6 +132,7 @@ function DangerZone() {
 }
 
 export function MorePage() {
+  const { t } = useT()
   const location = useLocation()
   const section = location.pathname.replace(/^\/more\//, '').split('/')[0] || 'profile'
 
@@ -156,14 +160,14 @@ export function MorePage() {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">More</p>
-          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">Settings, sync and app tools</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-ink-hi">{t.more.subtitle}</h2>
         </div>
       </div>
 
       <div className="w-full overflow-hidden rounded-2xl border border-line bg-surface-1/70 p-2">
         <nav className="flex min-w-0 flex-wrap gap-2 p-1">
           {navItems.map(({ to, label, icon: Icon }) => {
-            const isDanger = label === 'Danger'
+            const isDanger = label === 'danger'
             return (
               <NavLink
                 key={to}
@@ -182,7 +186,7 @@ export function MorePage() {
                 }
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                <span className="truncate">{label}</span>
+                <span className="truncate">{t.more[label]}</span>
               </NavLink>
             )
           })}

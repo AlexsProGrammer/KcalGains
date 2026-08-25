@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/i18n'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
 import { db } from '@/db'
@@ -17,14 +18,14 @@ import { mergePlannedMeals, planDay, readPersistedPlannerPlan, suggestMeal, writ
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
-const PANTRY_FILTERS = [
-  { value: 'all', label: 'Whole library' },
-  { value: 'custom', label: 'My pantry (custom foods)' },
-] as const
-
-type PantryFilter = (typeof PANTRY_FILTERS)[number]['value']
+type PantryFilter = 'all' | 'custom'
 
 export function AutoMealPlanner() {
+  const { t } = useT()
+  const PANTRY_FILTERS = [
+    { value: 'all', label: t.common.wholeLibrary },
+    { value: 'custom', label: t.common.myPantry },
+  ] as const
   const navigate = useNavigate()
   const { profile } = useProfile()
   const allFoods = useLiveQuery(() => db.foods.toArray(), [], [])
@@ -120,7 +121,7 @@ export function AutoMealPlanner() {
     }
 
     addFavoriteMeal(payload as never, `${planned.mealType} meal`)
-    setMessage(`Saved ${planned.mealType} to favorites.`)
+    setMessage(t.planner.saveToFavorites.replace('{mealType}', planned.mealType))
   }
 
   function loadMealIntoBalancer(planned: PlannedMeal) {
@@ -143,9 +144,9 @@ export function AutoMealPlanner() {
   async function logPlannedMeal(planned: PlannedMeal) {
     try {
       await commitBalancedMealToLog(planned.result, planned.mealType, new Date().toISOString().slice(0, 10))
-      setMessage(`Logged ${planned.mealType}.`)
+      setMessage(t.planner.loggedMeal.replace('{mealType}', planned.mealType))
     } catch {
-      setError('Could not log this meal.')
+      setError(t.planner.couldNotLog)
     }
   }
 
@@ -158,15 +159,17 @@ export function AutoMealPlanner() {
 
   return (
     <Card>
-      <CardHeader icon={<ChefHat />} title="Auto meal planner" />
+      <CardHeader icon={<ChefHat />} title={t.planner.title} />
       <CardContent className="space-y-4">
         <p className="text-sm text-slate-400">
-          Builds meals from your food library scored against {Math.round(dailyTargets.calories)} kcal / {Math.round(dailyTargets.protein)} g protein
-          {targets.source === 'goal' ? ' (from goal)' : ' (manual)'}.
+          {t.planner.description
+            .replace('{calories}', String(Math.round(dailyTargets.calories)))
+            .replace('{protein}', String(Math.round(dailyTargets.protein)))
+            .replace('{source}', targets.source === 'goal' ? t.common.byGoal : t.common.byManual)}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Food pool">
+          <Field label={t.common.foodPool}>
             <SelectInput value={pantryFilter} onChange={(event) => setPantryFilter(event.target.value as PantryFilter)}>
               {PANTRY_FILTERS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -175,7 +178,7 @@ export function AutoMealPlanner() {
               ))}
             </SelectInput>
           </Field>
-          <Field label="Meal to suggest">
+          <Field label={t.common.mealToSuggest}>
             <SelectInput value={mealType} onChange={(event) => setMealType(event.target.value as MealType)}>
               {MEAL_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -188,7 +191,7 @@ export function AutoMealPlanner() {
 
         <div className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-950/50 p-3 text-sm text-slate-300">
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500">Budget cap</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">{t.common.budgetCap}</div>
             <div className="mt-1 text-slate-200">€{budgetCap.toFixed(2)} / day</div>
           </div>
           <button
@@ -196,18 +199,18 @@ export function AutoMealPlanner() {
             onClick={() => setBudgetEnabled((value) => !value)}
             className={`rounded-full px-3 py-1 text-xs font-medium ${budgetEnabled ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700 text-slate-200'}`}
           >
-            {budgetEnabled ? 'enabled' : 'disabled'}
+            {budgetEnabled ? t.common.enable : t.common.disable}
           </button>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={handleSuggest} disabled={foods.length < 2}>
             <ChefHat className="mr-2 h-4 w-4" />
-            Suggest meal
+            {t.common.suggestMeal}
           </Button>
           <Button type="button" size="sm" variant="secondary" onClick={handlePlanDay} disabled={foods.length < 2}>
             <CalendarRange className="mr-2 h-4 w-4" />
-            Plan my day
+            {t.common.planDay}
           </Button>
           {plan.length > 0 ? (
             <Button
@@ -217,12 +220,12 @@ export function AutoMealPlanner() {
               onClick={() => (plan.length > 1 ? handlePlanDay() : handleSuggest())}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Regenerate
+              {t.common.regenerate}
             </Button>
           ) : null}
         </div>
 
-        {hiddenFoodsCount > 0 ? <p className="text-xs text-slate-500">{hiddenFoodsCount} foods hidden due to your allergy settings.</p> : null}
+        {hiddenFoodsCount > 0 ? <p className="text-xs text-slate-500">{t.planner.hiddenFoods.replace('{count}', String(hiddenFoodsCount))}</p> : null}
         {error ? <Alert variant="warning">{error}</Alert> : null}
         {message ? <Alert variant="success">{message}</Alert> : null}
 
@@ -247,7 +250,7 @@ export function AutoMealPlanner() {
                     className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-300"
                   >
                     {planned.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-                    {planned.locked ? 'Locked' : 'Lock'}
+                    {planned.locked ? t.common.locked : t.common.lock}
                   </button>
                   <span className="text-xs text-slate-500">
                     {Math.round(planned.result.totalMacros.calories)} / {planned.targets.calories} kcal
@@ -267,9 +270,9 @@ export function AutoMealPlanner() {
               </ul>
 
               <div className="mt-2 space-y-1 rounded-md border border-slate-800 bg-slate-950/60 p-2 text-[11px] text-slate-300">
-                <div className="flex items-center justify-between"><span>Price</span><strong className="text-emerald-300">€{planned.result.totalCost.toFixed(2)}</strong></div>
-                <div className="flex items-center justify-between"><span>Budget</span><strong>{`€${planned.result.totalCost.toFixed(2)} / €${budgetCap.toFixed(2)}`}</strong></div>
-                <div className="flex items-center justify-between"><span>Allergens</span><span className="text-right text-amber-300">{allergens.length > 0 ? allergens.join(', ') : 'none'}</span></div>
+                <div className="flex items-center justify-between"><span>{t.common.price}</span><strong className="text-emerald-300">€{planned.result.totalCost.toFixed(2)}</strong></div>
+                <div className="flex items-center justify-between"><span>{t.common.budget}</span><strong>{`€${planned.result.totalCost.toFixed(2)} / €${budgetCap.toFixed(2)}`}</strong></div>
+                <div className="flex items-center justify-between"><span>{t.common.allergens}</span><span className="text-right text-amber-300">{allergens.length > 0 ? allergens.join(', ') : t.common.none}</span></div>
               </div>
 
               <p className="mt-2 text-xs text-slate-500">
@@ -279,7 +282,7 @@ export function AutoMealPlanner() {
 
               <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/50 p-3">
                 <button type="button" className="flex w-full items-center justify-between text-left text-[10px] font-medium uppercase tracking-[0.12em] text-slate-300" onClick={() => setExpandedMeals((current) => ({ ...current, [planned.mealType]: !isExpanded }))}>
-                  <span>Meal micros</span>
+                  <span>{t.nutrition.micros}</span>
                   <span>{isExpanded ? '−' : '+'}</span>
                 </button>
                 {isExpanded ? (
@@ -302,15 +305,15 @@ export function AutoMealPlanner() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="secondary" onClick={() => void logPlannedMeal(planned)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Log this meal
+                  {t.common.logThisMeal}
                 </Button>
                 <Button type="button" size="sm" variant="secondary" onClick={() => favouriteMeal(planned)}>
                   <Star className="mr-2 h-4 w-4" />
-                  Favorite
+                  {t.common.savedToFavorites}
                 </Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => loadMealIntoBalancer(planned)}>
                   <WandSparkles className="mr-2 h-4 w-4" />
-                  Load to balancer
+                  {t.common.useInBalancer}
                 </Button>
               </div>
             </div>

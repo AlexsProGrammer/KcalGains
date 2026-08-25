@@ -19,11 +19,11 @@ import { db } from '@/db'
 const ONBOARDING_STATE_KEY = 'kcalgains.onboardingState'
 
 const navItems = [
-  { to: '/today', label: 'Today', icon: Home },
-  { to: '/nutrition', label: 'Nutrition', icon: UtensilsCrossed },
-  { to: '/train', label: 'Train', icon: Dumbbell },
-  { to: '/progress', label: 'Progress', icon: TrendingUp },
-  { to: '/more', label: 'More', icon: MoreHorizontal },
+  { to: '/today', key: 'today', icon: Home },
+  { to: '/nutrition', key: 'nutrition', icon: UtensilsCrossed },
+  { to: '/train', key: 'train', icon: Dumbbell },
+  { to: '/progress', key: 'progress', icon: TrendingUp },
+  { to: '/more', key: 'more', icon: MoreHorizontal },
 ]
 
 function readPersistedOnboardingState() {
@@ -86,7 +86,7 @@ export function AppShell() {
 
   const currentTitle = useMemo(() => {
     const match = navItems.find((item) => item.to === location.pathname)
-    if (match) return t.nav[match.to.replace('/', '') as keyof typeof t.nav] ?? match.label
+    if (match) return t.nav[match.key as keyof typeof t.nav]
     if (location.pathname.startsWith('/more')) return t.nav.more
     if (location.pathname === '/onboarding') return t.nav.onboarding
     return t.nav.today
@@ -103,7 +103,7 @@ export function AppShell() {
             </div>
 
             <nav className="space-y-2 px-3">
-              {navItems.map(({ to, label, icon: Icon }) => (
+              {navItems.map(({ to, key, icon: Icon }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -115,7 +115,7 @@ export function AppShell() {
                   }
                 >
                   <Icon className="h-4 w-4" />
-                  {label}
+                  {t.nav[key as keyof typeof t.nav]}
                 </NavLink>
               ))}
             </nav>
@@ -130,7 +130,7 @@ export function AppShell() {
                 </div>
 
                 <div className="rounded-xl border border-line bg-surface-1 px-3 py-2 text-center shadow-sm">
-                  <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">Today</div>
+                  <div className="text-[9px] uppercase tracking-[0.16em] text-ink-low">{t.common.today}</div>
                   <div className="mt-1 text-sm font-medium text-ink-hi">{trainingModeLabel}</div>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function AppShell() {
           <>
             <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface-1/95 p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur-xl lg:hidden">
               <div className="grid grid-cols-5 gap-1.5">
-                {navItems.map(({ to, label, icon: Icon }) => (
+                {navItems.map(({ to, key, icon: Icon }) => (
                   <NavLink
                     key={to}
                     to={to}
@@ -175,7 +175,7 @@ export function AppShell() {
                     }
                   >
                     <Icon className="h-4 w-4" />
-                    {label}
+                    {t.nav[key as keyof typeof t.nav]}
                   </NavLink>
                 ))}
               </div>

@@ -9,27 +9,27 @@ type QuickActionSheetProps = {
   onClose: () => void
 }
 
-const actions = [
-  { label: 'Log meal', icon: UtensilsCrossed, tone: 'primary' },
-  { label: 'Log weight', icon: Weight, tone: 'secondary' },
-  { label: 'Start workout', icon: Dumbbell, tone: 'secondary' },
-  { label: 'Scan barcode', icon: Camera, tone: 'secondary' },
-  { label: 'AI import', icon: Sparkles, tone: 'secondary' },
-]
-
 export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
   const { t } = useT()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleAction = (label: string) => {
+  const actions = [
+    { label: t.quickActions.logMeal, icon: UtensilsCrossed, tone: 'primary', action: 'meal' },
+    { label: t.quickActions.logWeight, icon: Weight, tone: 'secondary', action: 'weight' },
+    { label: t.quickActions.startWorkout, icon: Dumbbell, tone: 'secondary', action: 'workout' },
+    { label: t.quickActions.scanBarcode, icon: Camera, tone: 'secondary', action: 'barcode' },
+    { label: t.quickActions.aiImport, icon: Sparkles, tone: 'secondary', action: 'ai' },
+  ] as const
+
+  const handleAction = (action: (typeof actions)[number]['action']) => {
     onClose()
 
-    switch (label) {
-      case 'Log meal':
+    switch (action) {
+      case 'meal':
         navigate('/nutrition?tab=log', { replace: false })
         break
-      case 'Log weight':
+      case 'weight':
         if (location.pathname === '/today') {
           const nextUrl = '/today?weight=quick-add'
           window.history.pushState({}, '', nextUrl)
@@ -38,13 +38,13 @@ export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
           navigate('/today?weight=quick-add', { replace: false })
         }
         break
-      case 'Start workout':
+      case 'workout':
         navigate('/train', { replace: false })
         break
-      case 'Scan barcode':
+      case 'barcode':
         navigate('/nutrition?tab=barcode', { replace: false })
         break
-      case 'AI import':
+      case 'ai':
         navigate('/more/ai', { replace: false })
         break
       default:
@@ -82,12 +82,12 @@ export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {actions.map(({ label, icon: Icon, tone }) => (
+              {actions.map(({ label, icon: Icon, tone, action }) => (
                 <Button
                   key={label}
                   variant={tone === 'primary' ? 'primary' : 'secondary'}
                   className="justify-start gap-3 px-4 py-3"
-                  onClick={() => handleAction(label)}
+                  onClick={() => handleAction(action)}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent-text">
                     <Icon className="h-4 w-4" />

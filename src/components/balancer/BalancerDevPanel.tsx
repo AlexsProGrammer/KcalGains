@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { db } from '@/db'
+import { useT } from '@/i18n'
 import { useMealBalancer } from '@/hooks/useMealBalancer'
 import { useMealLogger } from '@/hooks/useMealLogger'
 import type { Food } from '@/types'
@@ -17,6 +18,7 @@ const targetFields = [
 ] as const
 
 export function BalancerDevPanel() {
+  const { t } = useT()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])
   const balancer = useMealBalancer()
   const { commitBalancedMealToLog } = useMealLogger()
@@ -79,8 +81,8 @@ export function BalancerDevPanel() {
           <label className="block max-w-xs">
             <span className="mb-1 block text-xs font-medium text-slate-400">Meal type</span>
             <select value={mealType} onChange={(event) => setMealType(event.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400">
-              {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => (
-                <option key={type} value={type}>{type}</option>
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => (
+                <option key={type} value={type}>{t.common.mealTypes[type]}</option>
               ))}
             </select>
           </label>

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Calculator, Check, Plus, WandSparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Alert } from '@/components/ui/alert'
+import { useT } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput } from '@/components/ui/field'
@@ -20,6 +21,7 @@ import { resolveDailyTargets } from '@/services/targetResolverService'
 import type { Food } from '@/types'
 
 export function BalancerContainer() {
+  const { t } = useT()
   const { profile: currentProfile } = useProfile()
   const { settings: appSettings } = useSettings()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], [])

@@ -7,38 +7,51 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, SelectInput, TextInput } from '@/components/ui/field'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import { GOAL_DEFAULT_RATES } from '@/schemas/profile.schema'
 import { resolveMicronutrientTargets } from '@/services/micronutrientTargetService'
 import type { ActivityLevel, BiologicalSex, DietaryPattern, FitnessGoal, SweatType } from '@/types'
 
-const GOAL_OPTIONS: { value: FitnessGoal; label: string }[] = [
-  { value: 'lose-fat', label: 'Lose fat' },
-  { value: 'maintain', label: 'Maintain' },
-  { value: 'gain-muscle', label: 'Gain muscle' },
-  { value: 'recomp', label: 'Recomposition' },
-  { value: 'athletic', label: 'More athletic' },
-]
+function goalLabel(t: ReturnType<typeof useT>['t'], value: FitnessGoal): string {
+  const map: Record<FitnessGoal, string> = {
+    'lose-fat': t.more.goalLoseFat,
+    maintain: t.more.goalMaintain,
+    'gain-muscle': t.more.goalGainMuscle,
+    recomp: t.more.goalRecomp,
+    athletic: t.more.goalAthletic,
+  }
+  return map[value]
+}
 
-const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
-  { value: 'sedentary', label: 'Sedentary (desk job)' },
-  { value: 'light', label: 'Light (1-2 sessions/week)' },
-  { value: 'moderate', label: 'Moderate (3-4 sessions/week)' },
-  { value: 'active', label: 'Active (5-6 sessions/week)' },
-  { value: 'athlete', label: 'Athlete (daily training)' },
-]
+function activityLabel(t: ReturnType<typeof useT>['t'], value: ActivityLevel): string {
+  const map: Record<ActivityLevel, string> = {
+    sedentary: t.more.actSedentary,
+    light: t.more.actLight,
+    moderate: t.more.actModerate,
+    active: t.more.actActive,
+    athlete: t.more.actAthlete,
+  }
+  return map[value]
+}
 
-const DIETARY_OPTIONS: { value: DietaryPattern; label: string }[] = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'ketogenic', label: 'Ketogenic' },
-  { value: 'diabetic_friendly', label: 'Diabetic-friendly' },
-  { value: 'low_fodmap', label: 'Low-FODMAP' },
-]
+function dietLabel(t: ReturnType<typeof useT>['t'], value: DietaryPattern): string {
+  const map: Record<DietaryPattern, string> = {
+    standard: t.more.dietStandard,
+    ketogenic: t.more.dietKetogenic,
+    diabetic_friendly: t.more.dietDiabetic,
+    low_fodmap: t.more.dietLowFodmap,
+  }
+  return map[value]
+}
 
-const SWEAT_OPTIONS: { value: SweatType; label: string }[] = [
-  { value: 'low', label: 'Low sweat / low sodium loss' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'heavy_salty', label: 'Heavy sweater / salty sweat' },
-]
+function sweatLabel(t: ReturnType<typeof useT>['t'], value: SweatType): string {
+  const map: Record<SweatType, string> = {
+    low: t.more.sweatLow,
+    normal: t.more.sweatNormal,
+    heavy_salty: t.more.sweatHeavy,
+  }
+  return map[value]
+}
 
 const MICRONUTRIENT_FIELDS = [
   { key: 'sodiumMg', label: 'Sodium (mg)' },
@@ -61,6 +74,7 @@ function toNumberOrUndefined(value: string): number | undefined {
 
 export function ProfileGoalForm() {
   const navigate = useNavigate()
+  const { t } = useT()
   const { profile, isLoading, saveProfile } = useProfile()
   const { setSetting } = useSettings()
   const [heightCm, setHeightCm] = useState('')
@@ -122,73 +136,73 @@ export function ProfileGoalForm() {
         ),
         goalRateKgPerWeek: Number(goalRate) || 0,
       })
-      setMessage('Profile saved. Connected modules will pick up the new goal and health constraints.')
+      setMessage(t.more.profileSaved)
     } catch {
-      setError('Check your entries: height 80-260 cm, weight above 0, rate between -1.5 and 1.5 kg/week.')
+      setError(t.more.profileError)
     }
   }
 
   return (
     <Card>
-      <CardHeader icon={<Target />} title="Body & goal" />
+      <CardHeader icon={<Target />} title={t.more.bodyAndGoal} />
       <CardContent>
         <form className="space-y-4" onSubmit={(event) => void submit(event)}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Height (cm)">
+            <Field label={t.more.heightCm}>
               <TextInput type="number" min="80" max="260" step="0.5" value={heightCm} onChange={(event) => setHeightCm(event.target.value)} placeholder="180" />
             </Field>
-            <Field label="Weight (kg)" hint="Used when automatic weight tracking is off.">
+            <Field label={t.more.weightKg} hint={t.more.weightUsedHint}>
               <TextInput type="number" min="30" max="350" step="0.1" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="80.0" />
             </Field>
-            <Field label="Birth year">
+            <Field label={t.more.birthYear}>
               <TextInput type="number" min="1900" max={new Date().getFullYear()} step="1" value={birthYear} onChange={(event) => setBirthYear(event.target.value)} placeholder="1995" />
             </Field>
-            <Field label="Sex" hint="Required for the BMR formula.">
+            <Field label={t.more.sex} hint={t.more.sexHint}>
               <SelectInput value={sex} onChange={(event) => setSex(event.target.value as BiologicalSex | '')}>
-                <option value="">Not set</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="">{t.more.notSet}</option>
+                <option value="male">{t.more.male}</option>
+                <option value="female">{t.more.female}</option>
               </SelectInput>
             </Field>
-            <Field label="Activity level">
+            <Field label={t.more.activityLevel}>
               <SelectInput value={activityLevel} onChange={(event) => setActivityLevel(event.target.value as ActivityLevel)}>
-                {ACTIVITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['sedentary', 'light', 'moderate', 'active', 'athlete'] as ActivityLevel[]).map((option) => (
+                  <option key={option} value={option}>{activityLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Goal">
+            <Field label={t.more.goal}>
               <SelectInput value={goal} onChange={(event) => selectGoal(event.target.value as FitnessGoal)}>
-                {GOAL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['lose-fat', 'maintain', 'gain-muscle', 'recomp', 'athletic'] as FitnessGoal[]).map((option) => (
+                  <option key={option} value={option}>{goalLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Diet pattern">
+            <Field label={t.more.dietPattern}>
               <SelectInput value={dietaryPattern} onChange={(event) => setDietaryPattern(event.target.value as DietaryPattern)}>
-                {DIETARY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['standard', 'ketogenic', 'diabetic_friendly', 'low_fodmap'] as DietaryPattern[]).map((option) => (
+                  <option key={option} value={option}>{dietLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Sweat type">
+            <Field label={t.more.sweatType}>
               <SelectInput value={sweatType} onChange={(event) => setSweatType(event.target.value as SweatType)}>
-                {SWEAT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {(['low', 'normal', 'heavy_salty'] as SweatType[]).map((option) => (
+                  <option key={option} value={option}>{sweatLabel(t, option)}</option>
                 ))}
               </SelectInput>
             </Field>
           </div>
 
-          <Field label="Daily budget (€)" hint="Optional: used by future budget-aware meal planning.">
+          <Field label={t.more.dailyBudget} hint={t.more.dailyBudgetHint}>
             <TextInput type="number" min="0" step="1" value={budgetPerDay} onChange={(event) => setBudgetPerDay(event.target.value)} placeholder="15" />
           </Field>
 
           <div className="rounded-xl border border-line bg-surface-1 p-3">
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-low">Micronutrient targets</div>
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-low">{t.more.micronutrientTargets}</div>
             <div className="grid gap-3 sm:grid-cols-2">
               {MICRONUTRIENT_FIELDS.map((field) => (
                 <Field key={field.key} label={field.label}>
@@ -204,7 +218,7 @@ export function ProfileGoalForm() {
             </div>
           </div>
 
-          <Field label={`Target rate: ${Number(goalRate) > 0 ? '+' : ''}${Number(goalRate).toFixed(2)} kg / week`} hint="Negative loses weight, positive gains.">
+          <Field label={t.more.targetRate.replace('{value}', `${Number(goalRate) > 0 ? '+' : ''}${Number(goalRate).toFixed(2)}`)} hint={t.more.targetRateHint}>
             <input
               type="range"
               min="-1.5"
@@ -217,9 +231,9 @@ export function ProfileGoalForm() {
           </Field>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit">Save profile</Button>
+            <Button type="submit">{t.more.saveProfile}</Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/onboarding')}>
-              Open setup wizard
+              {t.more.openSetupWizard}
             </Button>
           </div>
           {message ? <Alert variant="success">{message}</Alert> : null}

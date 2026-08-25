@@ -10,6 +10,7 @@ import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useNutritionTrend } from '@/hooks/useNutritionTrend'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
+import { useT } from '@/i18n'
 import { MealLogCard } from '@/components/nutrition/MealLogCard'
 import { WeightQuickAddModal } from '@/components/analytics/WeightQuickAddModal'
 import type { Meal } from '@/types'
@@ -43,6 +44,7 @@ function toNumber(value: number | undefined, fallback: number) {
 }
 
 export function TodayPage() {
+  const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()))
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -118,12 +120,12 @@ export function TodayPage() {
 
   async function updateMeal(meal: Meal, patch: Partial<Meal>) {
     await db.meals.put({ ...meal, ...patch })
-    setSuccessMessage('Meal updated.')
+    setSuccessMessage(t.today.mealUpdated)
   }
 
   async function handleDeleteMeal(mealId: string) {
     await db.meals.delete(mealId)
-    setSuccessMessage('Meal removed from the selected day.')
+    setSuccessMessage(t.today.mealRemoved)
   }
 
   const renderHero = () => {
@@ -132,30 +134,30 @@ export function TodayPage() {
         <Card className="p-0 overflow-hidden">
           <CardContent className="grid gap-4 p-5 md:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Weight / BMI</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.today.heroWeight}</p>
               <div className="mt-3 flex items-end gap-3">
                 <span className="text-4xl font-semibold text-ink-hi num">{profile.weightKg ?? '--'}kg</span>
                 <span className="text-sm text-ink-mid">BMI {bmi ? bmi.toFixed(1) : '--'}</span>
               </div>
               <ProgressBar className="mt-5" value={Math.min(100, ((bmi ?? 22) / 30) * 100)} color="accent" />
               <div className="mt-2 flex justify-between text-[11px] text-ink-low">
-                <span>Healthy range</span>
+                <span>{t.today.healthyRange}</span>
                 <span>18.5–24.9</span>
               </div>
             </div>
             <div className="rounded-xl border border-line bg-surface-0 p-4">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-ink-low">Diet</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-ink-low">{t.today.diet}</p>
               <div className="mt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-ink-mid">Calories</span>
+                  <span className="text-ink-mid">{t.today.calories}</span>
                   <span className="num font-medium text-ink-hi">{totals.calories}/{targets.calories}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-ink-mid">Protein</span>
+                  <span className="text-ink-mid">{t.today.protein}</span>
                   <span className="num font-medium text-ink-hi">{totals.protein}/{targets.protein}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-ink-mid">Carbs</span>
+                  <span className="text-ink-mid">{t.today.carbs}</span>
                   <span className="num font-medium text-ink-hi">{totals.carbs}/{targets.carbs}</span>
                 </div>
               </div>
@@ -170,12 +172,12 @@ export function TodayPage() {
         <Card>
           <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
             {[
-              ['Calories', `${totals.calories}/${targets.calories}`],
-              ['Protein', `${totals.protein}/${targets.protein}g`],
-              ['Carbs', `${totals.carbs}/${targets.carbs}g`],
-              ['Fat', `${totals.fat}/${targets.fat}g`],
-              ['Streak', `${streakValue}/7d`],
-              ['Workouts', `${workoutCount}`],
+              [t.today.calories, `${totals.calories}/${targets.calories}`],
+              [t.today.protein, `${totals.protein}/${targets.protein}g`],
+              [t.today.carbs, `${totals.carbs}/${targets.carbs}g`],
+              [t.common.fat, `${totals.fat}/${targets.fat}g`],
+              [t.today.streak, `${streakValue}/7d`],
+              [t.train.sessions, `${workoutCount}`],
             ].map(([label, value]) => (
               <div key={label} className="min-w-0 rounded-xl border border-line bg-surface-0 p-3">
                 <p className="text-[9px] uppercase tracking-[0.12em] text-ink-low">{label}</p>
@@ -193,7 +195,7 @@ export function TodayPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.14em] text-accent-text">7-day adherence</p>
+                <p className="text-[10px] uppercase tracking-[0.14em] text-accent-text">{t.today.adherence}</p>
                 <h3 className="mt-2 text-2xl font-semibold text-ink-hi">{streakValue}/7</h3>
               </div>
               <Trophy className="h-9 w-9 text-accent-text" />
@@ -220,22 +222,22 @@ export function TodayPage() {
           <div className="flex items-center gap-5">
             <ProgressRing value={Math.max(0, Math.min(100, calorieProgress))} max={100} size={118} strokeWidth={10} color="accent" label="kcal" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">Calories</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-text">{t.today.calories}</p>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-semibold text-ink-hi num">{totals.calories}</span>
                 <span className="text-sm text-ink-mid">/ {targets.calories}</span>
               </div>
               <p className={`mt-2 text-sm ${caloriesRemaining >= 0 ? 'text-accent-text' : 'text-warning'}`}>
-                {caloriesRemaining >= 0 ? `${caloriesRemaining} remaining` : `${Math.abs(caloriesRemaining)} over`}
+                {caloriesRemaining >= 0 ? t.today.caloriesRemaining.replace('{value}', String(caloriesRemaining)) : t.today.caloriesOver.replace('{value}', String(Math.abs(caloriesRemaining)))}
               </p>
             </div>
           </div>
 
           <div className="w-full max-w-md space-y-3">
             {[
-              ['Protein', totals.protein, targets.protein],
-              ['Carbs', totals.carbs, targets.carbs],
-              ['Fat', totals.fat, targets.fat],
+              [t.today.protein, totals.protein, targets.protein],
+              [t.today.carbs, totals.carbs, targets.carbs],
+              [t.common.fat, totals.fat, targets.fat],
             ].map(([label, current, target]) => (
               <div key={label as string}>
                 <div className="mb-1 flex items-center justify-between text-xs text-ink-mid">
@@ -258,13 +260,13 @@ export function TodayPage() {
       {successMessage ? <div className="rounded-xl border border-success/40 bg-success/10 px-3 py-2 text-sm text-ink-hi">{successMessage}</div> : null}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => goToDay(-1)} aria-label="Previous day">
+          <Button variant="ghost" size="icon" onClick={() => goToDay(-1)} aria-label={t.common.previousDay}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setSelectedDate(todayKey)} aria-label="Today">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedDate(todayKey)} aria-label={t.common.today}>
             <Activity className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => goToDay(1)} aria-label="Next day" disabled={selectedDate >= todayKey}>
+          <Button variant="ghost" size="icon" onClick={() => goToDay(1)} aria-label={t.common.nextDay} disabled={selectedDate >= todayKey}>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -279,11 +281,11 @@ export function TodayPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
         <Card>
-          <CardHeader icon={<Flame />} title="Today meals" />
+          <CardHeader icon={<Flame />} title={t.today.todayMeals} />
           <CardContent className="space-y-4">
             {groupedMeals.length === 0 ? (
               <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-                No meals logged for this day yet.
+                {t.today.noMeals}
               </div>
             ) : (
               groupedMeals.map(({ mealType, meals: mealEntries }) => (
@@ -312,35 +314,35 @@ export function TodayPage() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader icon={<Dumbbell />} title="Workout" />
+            <CardHeader icon={<Dumbbell />} title={t.today.workout} />
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-ink-mid">Active sessions</span>
+                <span className="text-ink-mid">{t.today.activeSessions}</span>
                 <span className="num text-ink-hi">{workoutCount}</span>
               </div>
               <div className="rounded-xl border border-line bg-surface-0 p-3 text-sm text-ink-mid">
-                {workoutCount > 0 ? 'A workout is already logged for today.' : 'No workouts logged yet today.'}
+                {workoutCount > 0 ? t.today.workoutAlready : t.today.workoutNone}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader icon={<Target />} title="Targets" />
+            <CardHeader icon={<Target />} title={t.today.targets} />
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-ink-mid">Source</span>
+                <span className="text-ink-mid">{t.common.source}</span>
                 <span className="text-ink-hi capitalize">{source}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-ink-mid">Calories</span>
+                <span className="text-ink-mid">{t.today.calories}</span>
                 <span className="num text-ink-hi">{targets.calories}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-ink-mid">Protein</span>
+                <span className="text-ink-mid">{t.today.protein}</span>
                 <span className="num text-ink-hi">{targets.protein}g</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-ink-mid">Carbs</span>
+                <span className="text-ink-mid">{t.today.carbs}</span>
                 <span className="num text-ink-hi">{targets.carbs}g</span>
               </div>
             </CardContent>
@@ -350,22 +352,22 @@ export function TodayPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader icon={<TrendingUp />} title="Quick stats" />
+          <CardHeader icon={<TrendingUp />} title={t.today.quickStats} />
           <CardContent className="space-y-3 text-sm">
-            <div className="flex items-center justify-between"><span className="text-ink-mid">TDEE</span><span className="num text-ink-hi">{toNumber(profile.targetCalories, 2200)}</span></div>
-            <div className="flex items-center justify-between"><span className="text-ink-mid">Weight</span><span className="num text-ink-hi">{profile.weightKg ?? '--'} kg</span></div>
-            <div className="flex items-center justify-between"><span className="text-ink-mid">Streak</span><span className="num text-ink-hi">{streakValue} days</span></div>
+            <div className="flex items-center justify-between"><span className="text-ink-mid">{t.today.tdee}</span><span className="num text-ink-hi">{toNumber(profile.targetCalories, 2200)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-ink-mid">{t.today.weight}</span><span className="num text-ink-hi">{profile.weightKg ?? '--'} kg</span></div>
+            <div className="flex items-center justify-between"><span className="text-ink-mid">{t.today.streak}</span><span className="num text-ink-hi">{streakValue} {t.common.days}</span></div>
           </CardContent>
         </Card>
 
         {profileComplete ? null : (
           <Card className="md:col-span-2">
-            <CardHeader icon={<Target />} title="Setup checklist" />
+            <CardHeader icon={<Target />} title={t.today.setupChecklist} />
             <CardContent className="space-y-3 text-sm">
-              {!profile.heightCm ? <div>• Add your height to unlock BMI and calorie estimates.</div> : null}
-              {!profile.weightKg ? <div>• Add your current weight so trend and goals stay aligned.</div> : null}
-              {!profile.birthYear ? <div>• Add your birth year to finish the profile.</div> : null}
-              {!profile.sex ? <div>• Choose your sex to enable the rest of the profile logic.</div> : null}
+              {!profile.heightCm ? <div>• {t.today.setupHeight}</div> : null}
+              {!profile.weightKg ? <div>• {t.today.setupWeight}</div> : null}
+              {!profile.birthYear ? <div>• {t.today.setupBirthYear}</div> : null}
+              {!profile.sex ? <div>• {t.today.setupSex}</div> : null}
             </CardContent>
           </Card>
         )}

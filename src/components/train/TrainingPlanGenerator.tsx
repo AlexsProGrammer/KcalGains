@@ -9,6 +9,7 @@ import { db } from '@/db'
 import { saveWorkoutLog } from '@/db/workoutRepository'
 import { useSettings } from '@/hooks/useSettings'
 import { useWorkoutLogger } from '@/hooks/useWorkoutLogger'
+import { useT } from '@/i18n'
 import { TrainingPlanSchema } from '@/schemas/trainingPlan.schema'
 import type { TrainingDayContext, TrainingPlan, WorkoutLog } from '@/types'
 
@@ -23,6 +24,20 @@ const DAY_LABELS = {
 } as const
 
 const DAY_KEYS = Object.keys(DAY_LABELS) as Array<keyof typeof DAY_LABELS>
+
+function weekdayLabel(t: ReturnType<typeof useT>['t'], key: keyof typeof DAY_LABELS): string {
+  return t.train.weekdays[key] ?? DAY_LABELS[key]
+}
+
+function trainingModeLabel(t: ReturnType<typeof useT>['t'], mode: string): string {
+  if (mode === 'rest') return t.train.rest
+  const map: Record<string, string> = {
+    strength: t.train.strength,
+    cardio: t.train.cardio,
+    other: t.train.other,
+  }
+  return map[mode] ?? mode
+}
 
 export function getDateForDayKey(weekStart: string, dayKey: keyof typeof DAY_LABELS): string {
   const [year, month, day] = weekStart.split('-').map(Number)
@@ -216,6 +231,7 @@ function normalizeTrainingPlan(plan: Partial<TrainingPlan> | null | undefined): 
 }
 
 export function TrainingPlanGenerator() {
+  const { t } = useT()
   const { settings } = useSettings()
   const logger = useWorkoutLogger()
   const plans = useLiveQuery(async () => db.trainingPlans.toArray(), [], []) as TrainingPlan[]
@@ -309,7 +325,7 @@ export function TrainingPlanGenerator() {
     await db.trainingPlans.put(parsed)
     await syncTrainingPlanContexts(parsed)
     setDraftPlan(parsed)
-    setMessage('Training profile saved.')
+    setMessage(t.train.profileSaved)
   }
 
   async function addNewPlan() {
@@ -321,7 +337,7 @@ export function TrainingPlanGenerator() {
     setSelectedPlanId(next.id)
     setDraftPlan(next)
     await db.trainingPlans.put(next)
-    setMessage('New manual training profile created.')
+    setMessage(t.train.newProfileCreated)
   }
 
   function addExerciseToDay(dayId: string, exerciseId: string) {
@@ -386,7 +402,7 @@ export function TrainingPlanGenerator() {
     setSelectedPlanId(duplicate.id)
     setDraftPlan(duplicate)
     await db.trainingPlans.put(duplicate)
-    setMessage('Training profile duplicated.')
+    setMessage(t.train.profileDuplicated)
   }
 
   async function removePlan(planId: string) {
@@ -394,7 +410,7 @@ export function TrainingPlanGenerator() {
     await db.trainingPlans.delete(planId)
     setSelectedPlanId('')
     setDraftPlan(null)
-    setMessage('Training profile deleted.')
+    setMessage(t.train.profileDeleted)
   }
 
   async function toggleDayCompletion(dayId: string) {
@@ -404,7 +420,7 @@ export function TrainingPlanGenerator() {
     const next = { ...draftPlan, completedDayIds }
     setDraftPlan(next)
     await db.trainingPlans.put(next)
-    setMessage(`${isCompleted ? 'Day unchecked.' : 'Day marked complete.'}`)
+    setMessage(isCompleted ? t.train.dayUnchecked : t.train.dayComplete)
   }
 
   function resetPlanCompletion() {
@@ -412,7 +428,7 @@ export function TrainingPlanGenerator() {
     const next = { ...draftPlan, completedDayIds: [] }
     setDraftPlan(next)
     void db.trainingPlans.put(next)
-    setMessage('Profile reset. All day checkmarks were cleared.')
+    setMessage(t.train.profileReset)
   }
 
   async function saveCurrentPlan() {
@@ -442,16 +458,16 @@ export function TrainingPlanGenerator() {
     const nextWorkout = logger.appendExercises(nextExercises)
     const finalWorkout = {
       ...nextWorkout,
-      title: `${day.label} · ${draftPlan?.title ?? 'Training plan'}`,
+      title: `${weekdayLabel(t, day.dayKey)} · ${draftPlan?.title ?? 'Training plan'}`,
     }
     logger.updateWorkout(finalWorkout)
     setSelectedDayId(day.id)
-    setMessage(`${day.label} added to the current workout.`)
+    setMessage(t.train.addedToWorkout.replace('{label}', weekdayLabel(t, day.dayKey)))
   }
 
   async function finishDayWorkoutLogger(day: TrainingPlan['days'][number]) {
     if (day.exercises.length === 0) {
-      setMessage(`${day.label} has no exercises to log.`)
+      setMessage(t.train.noExercisesToLog.replace('{label}', weekdayLabel(t, day.dayKey)))
       return
     }
 
@@ -461,13 +477,13 @@ export function TrainingPlanGenerator() {
       date: new Date().toISOString().slice(0, 10),
       startTime: new Date(),
       endTime: new Date(),
-      title: `${day.label} · ${draftPlan?.title ?? 'Training plan'}`,
+      title: `${weekdayLabel(t, day.dayKey)} · ${draftPlan?.title ?? 'Training plan'}`,
       exercises: nextExercises,
     }
 
     await saveWorkoutLog(finalWorkout)
     setSelectedDayId(day.id)
-    setMessage(`${day.label} was saved as a recent workout.`)
+    setMessage(t.train.savedAsWorkout.replace('{label}', weekdayLabel(t, day.dayKey)))
   }
 
   async function setDayAsToday(day: TrainingPlan['days'][number]) {
@@ -481,12 +497,12 @@ export function TrainingPlanGenerator() {
       seasonPhase: day.trainingMode === 'rest' ? 'recovery' : 'offseason',
       createdAt: new Date().toISOString(),
     })
-    setMessage(`${day.label} is now the active training mode for today.`)
+    setMessage(t.train.activeModeToday.replace('{label}', weekdayLabel(t, day.dayKey)))
   }
 
   return (
     <Card>
-      <CardHeader icon={<CalendarRange />} title="Manual training profiles" />
+      <CardHeader icon={<CalendarRange />} title={t.train.manualProfiles} />
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -504,10 +520,10 @@ export function TrainingPlanGenerator() {
               onClick={() => setIsEditing((value) => !value)}
               aria-pressed={isEditing}
             >
-              <Pencil className="mr-2 h-4 w-4" />Edit mode
+              <Pencil className="mr-2 h-4 w-4" />{t.train.editMode}
             </Button>
             <Button type="button" variant="secondary" onClick={() => void addNewPlan()}>
-              <Plus className="mr-2 h-4 w-4" />New profile
+              <Plus className="mr-2 h-4 w-4" />{t.train.newProfile}
             </Button>
           </div>
         </div>
@@ -516,35 +532,35 @@ export function TrainingPlanGenerator() {
           <div className="space-y-4">
             {isEditing ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface-0 p-3">
-                <TextInput value={selectedPlan.title} onChange={(event) => updatePlan((plan) => ({ ...plan, title: event.target.value }))} className="max-w-md" placeholder="Training profile name" />
+                <TextInput value={selectedPlan.title} onChange={(event) => updatePlan((plan) => ({ ...plan, title: event.target.value }))} className="max-w-md" placeholder={t.train.trainingProfileName} />
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" onClick={resetPlanCompletion}>
-                    <RotateCcw className="mr-2 h-4 w-4" />Reset
+                    <RotateCcw className="mr-2 h-4 w-4" />{t.train.reset}
                   </Button>
                   <Button type="button" variant="secondary" onClick={() => void duplicatePlan()}>
-                    <Plus className="mr-2 h-4 w-4" />Duplicate
+                    <Plus className="mr-2 h-4 w-4" />{t.train.duplicate}
                   </Button>
                   <Button type="button" variant="secondary" onClick={() => void saveCurrentPlan()}>
-                    <Save className="mr-2 h-4 w-4" />Save
+                    <Save className="mr-2 h-4 w-4" />{t.common.save}
                   </Button>
                   <Button type="button" variant="danger" onClick={() => void removePlan(selectedPlan.id)}>
-                    <Trash2 className="mr-2 h-4 w-4" />Delete
+                    <Trash2 className="mr-2 h-4 w-4" />{t.common.delete}
                   </Button>
                 </div>
               </div>
             ) : null}
 
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Repeat weeks">
+              <Field label={t.train.repeatWeeks}>
                 <SelectInput value={String(selectedPlan.repeatWeeks)} onChange={(event) => updatePlan((plan) => ({ ...plan, repeatWeeks: Number(event.target.value) }))} disabled={!isEditing}>
-                  <option value="1">1 week</option>
-                  <option value="2">2 weeks</option>
-                  <option value="3">3 weeks</option>
-                  <option value="4">4 weeks</option>
-                  <option value="999">Infinite</option>
+                  <option value="1">{t.train.weeks1}</option>
+                  <option value="2">{t.train.weeks2}</option>
+                  <option value="3">{t.train.weeks3}</option>
+                  <option value="4">{t.train.weeks4}</option>
+                  <option value="999">{t.train.infinite}</option>
                 </SelectInput>
               </Field>
-              <Field label="Week start">
+              <Field label={t.train.weekStart}>
                 <TextInput type="date" value={selectedPlan.weekStart ?? getCurrentWeekStart()} onChange={(event) => updatePlan((plan) => ({ ...plan, weekStart: event.target.value }))} readOnly={!isEditing} />
               </Field>
             </div>
@@ -557,7 +573,7 @@ export function TrainingPlanGenerator() {
                 return (
                   <div key={day.id} className={`rounded-xl border p-3 ${isSelected ? 'border-accent/60 bg-accent/5' : 'border-line bg-surface-0'} ${isEditing ? 'space-y-3' : 'space-y-2'}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-ink-hi">{day.label}</div>
+                      <div className="font-medium text-ink-hi">{weekdayLabel(t, day.dayKey)}</div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -567,9 +583,9 @@ export function TrainingPlanGenerator() {
                           }}
                           className={`rounded-full border px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] ${selectedDayId === day.id ? 'border-accent bg-accent/10 text-accent-text' : 'border-line text-ink-mid'}`}
                         >
-                          Today
+                          {t.train.todayAction}
                         </button>
-                        <button type="button" onClick={() => void toggleDayCompletion(day.id)} className={`flex h-7 w-7 items-center justify-center rounded-full border ${isComplete ? 'border-success/50 bg-success/10 text-success' : 'border-line text-ink-low'}`} aria-label={isComplete ? `Mark ${day.label} as incomplete` : `Mark ${day.label} as complete`}>
+                        <button type="button" onClick={() => void toggleDayCompletion(day.id)} className={`flex h-7 w-7 items-center justify-center rounded-full border ${isComplete ? 'border-success/50 bg-success/10 text-success' : 'border-line text-ink-low'}`} aria-label={isComplete ? t.train.markIncomplete.replace('{label}', weekdayLabel(t, day.dayKey)) : t.train.markComplete.replace('{label}', weekdayLabel(t, day.dayKey))}>
                           <Check className="h-4 w-4" />
                         </button>
                       </div>
@@ -579,17 +595,17 @@ export function TrainingPlanGenerator() {
                       {isEditing ? (
                         <>
                           <SelectInput value={day.trainingMode} onChange={(event) => updateDay(day.id, (current) => ({ ...current, trainingMode: event.target.value }))}>
-                            <option value="rest">Rest</option>
+                            <option value="rest">{t.train.rest}</option>
                             {availableModes.map((mode) => (
                               <option key={mode.id} value={mode.sportType}>{mode.label}</option>
                             ))}
                           </SelectInput>
-                          <TextInput value={day.notes ?? ''} onChange={(event) => updateDay(day.id, (current) => ({ ...current, notes: event.target.value }))} placeholder="Session notes" />
+                          <TextInput value={day.notes ?? ''} onChange={(event) => updateDay(day.id, (current) => ({ ...current, notes: event.target.value }))} placeholder={t.train.sessionNotes} />
                         </>
                       ) : (
                         <>
-                          <div className="rounded-md bg-surface-1 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-mid">{day.trainingMode === 'rest' ? 'Rest' : day.trainingMode}</div>
-                          <div className="text-[11px] text-ink-mid">{day.notes || 'No session notes'}</div>
+                          <div className="rounded-md bg-surface-1 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-mid">{trainingModeLabel(t, day.trainingMode)}</div>
+                          <div className="text-[11px] text-ink-mid">{day.notes || t.train.noSessionNotes}</div>
                         </>
                       )}
                     </div>
@@ -597,11 +613,11 @@ export function TrainingPlanGenerator() {
                     {day.exercises.length > 0 ? (
                       <div className="space-y-2">
                         <div className="grid grid-cols-[minmax(0,2.4fr)_0.9fr_0.9fr_0.9fr_0.8fr] gap-2 text-[10px] font-medium uppercase tracking-[0.12em] text-ink-low">
-                          <span>Exercise</span>
-                          <span>Set</span>
-                          <span>Reps</span>
-                          <span>Kg</span>
-                          <span>RPE</span>
+                          <span>{t.train.exercise}</span>
+                          <span>{t.train.setHeader}</span>
+                          <span>{t.train.repsHeader}</span>
+                          <span>{t.train.kgHeader}</span>
+                          <span>{t.train.rpeHeader}</span>
                         </div>
 
                         {day.exercises.map((exercise) => (
@@ -609,18 +625,18 @@ export function TrainingPlanGenerator() {
                             <div className="flex items-center justify-between gap-2">
                               <span className={isEditing ? 'text-sm font-medium text-ink-hi' : 'text-[12px] font-medium text-ink-hi'}>{exercise.name}</span>
                               {isEditing ? (
-                                <button type="button" onClick={() => removeExerciseFromDay(day.id, exercise.id)} className="text-ink-low hover:text-rose-300" aria-label={`Remove ${exercise.name}`}>
+                                <button type="button" onClick={() => removeExerciseFromDay(day.id, exercise.id)} className="text-ink-low hover:text-rose-300" aria-label={t.train.remove.replace('{name}', exercise.name)}>
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               ) : null}
                             </div>
 
                             {exercise.notes || isEditing ? (
-                              <TextInput value={exercise.notes ?? ''} onChange={(event) => updateExercise(day.id, exercise.id, (current) => ({ ...current, notes: event.target.value }))} placeholder="Exercise notes" className="h-7 px-2 text-[10px]" readOnly={!isEditing} />
+                              <TextInput value={exercise.notes ?? ''} onChange={(event) => updateExercise(day.id, exercise.id, (current) => ({ ...current, notes: event.target.value }))} placeholder={t.train.exerciseNotes} className="h-7 px-2 text-[10px]" readOnly={!isEditing} />
                             ) : null}
 
                             {exercise.sets.length === 0 ? (
-                              <div className="text-[11px] text-ink-mid">No sets yet.</div>
+                              <div className="text-[11px] text-ink-mid">{t.train.noSets}</div>
                             ) : (
                               <div className="space-y-2">
                                 {exercise.sets.map((set, index) => (
@@ -641,7 +657,7 @@ export function TrainingPlanGenerator() {
                                       </>
                                     )}
                                     {isEditing ? (
-                                      <button type="button" onClick={() => removeSet(day.id, exercise.id, set.id)} className="text-ink-low hover:text-rose-300" aria-label="Remove set">
+                                      <button type="button" onClick={() => removeSet(day.id, exercise.id, set.id)} className="text-ink-low hover:text-rose-300" aria-label={t.train.removeSet}>
                                         <Trash2 className="h-4 w-4" />
                                       </button>
                                     ) : null}
@@ -652,7 +668,7 @@ export function TrainingPlanGenerator() {
 
                             {isEditing ? (
                               <div className="flex flex-wrap gap-2">
-                                <Button type="button" variant="secondary" size="sm" onClick={() => addSetToExercise(day.id, exercise.id)}>Add set</Button>
+                                <Button type="button" variant="secondary" size="sm" onClick={() => addSetToExercise(day.id, exercise.id)}>{t.train.addSet}</Button>
                               </div>
                             ) : null}
                           </div>
@@ -672,27 +688,27 @@ export function TrainingPlanGenerator() {
                             }
                           }}
                         >
-                          <option value="">Add exercise...</option>
+                          <option value="">{t.train.addExercisePlaceholder}</option>
                           {(exerciseLibrary ?? []).map((exercise) => (
                             <option key={exercise.id} value={exercise.id}>{exercise.name}</option>
                           ))}
                         </SelectInput>
                         <div className="flex flex-wrap gap-2">
                           <Button type="button" variant="secondary" size="sm" onClick={() => loadDayIntoWorkoutLogger(day)}>
-                            Use in logger
+                            {t.train.useInLogger}
                           </Button>
                           <Button type="button" variant="primary" size="sm" onClick={() => void finishDayWorkoutLogger(day)}>
-                            Finish workout
+                            {t.train.finishWorkout}
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" size="sm" onClick={() => loadDayIntoWorkoutLogger(day)}>
-                          Add to logger
+                          {t.train.addToLogger}
                         </Button>
                         <Button type="button" variant="primary" size="sm" onClick={() => void finishDayWorkoutLogger(day)}>
-                          Finish workout
+                          {t.train.finishWorkout}
                         </Button>
                       </div>
                     )}
@@ -703,7 +719,7 @@ export function TrainingPlanGenerator() {
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
-            No training profile yet. Create one to build a manual weekly schedule.
+            {t.train.noTrainingProfile}
           </div>
         )}
 

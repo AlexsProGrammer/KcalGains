@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '@/components/ui/button'
 import { db } from '@/db'
+import { useT } from '@/i18n'
 import { MealSchema } from '@/schemas/meal.schema'
 import { MICRONUTRIENT_KEYS, createEmptyMicronutrientTotals, mergeMicronutrientTotals } from '@/services/micronutrientTargetService'
 import { normalizeFoodMicros } from '@/schemas/food.schema'
@@ -73,6 +74,7 @@ function applyFoodToItem(food: Food | null | undefined, item: DraftItem): DraftI
 }
 
 export function MealQuickEditorModal({ open, meal, date, onClose, onSaved }: MealQuickEditorModalProps) {
+  const { t } = useT()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [], []) as Food[] | undefined
   const [draft, setDraft] = useState(() => createDraftFromMeal(meal, date))
 
@@ -233,7 +235,7 @@ export function MealQuickEditorModal({ open, meal, date, onClose, onSaved }: Mea
           <label className="text-[10px] uppercase tracking-[0.12em] text-ink-low">
             Meal type
             <select value={draft.mealType} onChange={(event) => updateField('mealType', event.target.value as Meal['mealType'])} className="mt-1 min-h-9 w-full rounded-md border border-line bg-surface-0 px-2 text-sm text-ink-hi">
-              {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => <option key={type} value={type}>{type}</option>)}
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => <option key={type} value={type}>{t.common.mealTypes[type]}</option>)}
             </select>
           </label>
         </div>

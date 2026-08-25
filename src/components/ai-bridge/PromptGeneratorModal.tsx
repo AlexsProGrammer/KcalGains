@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useAiPromptGenerator } from '@/hooks/useAiPromptGenerator'
 import { Button } from '@/components/ui/button'
 import { Field, SelectInput, TextInput } from '@/components/ui/field'
+import { useT } from '@/i18n'
 import { PromptCopyCard } from '@/components/ai-bridge/PromptCopyCard'
 import type { PromptMode } from '@/services/promptSynthesizerService'
 
@@ -9,6 +10,7 @@ type Props = { open: boolean; onClose: () => void }
 
 export function PromptGeneratorModal({ open, onClose }: Props) {
   const generator = useAiPromptGenerator()
+  const { t } = useT()
   if (!open) return null
 
   return (
@@ -16,40 +18,40 @@ export function PromptGeneratorModal({ open, onClose }: Props) {
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-emerald-400">AI bridge</p>
+            <p className="text-xs uppercase tracking-wide text-emerald-400">{t.more.aiBridgeTag}</p>
             <h2 className="text-lg font-semibold text-slate-100">
-              {generator.mode === 'meal' ? 'Generate a meal prompt' : 'Convert a log into backup JSON'}
+              {generator.mode === 'meal' ? t.more.mealPromptTitle : t.more.logConvertTitle}
             </h2>
           </div>
-          <Button type="button" size="sm" variant="ghost" onClick={onClose} aria-label="Close prompt generator">
+          <Button type="button" size="sm" variant="ghost" onClick={onClose} aria-label={t.more.closePrompt}>
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         <div className="mt-4">
-          <Field label="Prompt mode">
+          <Field label={t.more.promptMode}>
             <SelectInput value={generator.mode} onChange={(event) => generator.setMode(event.target.value as PromptMode)}>
-              <option value="meal">Suggest a meal</option>
-              <option value="import">Convert tracked text to importable JSON</option>
+              <option value="meal">{t.more.suggestMeal}</option>
+              <option value="import">{t.more.convertImport}</option>
             </SelectInput>
           </Field>
         </div>
 
         {generator.mode === 'meal' ? (
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Field label="Meal type">
+            <Field label={t.common.mealType}>
               <SelectInput
                 value={generator.context.mealType}
                 onChange={(event) => generator.setContext({ mealType: event.target.value as typeof generator.context.mealType })}
               >
-                <option value="flexible">Flexible</option>
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-                <option value="snack">Snack</option>
+                <option value="flexible">{t.common.mealTypes.flexible}</option>
+                <option value="breakfast">{t.common.mealTypes.breakfast}</option>
+                <option value="lunch">{t.common.mealTypes.lunch}</option>
+                <option value="dinner">{t.common.mealTypes.dinner}</option>
+                <option value="snack">{t.common.mealTypes.snack}</option>
               </SelectInput>
             </Field>
-            <Field label="Max ingredients">
+            <Field label={t.more.maxIngredients}>
               <TextInput
                 type="number"
                 min="1"
@@ -60,7 +62,7 @@ export function PromptGeneratorModal({ open, onClose }: Props) {
           </div>
         ) : (
           <div className="mt-3">
-            <Field label="Your tracked meals or chat transcript" hint="Pasted here so the model can convert it; nothing leaves this device until you copy the prompt.">
+            <Field label={t.more.trackedText} hint={t.more.trackedTextHint}>
               <textarea
                 value={generator.sourceText}
                 onChange={(event) => generator.setSourceText(event.target.value)}
@@ -69,7 +71,7 @@ export function PromptGeneratorModal({ open, onClose }: Props) {
               />
             </Field>
             <p className="mt-2 text-xs text-slate-500">
-              Copy the JSON reply into a `.json` file, then import it from Backup and restore using merge mode.
+              {t.more.jsonToFileHint}
             </p>
           </div>
         )}
