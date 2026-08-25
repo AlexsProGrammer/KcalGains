@@ -217,6 +217,31 @@ This exposes the app to your local network so you can test it from a phone or ta
 
 > If you use pnpm and the install warns about an ignored esbuild step, run `pnpm install` once in the project root and retry the dev command.
 
+### Automated regression checks
+
+This project now includes a lightweight Vitest setup for the app’s highest-risk logic paths.
+
+```bash
+pnpm test
+```
+
+The current smoke suite covers:
+
+- settings persistence and merge behavior
+- dynamic target resolution with training context adjustments
+- default configuration safety for the app settings schema
+
+### Manual QA checklist
+
+Use the app-level regression checklist in [QA_CHECKLIST.md](QA_CHECKLIST.md) before shipping a feature pass. It covers:
+
+- onboarding persistence
+- quick actions and add-entry flows
+- meal log add/edit/remove actions
+- workout and weight history edits
+- training plan selection and duplicate prevention
+- dynamic target updates across date and training mode changes
+
 ---
 
 ## Production build
