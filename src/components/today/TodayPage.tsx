@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
-import { Activity, ArrowLeft, ArrowRight, Dumbbell, Flame, Target, TrendingUp, Trophy } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Activity, ArrowLeft, ArrowRight, Dumbbell, Flame, Plus, Target, Trash2, TrendingUp, Trophy } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ProgressBar, ProgressRing } from '@/components/ui/progress'
@@ -9,7 +10,8 @@ import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useNutritionTrend } from '@/hooks/useNutritionTrend'
 import { useProfile } from '@/hooks/useProfile'
 import { useSettings } from '@/hooks/useSettings'
-import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
+import { MealLogCard } from '@/components/nutrition/MealLogCard'
+import { WeightQuickAddModal } from '@/components/analytics/WeightQuickAddModal'
 import type { Meal } from '@/types'
 
 const formatDate = (value: Date) => value.toISOString().slice(0, 10)
@@ -31,7 +33,14 @@ function toNumber(value: number | undefined, fallback: number) {
 }
 
 export function TodayPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedDate, setSelectedDate] = useState(() => formatDate(new Date()))
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [quickAddOpen, setQuickAddOpen] = useState(searchParams.get('weight') === 'quick-add')
+
+  useEffect(() => {
+    setQuickAddOpen(searchParams.get('weight') === 'quick-add')
+  }, [searchParams])
   const { settings } = useSettings()
   const { profile } = useProfile()
   const { targets, source } = useDynamicTargets()
@@ -82,6 +91,23 @@ export function TodayPage() {
     const date = getDayStart(selected)
     date.setDate(date.getDate() + offset)
     setSelectedDate(formatDate(date))
+  }
+
+  const closeQuickAdd = () => {
+    setQuickAddOpen(false)
+    const next = new URLSearchParams(searchParams)
+    next.delete('weight')
+    setSearchParams(next, { replace: true })
+  }
+
+  async function updateMeal(meal: Meal, patch: Partial<Meal>) {
+    await db.meals.put({ ...meal, ...patch })
+    setSuccessMessage('Meal updated.')
+  }
+
+  async function handleDeleteMeal(mealId: string) {
+    await db.meals.delete(mealId)
+    setSuccessMessage('Meal removed from the selected day.')
   }
 
   const renderHero = () => {
@@ -213,6 +239,7 @@ export function TodayPage() {
 
   return (
     <div className="space-y-4">
+      {successMessage ? <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{successMessage}</div> : null}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => goToDay(-1)} aria-label="Previous day">
@@ -231,6 +258,8 @@ export function TodayPage() {
       </div>
 
       {renderHero()}
+
+      <WeightQuickAddModal open={quickAddOpen} onClose={closeQuickAdd} defaultDate={selectedDate} />
 
       <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
         <Card>
@@ -251,18 +280,12 @@ export function TodayPage() {
                   </div>
                   <div className="space-y-2">
                     {mealEntries.map((entry) => (
-                      <div key={entry.id} className="rounded-xl border border-line bg-surface-0 p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-ink-hi">{entry.mealType}</span>
-                          <span className="num text-xs text-ink-mid">{entry.totalCalories} kcal</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-ink-mid">
-                          <span>P {entry.totalProtein}g</span>
-                          <span>C {entry.totalCarbs}g</span>
-                          <span>F {entry.totalFat}g</span>
-                        </div>
-                        <MealMicronutrientSummary meal={entry} profile={profile} compact />
-                      </div>
+                      <MealLogCard
+                        key={entry.id}
+                        meal={entry}
+                        profile={profile}
+                        onDelete={handleDeleteMeal}
+                      />
                     ))}
                   </div>
                 </div>

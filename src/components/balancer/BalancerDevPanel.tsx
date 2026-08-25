@@ -21,6 +21,7 @@ export function BalancerDevPanel() {
   const balancer = useMealBalancer()
   const { commitBalancedMealToLog } = useMealLogger()
   const [catalogQuery, setCatalogQuery] = useState('')
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,8 +39,8 @@ export function BalancerDevPanel() {
     if (!balancer.result || balancer.result.solution.every((item) => item.grams <= 0)) return
     setError(null)
     try {
-      await commitBalancedMealToLog(balancer.result, 'lunch', new Date().toISOString().slice(0, 10))
-      setMessage('Balanced meal logged for today.')
+      await commitBalancedMealToLog(balancer.result, mealType, new Date().toISOString().slice(0, 10))
+      setMessage(`Balanced ${mealType} meal logged for today.`)
     } catch {
       setError('The balanced meal could not be logged.')
     }
@@ -66,14 +67,24 @@ export function BalancerDevPanel() {
             </label>
           ))}
         </div>
-        <label className="mt-3 block max-w-xs">
-          <span className="mb-1 block text-xs font-medium text-slate-400">Priority</span>
-          <select value={balancer.targets.priority} onChange={(event) => balancer.setTargets({ priority: event.target.value as typeof balancer.targets.priority })} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400">
-            <option value="balanced">Balanced</option>
-            <option value="protein-first">Protein first</option>
-            <option value="exact-calories">Exact calories</option>
-          </select>
-        </label>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block max-w-xs">
+            <span className="mb-1 block text-xs font-medium text-slate-400">Priority</span>
+            <select value={balancer.targets.priority} onChange={(event) => balancer.setTargets({ priority: event.target.value as typeof balancer.targets.priority })} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400">
+              <option value="balanced">Balanced</option>
+              <option value="protein-first">Protein first</option>
+              <option value="exact-calories">Exact calories</option>
+            </select>
+          </label>
+          <label className="block max-w-xs">
+            <span className="mb-1 block text-xs font-medium text-slate-400">Meal type</span>
+            <select value={mealType} onChange={(event) => setMealType(event.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')} className="min-h-9 w-full rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-400">
+              {['breakfast', 'lunch', 'dinner', 'snack'].map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <div className="mt-5 border-t border-slate-800 pt-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

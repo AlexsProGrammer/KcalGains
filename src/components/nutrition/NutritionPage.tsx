@@ -1,14 +1,18 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarRange, ChartColumn, Dumbbell, UtensilsCrossed } from 'lucide-react'
+import { CalendarRange, ChartColumn, Dumbbell, Plus, Trash2, UtensilsCrossed } from 'lucide-react'
+import { BarcodeNutritionTab } from '@/components/nutrition/BarcodeNutritionTab'
+import { Alert } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { SegmentedControl } from '@/components/ui/segmented'
 import { db } from '@/db'
 import { AutoMealPlanner } from '@/components/planner/AutoMealPlanner'
 import { BalancerContainer } from '@/components/balancer/BalancerContainer'
 import { FoodManagement } from '@/components/food/FoodManagement'
-import { MealMicronutrientSummary } from '@/components/nutrition/MealMicronutrientSummary'
+import { MealLogCard } from '@/components/nutrition/MealLogCard'
+import { MealQuickEditorModal } from '@/components/nutrition/MealQuickEditorModal'
 import { MicronutrientRadar } from '@/components/nutrition/MicronutrientRadar'
 import { useDynamicTargets } from '@/hooks/useDynamicTargets'
 import { useProfile } from '@/hooks/useProfile'
@@ -16,6 +20,7 @@ import type { Meal } from '@/types'
 
 const tabs = [
   { value: 'log', label: 'Log' },
+  { value: 'barcode', label: 'Barcode' },
   { value: 'micros', label: 'Micros' },
   { value: 'plan', label: 'Plan' },
   { value: 'balance', label: 'Balance' },
@@ -28,6 +33,9 @@ export function NutritionPage() {
   const today = new Date().toISOString().slice(0, 10)
   const { targets } = useDynamicTargets()
   const { profile } = useProfile()
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [mealEditorOpen, setMealEditorOpen] = useState(false)
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
 
   const meals = useLiveQuery(() => db.meals.where('date').equals(today).toArray(), [today], []) as Meal[]
 
@@ -47,6 +55,26 @@ export function NutritionPage() {
     setSearchParams({ tab: nextValue }, { replace: true })
   }
 
+  async function updateMeal(meal: Meal, patch: Partial<Meal>) {
+    await db.meals.put({ ...meal, ...patch })
+    setSuccessMessage('Meal updated.')
+  }
+
+  function openAddMeal() {
+    setSelectedMeal(null)
+    setMealEditorOpen(true)
+  }
+
+  function openEditMeal(meal: Meal) {
+    setSelectedMeal(meal)
+    setMealEditorOpen(true)
+  }
+
+  async function handleDeleteMeal(mealId: string) {
+    await db.meals.delete(mealId)
+    setSuccessMessage('Meal removed from today\'s log.')
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -56,6 +84,8 @@ export function NutritionPage() {
         </div>
         <SegmentedControl value={activeTab} onValueChange={handleTabChange} items={tabs} />
       </div>
+
+      {successMessage ? <Alert variant="success">{successMessage}</Alert> : null}
 
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
         <Card className="min-w-0">
@@ -90,7 +120,16 @@ export function NutritionPage() {
 
       {activeTab === 'log' ? (
         <Card>
-          <CardHeader icon={<UtensilsCrossed />} title="Today log" />
+          <CardHeader
+            icon={<UtensilsCrossed />}
+            title="Today log"
+            actions={
+              <Button type="button" size="sm" variant="secondary" onClick={openAddMeal}>
+                <Plus className="h-4 w-4" />
+                Add meal
+              </Button>
+            }
+          />
           <CardContent className="space-y-3">
             {meals.length === 0 ? (
               <div className="rounded-xl border border-dashed border-line bg-surface-0 p-5 text-sm text-ink-mid">
@@ -98,28 +137,39 @@ export function NutritionPage() {
               </div>
             ) : (
               meals.map((meal) => (
-                <div key={meal.id} className="rounded-xl border border-line bg-surface-0 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium capitalize text-ink-hi">{meal.mealType}</span>
-                    <span className="num text-xs text-ink-mid">{meal.totalCalories} kcal</span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-ink-mid">
-                    <span>Protein {meal.totalProtein}g</span>
-                    <span>Carbs {meal.totalCarbs}g</span>
-                    <span>Fat {meal.totalFat}g</span>
-                  </div>
-                  <MealMicronutrientSummary meal={meal} profile={profile} compact />
-                </div>
+                <MealLogCard
+                  key={meal.id}
+                  meal={meal}
+                  profile={profile}
+                  onEdit={openEditMeal}
+                  onDelete={handleDeleteMeal}
+                />
               ))
             )}
           </CardContent>
         </Card>
       ) : null}
 
+      {activeTab === 'barcode' ? <BarcodeNutritionTab /> : null}
       {activeTab === 'micros' ? <MicronutrientRadar meals={meals} /> : null}
       {activeTab === 'plan' ? <AutoMealPlanner /> : null}
       {activeTab === 'balance' ? <BalancerContainer /> : null}
       {activeTab === 'library' ? <FoodManagement /> : null}
+
+      <MealQuickEditorModal
+        open={mealEditorOpen}
+        meal={selectedMeal}
+        date={today}
+        onClose={() => {
+          setMealEditorOpen(false)
+          setSelectedMeal(null)
+        }}
+        onSaved={(message) => {
+          setSuccessMessage(message)
+          setMealEditorOpen(false)
+          setSelectedMeal(null)
+        }}
+      />
     </div>
   )
 }

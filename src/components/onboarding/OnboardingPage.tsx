@@ -85,10 +85,14 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
 
   function persistOnboardingDecision(state: 'completed' | 'dismissed') {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem(ONBOARDING_STATE_KEY, state)
-    window.sessionStorage.setItem(ONBOARDING_STATE_KEY, state)
-    window.localStorage.removeItem('kcalgains.forceOnboarding')
-    window.sessionStorage.removeItem('kcalgains.forceOnboarding')
+
+    const persist = (storage: Storage) => {
+      storage.setItem(ONBOARDING_STATE_KEY, state)
+      storage.removeItem('kcalgains.forceOnboarding')
+    }
+
+    persist(window.localStorage)
+    persist(window.sessionStorage)
   }
 
   async function createStarterTrainingPlan(): Promise<TrainingPlan> {
@@ -154,7 +158,9 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
       await setSetting('onboardingCompleted', true)
       await setSetting('onboardingDismissed', false)
       persistOnboardingDecision('completed')
-      navigate('/today', { replace: true })
+      if (window.location.pathname !== '/today') {
+        navigate('/today', { replace: true })
+      }
     } catch {
       setError('Your profile could not be saved. Please check the values and try again.')
     } finally {
@@ -166,7 +172,9 @@ export function OnboardingPage({ modalMode = false }: { modalMode?: boolean }) {
     await setSetting('onboardingCompleted', true)
     await setSetting('onboardingDismissed', true)
     persistOnboardingDecision('dismissed')
-    navigate('/today', { replace: true })
+    if (window.location.pathname !== '/today') {
+      navigate('/today', { replace: true })
+    }
   }
 
   const stepInfo = [

@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { BarChart3, Camera, Dumbbell, UtensilsCrossed, Weight, Sparkles, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 
@@ -18,6 +19,38 @@ const actions = [
 
 export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
   const { t } = useT()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const handleAction = (label: string) => {
+    onClose()
+
+    switch (label) {
+      case 'Log meal':
+        navigate('/nutrition?tab=log', { replace: false })
+        break
+      case 'Log weight':
+        if (location.pathname === '/today') {
+          const nextUrl = '/today?weight=quick-add'
+          window.history.pushState({}, '', nextUrl)
+          window.dispatchEvent(new PopStateEvent('popstate'))
+        } else {
+          navigate('/today?weight=quick-add', { replace: false })
+        }
+        break
+      case 'Start workout':
+        navigate('/train', { replace: false })
+        break
+      case 'Scan barcode':
+        navigate('/nutrition?tab=barcode', { replace: false })
+        break
+      case 'AI import':
+        navigate('/more/ai', { replace: false })
+        break
+      default:
+        break
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -54,7 +87,7 @@ export function QuickActionSheet({ open, onClose }: QuickActionSheetProps) {
                   key={label}
                   variant={tone === 'primary' ? 'primary' : 'secondary'}
                   className="justify-start gap-3 px-4 py-3"
-                  onClick={onClose}
+                  onClick={() => handleAction(label)}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent-text">
                     <Icon className="h-4 w-4" />
