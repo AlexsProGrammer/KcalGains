@@ -20,6 +20,7 @@ const EMPTY_FORM: { date: string; type: Workout['type']; durationMinutes: string
 export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
   const [draft, setDraft] = useState(EMPTY_FORM)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const workouts = useLiveQuery(() => db.workouts.orderBy('date').reverse().toArray(), [])
   const exerciseTypes = useLiveQuery(() => db.exerciseDefinitions.toArray(), [], [])
 
@@ -44,6 +45,7 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
 
       await db.workouts.put(parsed)
       setDraft(EMPTY_FORM)
+      setSuccessMessage('Workout saved.')
     } catch {
       setError('Enter a valid date and workout type.')
     }
@@ -52,10 +54,12 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
   async function updateWorkout(workout: Workout, patch: Partial<Workout>) {
     const next = WorkoutSchema.parse({ ...workout, ...patch })
     await db.workouts.put(next)
+    setSuccessMessage('Workout updated.')
   }
 
   async function deleteWorkout(id: string) {
     await db.workouts.delete(id)
+    setSuccessMessage('Workout removed.')
   }
 
   if (viewMode === 'graph') {
@@ -87,6 +91,7 @@ export function WorkoutHistoryList({ viewMode }: WorkoutHistoryListProps) {
         </Field>
 
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        {successMessage ? <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{successMessage}</p> : null}
 
         <div className="space-y-3">
           {sortedWorkouts.length === 0 ? <p className="text-sm text-slate-500">No workouts logged yet.</p> : null}

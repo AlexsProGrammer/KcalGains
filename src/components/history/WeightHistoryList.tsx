@@ -16,6 +16,7 @@ const EMPTY_FORM = { date: new Date().toISOString().slice(0, 10), weightKg: '', 
 export function WeightHistoryList({ viewMode }: WeightHistoryListProps) {
   const [draft, setDraft] = useState(EMPTY_FORM)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const entries = useLiveQuery(() => db.weightLogs.orderBy('date').reverse().toArray(), [])
 
   const sortedEntries = useMemo(
@@ -38,6 +39,7 @@ export function WeightHistoryList({ viewMode }: WeightHistoryListProps) {
 
       await db.weightLogs.put(parsed)
       setDraft(EMPTY_FORM)
+      setSuccessMessage('Weight logged.')
     } catch {
       setError('Use a valid date and a weight between 30 and 350 kg.')
     }
@@ -52,10 +54,12 @@ export function WeightHistoryList({ viewMode }: WeightHistoryListProps) {
       note: nextNote.trim() || undefined,
     })
     await db.weightLogs.put(parsed)
+    setSuccessMessage('Weight updated.')
   }
 
   async function deleteEntry(id: string) {
     await db.weightLogs.delete(id)
+    setSuccessMessage('Weight entry removed.')
   }
 
   if (viewMode === 'graph') {
@@ -79,6 +83,7 @@ export function WeightHistoryList({ viewMode }: WeightHistoryListProps) {
         </form>
 
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        {successMessage ? <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{successMessage}</p> : null}
 
         <div className="space-y-3">
           {sortedEntries.length === 0 ? <p className="text-sm text-slate-500">No weight entries yet.</p> : null}

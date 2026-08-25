@@ -18,6 +18,7 @@ const EMPTY_FORM = { date: new Date().toISOString().slice(0, 10), mealType: 'bre
 export function MealHistoryList({ viewMode }: MealHistoryListProps) {
   const [draft, setDraft] = useState(EMPTY_FORM)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const meals = useLiveQuery(() => db.meals.orderBy('date').reverse().toArray(), [])
 
   const sortedMeals = useMemo(
@@ -43,6 +44,7 @@ export function MealHistoryList({ viewMode }: MealHistoryListProps) {
 
       await db.meals.put(parsed)
       setDraft(EMPTY_FORM)
+      setSuccessMessage('Meal added.')
     } catch {
       setError('Enter valid meal totals in grams and macro values.')
     }
@@ -51,10 +53,12 @@ export function MealHistoryList({ viewMode }: MealHistoryListProps) {
   async function updateMeal(meal: Meal, patch: Partial<Meal>) {
     const next = MealSchema.parse({ ...meal, ...patch })
     await db.meals.put(next)
+    setSuccessMessage('Meal updated.')
   }
 
   async function deleteMeal(id: string) {
     await db.meals.delete(id)
+    setSuccessMessage('Meal removed.')
   }
 
   if (viewMode === 'graph') {
@@ -95,6 +99,7 @@ export function MealHistoryList({ viewMode }: MealHistoryListProps) {
         </div>
 
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        {successMessage ? <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{successMessage}</p> : null}
 
         <div className="space-y-3">
           {sortedMeals.length === 0 ? <p className="text-sm text-slate-500">No meals logged yet.</p> : null}
